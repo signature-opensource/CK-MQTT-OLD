@@ -1,17 +1,16 @@
-# ![Icon](https://raw.githubusercontent.com/MobileEssentials/hermes/master/logo/64px.png?token=AAKW614ypTLCeyilkrim9L2nICWH6g-Lks5UUToXwA%3D%3D)![Spacer](https://raw.githubusercontent.com/MobileEssentials/hermes/master/logo/spacer.png?token=AAKW6zHJTj3jztnN_Bm2Ga3V1TPXY2dhks5UUTovwA%3D%3D)![Tagline](https://raw.githubusercontent.com/MobileEssentials/hermes/master/logo/tagline.png?token=AAKW6zHJTj3jztnN_Bm2Ga3V1TPXY2dhks5UUTovwA%3D%3D)
+# ![Icon](http://www.mobileessentials.org/img/hermes/logo/64px.png)![Spacer](http://www.mobileessentials.org/img/hermes/logo/spacer.png)![Tagline](http://www.mobileessentials.org/img/hermes/logo/tagline.png)
 
 
-Minimalist and intuitive asynchronous MQTT messaging broker and client written entirely in C#
+Minimalist and intuitive asynchronous MQTT messaging server and client written entirely in C#
 
+> Hermes: messenger of the Greek gods
 
 ## Installation
 
-Server (broker) package:
+Server package:
 
-`Install-Package Hermes.Server`
+`Install-Package System.Net.Mqtt.Server -Pre`
 
 Client package:
 
-`Install-Package Hermes.Client`
-
-To debug with full symbols and sources the above packages, setup SymbolSource in the Visual Studio debugging options as explained in the [SymbolSource site](http://www.symbolsource.org/Public/Home/VisualStudio)
+`Install-Package System.Net.Mqtt -Pre`
