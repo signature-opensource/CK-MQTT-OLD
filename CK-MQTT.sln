@@ -30,7 +30,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{E887D106
 		..\packages.config = ..\packages.config
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{E845DA55-2A50-473C-8DDA-C8E7BA236D87}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CodeCakeBuilder", "CodeCakeBuilder\CodeCakeBuilder.csproj", "{642792BA-206F-45D2-A743-E20AE1333B6E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -58,12 +58,15 @@ Global
 		{47B97A73-38F4-4216-ABF7-E8BE4F934AD4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{47B97A73-38F4-4216-ABF7-E8BE4F934AD4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{47B97A73-38F4-4216-ABF7-E8BE4F934AD4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{642792BA-206F-45D2-A743-E20AE1333B6E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{642792BA-206F-45D2-A743-E20AE1333B6E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{642792BA-206F-45D2-A743-E20AE1333B6E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{642792BA-206F-45D2-A743-E20AE1333B6E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{CC70B0BB-EC87-45D0-A4AE-2462F99D7573} = {E845DA55-2A50-473C-8DDA-C8E7BA236D87}
 		{E887D106-44B8-46EF-9BCC-FF68AD1A1B71} = {1A5ABB89-2797-4946-8D46-F07144F616F3}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution

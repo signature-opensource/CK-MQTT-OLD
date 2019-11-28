@@ -1,24 +1,19 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net46</TargetFramework>
     <IncludeTesting>true</IncludeTesting>
-    <IsPackable>false</IsPackable>
+    <IsPackable>False</IsPackable>
   </PropertyGroup>
-
   <ItemGroup>
     <None Update="**\*.packet;**\*.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-  
   <ItemGroup>
     <ProjectReference Include="..\..\CK.MQTT.Client\CK.MQTT.Client.csproj" />
     <ProjectReference Include="..\..\CK.MQTT.Server\CK.MQTT.Server.csproj" />
   </ItemGroup>
-  
   <ItemGroup>
     <Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />
   </ItemGroup>
-
 </Project>

@@ -13,3 +13,13 @@ packages
 .vs
 .*
 log.txt
+[Bb]in/
+[Oo]bj/
+[Rr]elease/
+[Rr]eleases/
+.vs/
+CodeCakeBuilder/UnitTestsDone.*.txt
+Tests/**/TestResult*.xml
+CodeCakeBuilder/MemoryKey.*.txt
+Tests/**/Logs/
+Tests/**/CKSetup-WorkingDir/
