@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using CK.MQTT.Sdk.Packets;
 using System.Text.RegularExpressions;
+using System;
 
 namespace CK.MQTT.Sdk.Formatters
 {

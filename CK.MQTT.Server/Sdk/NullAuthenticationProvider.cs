@@ -1,4 +1,6 @@
-﻿namespace CK.MQTT.Sdk
+﻿using System;
+
+namespace CK.MQTT.Sdk
 {
 	internal class NullAuthenticationProvider : IMqttAuthenticationProvider
 	{

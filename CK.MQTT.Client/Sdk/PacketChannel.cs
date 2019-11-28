@@ -2,6 +2,7 @@
 using CK.MQTT.Sdk.Packets;
 using System.Reactive.Subjects;
 using System.Threading.Tasks;
+using System;
 
 namespace CK.MQTT.Sdk
 {

@@ -2,7 +2,7 @@
 
 namespace CK.MQTT.Sdk
 {
-    internal interface IPacketBuffer
+    public interface IPacketBuffer
 	{
 		bool TryGetPackets (IEnumerable<byte> sequence, out IEnumerable<byte[]> packets);
 	}

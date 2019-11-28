@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\Tests\FooWillMessage.cs" Link="FooWillMessage.cs" />
+    <Compile Include="..\Tests\CK.MQTT.Tests\FooWillMessage.cs" Link="FooWillMessage.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -14,8 +14,8 @@
   </ItemGroup>
   
   <ItemGroup>
-    <ProjectReference Include="..\Client\Client.csproj" />
-    <ProjectReference Include="..\Server\Server.csproj" />
+    <ProjectReference Include="..\CK.MQTT.Client\CK.MQTT.Client.csproj" />
+    <ProjectReference Include="..\CK.MQTT.Server\CK.MQTT.Server.csproj" />
   </ItemGroup>
   
   <ItemGroup>

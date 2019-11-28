@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace CK.MQTT.Sdk
 {
-    internal class PacketBuffer : IPacketBuffer
+	public class PacketBuffer : IPacketBuffer
 	{
 		bool packetReadStarted;
 		bool packetRemainingLengthReadCompleted;

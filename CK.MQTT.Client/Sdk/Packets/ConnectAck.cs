@@ -1,4 +1,6 @@
-﻿namespace CK.MQTT.Sdk.Packets
+﻿using System;
+
+namespace CK.MQTT.Sdk.Packets
 {
 	internal class ConnectAck : IPacket, IEquatable<ConnectAck>
 	{

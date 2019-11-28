@@ -1,4 +1,5 @@
-﻿using System.Reactive.Linq;
+﻿using System;
+using System.Reactive.Linq;
 using System.Reactive.Subjects;
 
 namespace CK.MQTT.Sdk.Bindings

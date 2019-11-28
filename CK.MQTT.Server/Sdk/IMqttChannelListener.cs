@@ -1,4 +1,6 @@
-﻿namespace CK.MQTT.Sdk
+﻿using System;
+
+namespace CK.MQTT.Sdk
 {
     /// <summary>
     /// Represents a listener for incoming channel connections on top of an underlying transport protocol

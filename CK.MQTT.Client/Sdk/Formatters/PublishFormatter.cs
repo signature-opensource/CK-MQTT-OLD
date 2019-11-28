@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using CK.MQTT.Sdk.Packets;
 
 namespace CK.MQTT.Sdk.Formatters

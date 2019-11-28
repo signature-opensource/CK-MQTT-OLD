@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using CK.MQTT.Sdk.Packets;
 
 namespace CK.MQTT.Sdk.Formatters

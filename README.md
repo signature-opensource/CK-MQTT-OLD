@@ -11,9 +11,9 @@
 
 MQTT is a Client Server publish/subscribe messaging transport protocol, designed to be lightweight, open and simple to use and implement. This makes it suitable for Internet of Things (IoT) messaging, machine to machine communication, mobile devices, etc.
 
-System.Net.Mqtt is a lightweight and simple implementation of the MQTT protocol version 3.1.1, written entirely in C# and divided in two libraries: System.Net.Mqtt and System.Net.Mqtt.Server.
+CK.MQTT is a lightweight and simple implementation of the MQTT protocol version 3.1.1, written entirely in C# and divided in two libraries: CK.MQTT and CK.MQTT.Server.
 
-The foundation of the System.Net.Mqtt libraries is to provide an intuitive and very easy to use API, hiding most of the protocol concepts that don't need to be exposed, letting consumers just focus on the main protocol operations, which are: CONNECT, SUBSCRIBE, UNSUBSCRIBE, PUBLISH, DISCONNECT.
+The foundation of the CK.MQTT libraries is to provide an intuitive and very easy to use API, hiding most of the protocol concepts that don't need to be exposed, letting consumers just focus on the main protocol operations, which are: CONNECT, SUBSCRIBE, UNSUBSCRIBE, PUBLISH, DISCONNECT.
 
 All the protocol packets acknowledgement happens under the hood in an asynchronous way, adding a level of simplicity reduced to just awaiting the client method calls in a native .net style without worring about low level protocol concepts.
 
@@ -88,13 +88,13 @@ Also, the reception of the subscribed messages is handled using an IObservable i
 
 ## Installing
 
-System.Net.Mqtt and System.Net.Mqtt.Server are distributed as [NuGet][1] packages and can be installed from Visual Studio by searching for the "System.Net.Mqtt" packages or by running the following commands from the Package Manager Console:
+CK.MQTT and CK.MQTT.Server are distributed as [NuGet][1] packages and can be installed from Visual Studio by searching for the "CK.MQTT" packages or by running the following commands from the Package Manager Console:
 
 Client Package:
-	`Install-Package System.Net.Mqtt -Pre`
+	`Install-Package CK.MQTT -Pre`
 	
 Server Package:
-	`Install-Package System.Net.Mqtt.Server -Pre`
+	`Install-Package CK.MQTT.Server -Pre`
 	
 Current package dependencies:
 
