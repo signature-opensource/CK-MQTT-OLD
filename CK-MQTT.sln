@@ -7,11 +7,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CK.MQTT.Client", "CK.MQTT.C
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CK.MQTT.Server", "CK.MQTT.Server\CK.MQTT.Server.csproj", "{1397EC83-6D03-4D81-95D5-5D11C766C43A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests", "Tests\CK.MQTT.Tests\CK.MQTT.Tests.csproj", "{CC70B0BB-EC87-45D0-A4AE-2462F99D7573}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CK.MQTT.Tests", "Tests\CK.MQTT.Tests\CK.MQTT.Tests.csproj", "{CC70B0BB-EC87-45D0-A4AE-2462F99D7573}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IntegrationTests", "IntegrationTests\IntegrationTests.csproj", "{1A4E01C2-78A6-4E71-A34A-E911F01CE840}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CK.MQTT.Client.Ssl", "CK.MQTT.Client.Ssl\CK.MQTT.Client.Ssl.csproj", "{47B97A73-38F4-4216-ABF7-E8BE4F934AD4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CK.MQTT.Client.Ssl", "CK.MQTT.Client.Ssl\CK.MQTT.Client.Ssl.csproj", "{47B97A73-38F4-4216-ABF7-E8BE4F934AD4}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{1A5ABB89-2797-4946-8D46-F07144F616F3}"
 	ProjectSection(SolutionItems) = preProject
@@ -30,7 +30,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{E887D106
 		..\packages.config = ..\packages.config
 	EndProjectSection
 EndProject
-
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{E845DA55-2A50-473C-8DDA-C8E7BA236D87}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -41,6 +42,10 @@ Global
 		{6481B999-0479-4162-AC53-5936CE5FD8BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6481B999-0479-4162-AC53-5936CE5FD8BF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6481B999-0479-4162-AC53-5936CE5FD8BF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1397EC83-6D03-4D81-95D5-5D11C766C43A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1397EC83-6D03-4D81-95D5-5D11C766C43A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1397EC83-6D03-4D81-95D5-5D11C766C43A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1397EC83-6D03-4D81-95D5-5D11C766C43A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{CC70B0BB-EC87-45D0-A4AE-2462F99D7573}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{CC70B0BB-EC87-45D0-A4AE-2462F99D7573}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CC70B0BB-EC87-45D0-A4AE-2462F99D7573}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -49,10 +54,6 @@ Global
 		{1A4E01C2-78A6-4E71-A34A-E911F01CE840}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1A4E01C2-78A6-4E71-A34A-E911F01CE840}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1A4E01C2-78A6-4E71-A34A-E911F01CE840}.Release|Any CPU.Build.0 = Release|Any CPU
-		{1397EC83-6D03-4D81-95D5-5D11C766C43A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1397EC83-6D03-4D81-95D5-5D11C766C43A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1397EC83-6D03-4D81-95D5-5D11C766C43A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1397EC83-6D03-4D81-95D5-5D11C766C43A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{47B97A73-38F4-4216-ABF7-E8BE4F934AD4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{47B97A73-38F4-4216-ABF7-E8BE4F934AD4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{47B97A73-38F4-4216-ABF7-E8BE4F934AD4}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -62,6 +63,7 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
+		{CC70B0BB-EC87-45D0-A4AE-2462F99D7573} = {E845DA55-2A50-473C-8DDA-C8E7BA236D87}
 		{E887D106-44B8-46EF-9BCC-FF68AD1A1B71} = {1A5ABB89-2797-4946-8D46-F07144F616F3}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
