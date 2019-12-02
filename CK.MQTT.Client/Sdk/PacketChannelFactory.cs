@@ -29,7 +29,7 @@ namespace CK.MQTT.Sdk
 		public async Task<IMqttChannel<IPacket>> CreateAsync ()
 		{
 			if (innerChannelFactory == null) {
-				throw new MqttException (Properties.Resources.PacketChannelFactory_InnerChannelFactoryNotFound);
+				throw new MqttException (Properties.Resources.GetString("PacketChannelFactory_InnerChannelFactoryNotFound"));
 			}
 
 			var binaryChannel = await innerChannelFactory

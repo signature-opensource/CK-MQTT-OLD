@@ -23,9 +23,9 @@ namespace CK.MQTT.Sdk.Bindings
 				try {
 					tcpListener.Start ();
 				} catch (SocketException socketEx) {
-					tracer.Error (socketEx, Properties.Resources.TcpChannelProvider_TcpListener_Failed);
+					tracer.Error (socketEx, ServerProperties.Resources.GetString("TcpChannelProvider_TcpListener_Failed"));
 
-					throw new MqttException (Properties.Resources.TcpChannelProvider_TcpListener_Failed, socketEx);
+					throw new MqttException (ServerProperties.Resources.GetString("TcpChannelProvider_TcpListener_Failed"), socketEx);
 				}
 
 				return tcpListener;

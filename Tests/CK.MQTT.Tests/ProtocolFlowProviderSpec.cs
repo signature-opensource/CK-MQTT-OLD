@@ -1,4 +1,4 @@
-﻿using Moq;
+using Moq;
 using System;
 using CK.MQTT;
 using CK.MQTT.Sdk.Flows;
@@ -11,7 +11,7 @@ using CK.MQTT.Sdk;
 
 namespace Tests
 {
-    internal class ProtocolFlowProviderSpec
+    public class ProtocolFlowProviderSpec
 	{
 		[Theory]
 		[InlineData(MqttPacketType.ConnectAck, typeof(ClientConnectFlow))]

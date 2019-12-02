@@ -1,4 +1,4 @@
-﻿using Moq;
+using Moq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +7,6 @@ using CK.MQTT.Sdk;
 using CK.MQTT.Sdk.Flows;
 using CK.MQTT.Sdk.Packets;
 using CK.MQTT.Sdk.Storage;
-using CK.MQTT.Server.Properties;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
@@ -795,7 +794,7 @@ namespace Tests.Flows
             Assert.NotNull (ex);
             Assert.NotNull (ex.InnerException);
             Assert.True (ex.InnerException is MqttException);
-            Assert.Equal (Resources.ServerPublishReceiverFlow_SystemMessageNotAllowedForClient, ex.InnerException.Message);
+            Assert.Equal (ServerProperties.Resources.GetString("ServerPublishReceiverFlow_SystemMessageNotAllowedForClient"), ex.InnerException.Message);
         }
 
         [Fact]

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Net.WebSockets;
 using System.Runtime.ExceptionServices;
@@ -47,13 +47,13 @@ namespace CK.MQTT.Sdk.Bindings
 				}
 				catch { }
 
-				var message = string.Format (Properties.Resources.WebSocketChannelFactory_WebSocketClient_Failed, hostAddress);
+				var message = string.Format (Properties.Resources.GetString("WebSocketChannelFactory_WebSocketClient_Failed"), hostAddress);
 
 				tracer.Error (timeoutEx, message);
 
 				throw new MqttException (message, timeoutEx);
 			} catch (Exception ex) {
-				var message = string.Format (Properties.Resources.WebSocketChannelFactory_WebSocketClient_Failed, hostAddress);
+				var message = string.Format (Properties.Resources.GetString("WebSocketChannelFactory_WebSocketClient_Failed"), hostAddress);
 
 				tracer.Error (ex, message);
 

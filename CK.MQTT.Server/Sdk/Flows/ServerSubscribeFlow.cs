@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using CK.MQTT.Sdk.Packets;
@@ -43,7 +43,7 @@ namespace CK.MQTT.Sdk.Flows
 			var session = sessionRepository.Read (clientId);
 
 			if (session == null) {
-				throw new MqttException (string.Format(Properties.Resources.SessionRepository_ClientSessionNotFound, clientId));
+				throw new MqttException (string.Format(ServerProperties.Resources.GetString("SessionRepository_ClientSessionNotFound"), clientId));
 			}
 
 			var returnCodes = new List<SubscribeReturnCode> ();
@@ -51,7 +51,7 @@ namespace CK.MQTT.Sdk.Flows
 			foreach (var subscription in subscribe.Subscriptions) {
 				try {
 					if (!topicEvaluator.IsValidTopicFilter (subscription.TopicFilter)) {
-						tracer.Error (Server.Properties.Resources.ServerSubscribeFlow_InvalidTopicSubscription, subscription.TopicFilter, clientId);
+						tracer.Error (ServerProperties.Resources.GetString("ServerSubscribeFlow_InvalidTopicSubscription"), subscription.TopicFilter, clientId);
 
 						returnCodes.Add (SubscribeReturnCode.Failure);
 						continue;
@@ -81,7 +81,7 @@ namespace CK.MQTT.Sdk.Flows
 
 					returnCodes.Add (returnCode);
 				} catch (RepositoryException repoEx) {
-					tracer.Error (repoEx, Server.Properties.Resources.ServerSubscribeFlow_ErrorOnSubscription, clientId, subscription.TopicFilter);
+					tracer.Error (repoEx, ServerProperties.Resources.GetString("ServerSubscribeFlow_ErrorOnSubscription"), clientId, subscription.TopicFilter);
 
 					returnCodes.Add (SubscribeReturnCode.Failure);
 				}

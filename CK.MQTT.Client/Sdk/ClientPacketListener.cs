@@ -64,7 +64,7 @@ namespace CK.MQTT.Sdk
 			}
 
 			if (disposing) {
-				tracer.Info (Properties.Resources.Mqtt_Disposing, GetType ().FullName);
+				tracer.Info (Properties.Resources.GetString("Mqtt_Disposing"), GetType ().FullName);
 
 				listenerDisposable.Dispose ();
 				StopKeepAliveMonitor ();
@@ -84,12 +84,12 @@ namespace CK.MQTT.Sdk
 						return;
 					}
 
-					tracer.Info (Properties.Resources.ClientPacketListener_FirstPacketReceived, clientId, packet.Type);
+					tracer.Info (Properties.Resources.GetString("ClientPacketListener_FirstPacketReceived"), clientId, packet.Type);
 
 					var connectAck = packet as ConnectAck;
 
 					if (connectAck == null) {
-						NotifyError (Properties.Resources.ClientPacketListener_FirstReceivedPacketMustBeConnectAck);
+						NotifyError (Properties.Resources.GetString("ClientPacketListener_FirstReceivedPacketMustBeConnectAck"));
 						return;
 					}
 
@@ -125,7 +125,7 @@ namespace CK.MQTT.Sdk
 				    ex => {
 					    NotifyError (ex);
 				    }, () => {
-					    tracer.Warn (Properties.Resources.ClientPacketListener_PacketChannelCompleted, clientId);
+					    tracer.Warn (Properties.Resources.GetString("ClientPacketListener_PacketChannelCompleted"), clientId);
 
 					    packets.OnCompleted ();
 				    }
@@ -166,7 +166,7 @@ namespace CK.MQTT.Sdk
 			keepAliveTimer.IntervalMillisecs = interval;
 			keepAliveTimer.Elapsed += async (sender, e) => {
 				try {
-					tracer.Warn (Properties.Resources.ClientPacketListener_SendingKeepAlive, clientId, configuration.KeepAliveSecs);
+					tracer.Warn (Properties.Resources.GetString("ClientPacketListener_SendingKeepAlive"), clientId, configuration.KeepAliveSecs);
 
 					var ping = new PingRequest ();
 
@@ -202,9 +202,9 @@ namespace CK.MQTT.Sdk
 						var publish = packet as Publish;
 
 						if (publish == null) {
-							tracer.Info (Properties.Resources.ClientPacketListener_DispatchingMessage, clientId, packet.Type, flow.GetType ().Name);
+							tracer.Info (Properties.Resources.GetString("ClientPacketListener_DispatchingMessage"), clientId, packet.Type, flow.GetType ().Name);
 						} else {
-							tracer.Info (Properties.Resources.ClientPacketListener_DispatchingPublish, clientId, flow.GetType ().Name, publish.Topic);
+							tracer.Info (Properties.Resources.GetString("ClientPacketListener_DispatchingPublish"), clientId, flow.GetType ().Name, publish.Topic);
 						}
 
 						await flow.ExecuteAsync (clientId, packet, channel)
@@ -219,7 +219,7 @@ namespace CK.MQTT.Sdk
 
 		void NotifyError (Exception exception)
 		{
-			tracer.Error (exception, Properties.Resources.ClientPacketListener_Error);
+			tracer.Error (exception, Properties.Resources.GetString("ClientPacketListener_Error"));
 
 			packets.OnError (exception);
 		}

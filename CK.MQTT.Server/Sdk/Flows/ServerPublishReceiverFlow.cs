@@ -1,11 +1,10 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Linq;
 using CK.MQTT.Sdk.Packets;
 using CK.MQTT.Sdk.Storage;
 using System.Reactive.Subjects;
 using System.Text;
 using System.Threading.Tasks;
-using ServerProperties = CK.MQTT.Server.Properties;
 
 namespace CK.MQTT.Sdk.Flows
 {
@@ -48,7 +47,7 @@ namespace CK.MQTT.Sdk.Flows
                     Payload = will.Will.Payload
                 };
 
-                tracer.Info(Server.Properties.Resources.ServerPublishReceiverFlow_SendingWill, clientId, willPublish.Topic);
+                tracer.Info(ServerProperties.Resources.GetString("ServerPublishReceiverFlow_SendingWill"), clientId, willPublish.Topic);
 
                 await DispatchAsync(willPublish, clientId, isWill: true)
                     .ConfigureAwait(continueOnCapturedContext: false);
@@ -83,7 +82,7 @@ namespace CK.MQTT.Sdk.Flows
 
             if (publish.Topic.Trim ().StartsWith ("$") && !connectionProvider.PrivateClients.Contains (clientId))
             {
-                throw new MqttException (ServerProperties.Resources.ServerPublishReceiverFlow_SystemMessageNotAllowedForClient);
+                throw new MqttException (ServerProperties.Resources.GetString("ServerPublishReceiverFlow_SystemMessageNotAllowedForClient"));
             }
         }
 
@@ -95,7 +94,7 @@ namespace CK.MQTT.Sdk.Flows
 				.Where (x => topicEvaluator.Matches (publish.Topic, x.TopicFilter));
 
 			if (!subscriptions.Any ()) {
-				tracer.Verbose (Server.Properties.Resources.ServerPublishReceiverFlow_TopicNotSubscribed, publish.Topic, clientId);
+				tracer.Verbose (ServerProperties.Resources.GetString("ServerPublishReceiverFlow_TopicNotSubscribed"), publish.Topic, clientId);
 
 				undeliveredMessagesListener.OnNext (new MqttUndeliveredMessage { SenderId = clientId, Message = new MqttApplicationMessage (publish.Topic, publish.Payload) });
 			} else {

@@ -1,9 +1,8 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using CK.MQTT.Sdk.Bindings;
 using CK.MQTT.Sdk.Flows;
 using CK.MQTT.Sdk.Storage;
 using System.Reactive.Subjects;
-using ServerProperties = CK.MQTT.Server.Properties;
 using System;
 
 namespace CK.MQTT.Sdk
@@ -81,9 +80,9 @@ namespace CK.MQTT.Sdk
                 return new MqttServerImpl (channelProvider, channelFactory,
                     flowProvider, connectionProvider, undeliveredMessagesListener, configuration);
             } catch (Exception ex) {
-                tracer.Error (ex, ServerProperties.Resources.Server_InitializeError);
+                tracer.Error (ex, ServerProperties.Resources.GetString("Server_InitializeError"));
 
-                throw new MqttServerException (ServerProperties.Resources.Server_InitializeError, ex);
+                throw new MqttServerException (ServerProperties.Resources.GetString("Server_InitializeError"), ex);
             }
         }
     }

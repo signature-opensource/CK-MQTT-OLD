@@ -73,7 +73,7 @@ namespace CK.MQTT.Sdk
 			if (disposed) return;
 
 			if (disposing) {
-				tracer.Info (Properties.Resources.Mqtt_Disposing, GetType ().FullName);
+				tracer.Info (Properties.Resources.GetString("Mqtt_Disposing"), GetType ().FullName);
 
 				subscription.Dispose ();
 				receiver.OnCompleted ();

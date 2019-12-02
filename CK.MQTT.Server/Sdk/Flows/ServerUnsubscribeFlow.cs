@@ -24,7 +24,7 @@ namespace CK.MQTT.Sdk.Flows
 			var session = sessionRepository.Read (clientId);
 
 			if (session == null) {
-				throw new MqttException (string.Format (Properties.Resources.SessionRepository_ClientSessionNotFound, clientId));
+				throw new MqttException (string.Format (ServerProperties.Resources.GetString("SessionRepository_ClientSessionNotFound"), clientId));
 			}
 
 			foreach (var topic in unsubscribe.Topics) {

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -12,7 +12,7 @@ using CK.MQTT.Sdk;
 
 namespace Tests
 {
-	internal class PacketManagerSpec
+	public class PacketManagerSpec
 	{
 		[Theory]
 		[InlineData("Files/Binaries/Connect_Full.packet", "Files/Packets/Connect_Full.json", typeof(Connect), MqttPacketType.Connect)]

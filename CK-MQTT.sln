@@ -15,22 +15,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CK.MQTT.Client.Ssl", "CK.MQ
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{1A5ABB89-2797-4946-8D46-F07144F616F3}"
 	ProjectSection(SolutionItems) = preProject
-		CodeCoverage.runsettings = CodeCoverage.runsettings
-		Directory.Build.props = Directory.Build.props
-		Directory.Build.targets = Directory.Build.targets
-		..\packages.config = ..\packages.config
 		..\README.md = ..\README.md
-		..\ReleaseNotes.md = ..\ReleaseNotes.md
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{E887D106-44B8-46EF-9BCC-FF68AD1A1B71}"
-	ProjectSection(SolutionItems) = preProject
-		..\build.cmd = ..\build.cmd
-		..\build.proj = ..\build.proj
-		..\packages.config = ..\packages.config
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CodeCakeBuilder", "CodeCakeBuilder\CodeCakeBuilder.csproj", "{642792BA-206F-45D2-A743-E20AE1333B6E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{25AD6D5E-4103-4178-A0E9-643E2C4080D2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -67,7 +57,7 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{E887D106-44B8-46EF-9BCC-FF68AD1A1B71} = {1A5ABB89-2797-4946-8D46-F07144F616F3}
+		{CC70B0BB-EC87-45D0-A4AE-2462F99D7573} = {25AD6D5E-4103-4178-A0E9-643E2C4080D2}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {51909930-3108-4637-AB70-69F6B1CC3434}

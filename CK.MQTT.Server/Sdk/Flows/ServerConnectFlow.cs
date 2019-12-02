@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using CK.MQTT.Sdk.Packets;
 using CK.MQTT.Sdk.Storage;
 using System.Threading.Tasks;
@@ -43,7 +43,7 @@ namespace CK.MQTT.Sdk.Flows
 				sessionRepository.Delete (session.Id);
 				session = null;
 
-				tracer.Info (Server.Properties.Resources.Server_CleanedOldSession, clientId);
+				tracer.Info (ServerProperties.Resources.GetString("Server_CleanedOldSession"), clientId);
 			}
 
 			var sendPendingMessages = false;
@@ -53,7 +53,7 @@ namespace CK.MQTT.Sdk.Flows
 
 				sessionRepository.Create (session);
 
-				tracer.Info (Server.Properties.Resources.Server_CreatedSession, clientId);
+				tracer.Info (ServerProperties.Resources.GetString("Server_CreatedSession"), clientId);
 			} else {
 				sendPendingMessages = true;
 			}

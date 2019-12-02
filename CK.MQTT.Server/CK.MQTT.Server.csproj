@@ -1,26 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
+  <Import Project="..\Common\Shared.props" />
   <PropertyGroup>
-    <TargetFrameworks>net46;netstandard2.0</TargetFrameworks>
-    <GeneratePackageOnBuild Condition="'$(Configuration)' == 'Release'">true</GeneratePackageOnBuild>
-
-    <AssemblyName>CK.MQTT.Server</AssemblyName>
-    <RootNamespace>CK.MQTT.Server</RootNamespace>
-    <PackageId>$(AssemblyName)</PackageId>
-    <DocumentationFile>$(IntermediateOutputPath)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
-
+    <TargetFramework>netstandard2.0</TargetFramework>
     <Description>A lightweight and simple MQTT Server implementation written entirely in C#.</Description>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\CK.MQTT.Client\CK.MQTT.Client.csproj" />
   </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Update="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-  </ItemGroup>
-  
 </Project>

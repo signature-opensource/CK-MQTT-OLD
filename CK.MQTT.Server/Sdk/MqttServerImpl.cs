@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using CK.MQTT.Sdk.Bindings;
@@ -7,7 +7,6 @@ using CK.MQTT.Sdk.Packets;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading.Tasks;
-using ServerProperties = CK.MQTT.Server.Properties;
 using System;
 
 namespace CK.MQTT.Sdk
@@ -61,7 +60,7 @@ namespace CK.MQTT.Sdk
 		public void Start ()
 		{
             if (disposed)
-                throw new ObjectDisposedException (nameof (Server));
+                throw new ObjectDisposedException (nameof ( MqttServerImpl ) );
 
             var channelStreams = binaryChannelListeners.Select (listener => listener.GetChannelStream ());
 
@@ -84,10 +83,10 @@ namespace CK.MQTT.Sdk
         public async Task<IMqttConnectedClient> CreateClientAsync ()
         {
             if (disposed)
-                throw new ObjectDisposedException (nameof (Server));
+                throw new ObjectDisposedException (nameof (MqttServerImpl));
 
             if (!started)
-                throw new InvalidOperationException (ServerProperties.Resources.Server_NotStartedError);
+                throw new InvalidOperationException (ServerProperties.Resources.GetString("Server_NotStartedError"));
 
             var factory = new MqttConnectedClientFactory (privateStreamListener);
             var client = await factory
@@ -122,7 +121,7 @@ namespace CK.MQTT.Sdk
 			if (disposing) {
                 try
                 {
-                    tracer.Info (Properties.Resources.Mqtt_Disposing, GetType ().FullName);
+                    tracer.Info (ServerProperties.Resources.GetString("Mqtt_Disposing"), GetType ().FullName);
 
                     streamSubscription?.Dispose ();
 
@@ -152,7 +151,7 @@ namespace CK.MQTT.Sdk
 
 		void ProcessChannel (IMqttChannel<byte[]> binaryChannel)
 		{
-			tracer.Verbose (ServerProperties.Resources.Server_NewSocketAccepted);
+			tracer.Verbose (ServerProperties.Resources.GetString("Server_NewSocketAccepted"));
 
 			var packetChannel = channelFactory.Create (binaryChannel);
 			var packetListener = new ServerPacketListener (packetChannel, connectionProvider, flowProvider, configuration);
@@ -161,11 +160,11 @@ namespace CK.MQTT.Sdk
 			packetListener
                 .PacketStream
                 .Subscribe (_ => { }, ex => {
-				        tracer.Error (ex, ServerProperties.Resources.Server_PacketsObservableError);
+				        tracer.Error (ex, ServerProperties.Resources.GetString("Server_PacketsObservableError"));
 				        packetChannel.Dispose ();
 				        packetListener.Dispose ();
 			        }, () => {
-				        tracer.Warn (ServerProperties.Resources.Server_PacketsObservableCompleted);
+				        tracer.Warn (ServerProperties.Resources.GetString("Server_PacketsObservableCompleted"));
 				        packetChannel.Dispose ();
 				        packetListener.Dispose ();
 			        }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Threading.Tasks;
 using CK.MQTT;
@@ -11,7 +11,7 @@ using CK.MQTT.Sdk;
 
 namespace Tests.Formatters
 {
-	internal class EmptyPacketFormatterSpec
+	public class EmptyPacketFormatterSpec
 	{
 		readonly Mock<IMqttChannel<IPacket>> packetChannel;
 		readonly Mock<IMqttChannel<byte[]>> byteChannel;

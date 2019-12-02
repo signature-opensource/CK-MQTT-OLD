@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Net.Sockets;
 using System.Runtime.ExceptionServices;
@@ -38,7 +38,7 @@ namespace CK.MQTT.Sdk.Bindings
 
 				return new TcpChannel (tcpClient, new PacketBuffer (), configuration);
 			} catch (SocketException socketEx) {
-				var message = string.Format (Properties.Resources.TcpChannelFactory_TcpClient_Failed, hostAddress, configuration.Port);
+				var message = string.Format ( Properties.Resources.GetString("TcpChannelFactory_TcpClient_Failed"), hostAddress, configuration.Port);
 
 				tracer.Error (socketEx, message);
 
@@ -51,7 +51,7 @@ namespace CK.MQTT.Sdk.Bindings
 					tcpClient.Dispose ();
 				} catch {}
 
-				var message = string.Format (Properties.Resources.TcpChannelFactory_TcpClient_Failed, hostAddress, configuration.Port);
+				var message = string.Format (Properties.Resources.GetString("TcpChannelFactory_TcpClient_Failed"), hostAddress, configuration.Port);
 
 				tracer.Error (timeoutEx, message);
 

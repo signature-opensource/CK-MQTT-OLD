@@ -1,8 +1,7 @@
-﻿using IntegrationTests.Context;
+using IntegrationTests.Context;
 using System;
 using System.Collections.Generic;
 using CK.MQTT;
-using CK.MQTT.Properties;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -87,7 +86,7 @@ namespace IntegrationTests
             Assert.True (ex.InnerException is MqttClientException);
             Assert.NotNull (ex.InnerException.InnerException);
             Assert.NotNull (ex.InnerException.InnerException is MqttException);
-            Assert.Equal (string.Format (Resources.SubscribeFormatter_InvalidTopicFilter, topicFilter), ex.InnerException.InnerException.Message);
+            Assert.Equal (string.Format (Properties.Resources.GetString("SubscribeFormatter_InvalidTopicFilter"), topicFilter), ex.InnerException.InnerException.Message);
         }
 
         [Fact]

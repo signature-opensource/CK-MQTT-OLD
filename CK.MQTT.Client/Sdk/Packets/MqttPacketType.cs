@@ -1,9 +1,9 @@
-﻿namespace CK.MQTT.Sdk.Packets
+namespace CK.MQTT.Sdk.Packets
 {
     /// <summary>
     /// Represents one of the possible MQTT packet types
     /// </summary>
-	internal enum MqttPacketType : byte
+	public enum MqttPacketType : byte
     {
         /// <summary>
         /// MQTT CONNECT packet

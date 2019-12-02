@@ -76,12 +76,12 @@ namespace CK.MQTT.Sdk
 			{
 				if (IsConnected)
 				{
-					throw new MqttClientException(string.Format(Properties.Resources.Client_AlreadyConnected, Id));
+					throw new MqttClientException(string.Format(Properties.Resources.GetString("Client_AlreadyConnected"), Id));
 				}
 
 				if (string.IsNullOrEmpty(credentials.ClientId) && !cleanSession)
 				{
-					throw new MqttClientException(Properties.Resources.Client_AnonymousClientWithoutCleanSession);
+					throw new MqttClientException(Properties.Resources.GetString("Client_AnonymousClientWithoutCleanSession"));
 				}
 
 				Id = string.IsNullOrEmpty(credentials.ClientId) ?
@@ -113,7 +113,7 @@ namespace CK.MQTT.Sdk
 
 				if (ack == null)
 				{
-					var message = string.Format(Properties.Resources.Client_ConnectionDisconnected, Id);
+					var message = string.Format(Properties.Resources.GetString("Client_ConnectionDisconnected"), Id);
 
 					throw new MqttClientException(message);
 				}
@@ -130,13 +130,13 @@ namespace CK.MQTT.Sdk
 			catch (TimeoutException timeEx)
 			{
 				Close(timeEx);
-				throw new MqttClientException(string.Format(Properties.Resources.Client_ConnectionTimeout, Id), timeEx);
+				throw new MqttClientException(string.Format(Properties.Resources.GetString("Client_ConnectionTimeout"), Id), timeEx);
 			}
 			catch (MqttConnectionException connectionEx)
 			{
 				Close(connectionEx);
 
-				var message = string.Format(Properties.Resources.Client_ConnectNotAccepted, Id, connectionEx.ReturnCode);
+				var message = string.Format(Properties.Resources.GetString("Client_ConnectNotAccepted"), Id, connectionEx.ReturnCode);
 
 				throw new MqttClientException(message, connectionEx);
 			}
@@ -148,7 +148,7 @@ namespace CK.MQTT.Sdk
 			catch (Exception ex)
 			{
 				Close(ex);
-				throw new MqttClientException(string.Format(Properties.Resources.Client_ConnectionError, Id), ex);
+				throw new MqttClientException(string.Format(Properties.Resources.GetString("Client_ConnectionError"), Id), ex);
 			}
 		}
 
@@ -182,7 +182,7 @@ namespace CK.MQTT.Sdk
 
 				if (ack == null)
 				{
-					var message = string.Format(Properties.Resources.Client_SubscriptionDisconnected, Id, topicFilter);
+					var message = string.Format(Properties.Resources.GetString("Client_SubscriptionDisconnected"), Id, topicFilter);
 
 					tracer.Error(message);
 
@@ -191,7 +191,7 @@ namespace CK.MQTT.Sdk
 
 				if (ack.ReturnCodes.FirstOrDefault() == SubscribeReturnCode.Failure)
 				{
-					var message = string.Format(Properties.Resources.Client_SubscriptionRejected, Id, topicFilter);
+					var message = string.Format(Properties.Resources.GetString("Client_SubscriptionRejected"), Id, topicFilter);
 
 					tracer.Error(message);
 
@@ -202,7 +202,7 @@ namespace CK.MQTT.Sdk
 			{
 				Close(timeEx);
 
-				var message = string.Format(Properties.Resources.Client_SubscribeTimeout, Id, topicFilter);
+				var message = string.Format(Properties.Resources.GetString("Client_SubscribeTimeout"), Id, topicFilter);
 
 				throw new MqttClientException(message, timeEx);
 			}
@@ -215,7 +215,7 @@ namespace CK.MQTT.Sdk
 			{
 				Close(ex);
 
-				var message = string.Format(Properties.Resources.Client_SubscribeError, Id, topicFilter);
+				var message = string.Format(Properties.Resources.GetString("Client_SubscribeError"), Id, topicFilter);
 
 				throw new MqttClientException(message, ex);
 			}
@@ -280,7 +280,7 @@ namespace CK.MQTT.Sdk
 
 				if (ack == null)
 				{
-					var message = string.Format(Properties.Resources.Client_UnsubscribeDisconnected, Id, string.Join(", ", topics));
+					var message = string.Format(Properties.Resources.GetString("Client_UnsubscribeDisconnected"), Id, string.Join(", ", topics));
 
 					tracer.Error(message);
 
@@ -291,7 +291,7 @@ namespace CK.MQTT.Sdk
 			{
 				Close(timeEx);
 
-				var message = string.Format(Properties.Resources.Client_UnsubscribeTimeout, Id, string.Join(", ", topics));
+				var message = string.Format(Properties.Resources.GetString("Client_UnsubscribeTimeout"), Id, string.Join(", ", topics));
 
 				tracer.Error(message);
 
@@ -306,7 +306,7 @@ namespace CK.MQTT.Sdk
 			{
 				Close(ex);
 
-				var message = string.Format(Properties.Resources.Client_UnsubscribeError, Id, string.Join(", ", topics));
+				var message = string.Format(Properties.Resources.GetString("Client_UnsubscribeError"), Id, string.Join(", ", topics));
 
 				tracer.Error(message);
 
@@ -320,7 +320,7 @@ namespace CK.MQTT.Sdk
 			{
 				if (!IsConnected)
 				{
-					throw new MqttClientException(Properties.Resources.Client_AlreadyDisconnected);
+					throw new MqttClientException(Properties.Resources.GetString("Client_AlreadyDisconnected"));
 				}
 
 				packetsSubscription?.Dispose();
@@ -370,7 +370,7 @@ namespace CK.MQTT.Sdk
 
 		void Close(DisconnectedReason reason, string message = null)
 		{
-			tracer.Info(Properties.Resources.Client_Closing, Id, reason);
+			tracer.Info(Properties.Resources.GetString("Client_Closing"), Id, reason);
 
 			CloseClientSession();
 			packetsSubscription?.Dispose();
@@ -404,7 +404,7 @@ namespace CK.MQTT.Sdk
 				sessionRepository.Delete(session.Id);
 				session = null;
 
-				tracer.Info(Properties.Resources.Client_CleanedOldSession, Id);
+				tracer.Info(Properties.Resources.GetString("Client_CleanedOldSession"), Id);
 			}
 
 			if (session == null)
@@ -413,7 +413,7 @@ namespace CK.MQTT.Sdk
 
 				sessionRepository.Create(session);
 
-				tracer.Info(Properties.Resources.Client_CreatedSession, Id);
+				tracer.Info(Properties.Resources.GetString("Client_CreatedSession"), Id);
 			}
 		}
 
@@ -430,7 +430,7 @@ namespace CK.MQTT.Sdk
 			{
 				sessionRepository.Delete(session.Id);
 
-				tracer.Info(Properties.Resources.Client_DeletedSessionOnDisconnect, Id);
+				tracer.Info(Properties.Resources.GetString("Client_DeletedSessionOnDisconnect"), Id);
 			}
 		}
 
@@ -444,7 +444,7 @@ namespace CK.MQTT.Sdk
 		{
 			if (isProtocolConnected && !Channel.IsConnected)
 			{
-				Close(DisconnectedReason.Error, Properties.Resources.Client_UnexpectedChannelDisconnection);
+				Close(DisconnectedReason.Error, Properties.Resources.GetString("Client_UnexpectedChannelDisconnection"));
 			}
 		}
 
@@ -461,14 +461,14 @@ namespace CK.MQTT.Sdk
 						var message = new MqttApplicationMessage(publish.Topic, publish.Payload);
 
 						receiver.OnNext(message);
-						tracer.Info(Properties.Resources.Client_NewApplicationMessageReceived, Id, publish.Topic);
+						tracer.Info(Properties.Resources.GetString("Client_NewApplicationMessageReceived"), Id, publish.Topic);
 					}
 				}, ex =>
 				{
 					Close(ex);
 				}, () =>
 				{
-					tracer.Warn(Properties.Resources.Client_PacketsObservableCompleted);
+					tracer.Warn(Properties.Resources.GetString("Client_PacketsObservableCompleted"));
 					Close(DisconnectedReason.RemoteDisconnected);
 				});
 		}
