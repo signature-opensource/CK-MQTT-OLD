@@ -68,7 +68,7 @@ namespace CodeCake
                 .IsDependentOn( "Create-NuGet-Packages" )
                 .Does( () =>
                  {
-                     //globalInfo.PushArtifacts();
+                     globalInfo.PushArtifacts();
                  } );
 
             // The Default task for this script can be set here.
