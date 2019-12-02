@@ -51,7 +51,7 @@ namespace CodeCake
                                      || Cake.ReadInteractiveOption( "RunUnitTests", "Run Unit Tests?", 'Y', 'N' ) == 'Y' )
                .Does( () =>
                 {
-                    //globalInfo.GetDotnetSolution().Test();
+                    globalInfo.GetDotnetSolution().Test();
                 } );
 
 
@@ -60,7 +60,7 @@ namespace CodeCake
                 .IsDependentOn( "Unit-Testing" )
                 .Does( () =>
                  {
-                     //globalInfo.GetDotnetSolution().Pack();
+                     globalInfo.GetDotnetSolution().Pack();
                  } );
 
             Task( "Push-Packages" )
