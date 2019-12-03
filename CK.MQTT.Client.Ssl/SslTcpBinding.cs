@@ -7,7 +7,7 @@ using System.Text;
 
 namespace CK.MQTT.Ssl
 {
-	class SslTcpBinding : IMqttBinding
+	public class SslTcpBinding : IMqttBinding
 	{
 		readonly SslTcpConfig _sslConfig;
 
