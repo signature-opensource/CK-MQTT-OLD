@@ -9,13 +9,13 @@ using System.Threading.Tasks;
 
 namespace CK.MQTT.Ssl
 {
-    class SslTcpListener : IListener<GenericChannel>
+    class SslTcpChannelListener : IListener<GenericChannel>
     {
         readonly TcpListener _listener;
         readonly MqttConfiguration _configuration;
         private readonly SslTcpConfig _sslConfig;
 
-        public SslTcpListener( MqttConfiguration configuration, SslTcpConfig sslConfig )
+        public SslTcpChannelListener( MqttConfiguration configuration, SslTcpConfig sslConfig )
         {
             _listener = new TcpListener( IPAddress.Any, configuration.Port );
             _configuration = configuration;
