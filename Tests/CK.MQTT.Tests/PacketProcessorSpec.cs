@@ -1,35 +1,35 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
-using Xunit;
-using Xunit.Extensions;
 using System.Linq;
 using CK.MQTT.Sdk;
+using FluentAssertions;
+using NUnit.Framework;
 
 namespace Tests
 {
 	public class PacketProcessorSpec
 	{
 		[Theory]
-		[InlineData("Files/Binaries/Connect_Full.packet")]
-		[InlineData("Files/Binaries/Connect_Min.packet")]
-		[InlineData("Files/Binaries/ConnectAck.packet")]
-		[InlineData("Files/Binaries/Disconnect.packet")]
-		[InlineData("Files/Binaries/PingRequest.packet")]
-		[InlineData("Files/Binaries/PingResponse.packet")]
-		[InlineData("Files/Binaries/Publish_Full.packet")]
-		[InlineData("Files/Binaries/Publish_Min.packet")]
-		[InlineData("Files/Binaries/PublishAck.packet")]
-		[InlineData("Files/Binaries/PublishComplete.packet")]
-		[InlineData("Files/Binaries/PublishReceived.packet")]
-		[InlineData("Files/Binaries/PublishRelease.packet")]
-		[InlineData("Files/Binaries/Subscribe_MultiTopic.packet")]
-		[InlineData("Files/Binaries/Subscribe_SingleTopic.packet")]
-		[InlineData("Files/Binaries/SubscribeAck_MultiTopic.packet")]
-		[InlineData("Files/Binaries/SubscribeAck_SingleTopic.packet")]
-		[InlineData("Files/Binaries/Unsubscribe_MultiTopic.packet")]
-		[InlineData("Files/Binaries/Unsubscribe_SingleTopic.packet")]
-		[InlineData("Files/Binaries/UnsubscribeAck.packet")]
+		[TestCase("Files/Binaries/Connect_Full.packet")]
+		[TestCase("Files/Binaries/Connect_Min.packet")]
+		[TestCase("Files/Binaries/ConnectAck.packet")]
+		[TestCase("Files/Binaries/Disconnect.packet")]
+		[TestCase("Files/Binaries/PingRequest.packet")]
+		[TestCase("Files/Binaries/PingResponse.packet")]
+		[TestCase("Files/Binaries/Publish_Full.packet")]
+		[TestCase("Files/Binaries/Publish_Min.packet")]
+		[TestCase("Files/Binaries/PublishAck.packet")]
+		[TestCase("Files/Binaries/PublishComplete.packet")]
+		[TestCase("Files/Binaries/PublishReceived.packet")]
+		[TestCase("Files/Binaries/PublishRelease.packet")]
+		[TestCase("Files/Binaries/Subscribe_MultiTopic.packet")]
+		[TestCase("Files/Binaries/Subscribe_SingleTopic.packet")]
+		[TestCase("Files/Binaries/SubscribeAck_MultiTopic.packet")]
+		[TestCase("Files/Binaries/SubscribeAck_SingleTopic.packet")]
+		[TestCase("Files/Binaries/Unsubscribe_MultiTopic.packet")]
+		[TestCase("Files/Binaries/Unsubscribe_SingleTopic.packet")]
+		[TestCase("Files/Binaries/UnsubscribeAck.packet")]
 		public void when_buffering_packet_in_one_sequence_then_get_packet(string packetPath)
 		{
 			var buffer = new PacketBuffer ();
@@ -42,29 +42,29 @@ namespace Tests
 			var buffered = buffer.TryGetPackets (readPacket, out bufferedPackets);
 
 			Assert.True (buffered);
-			Assert.Equal (readPacket, bufferedPackets.First());
+			readPacket.Should().BeEquivalentTo( bufferedPackets.First());
 		}
 
 		[Theory]
-		[InlineData("Files/Binaries/Connect_Full.packet")]
-		[InlineData("Files/Binaries/Connect_Min.packet")]
-		[InlineData("Files/Binaries/ConnectAck.packet")]
-		[InlineData("Files/Binaries/Disconnect.packet")]
-		[InlineData("Files/Binaries/PingRequest.packet")]
-		[InlineData("Files/Binaries/PingResponse.packet")]
-		[InlineData("Files/Binaries/Publish_Full.packet")]
-		[InlineData("Files/Binaries/Publish_Min.packet")]
-		[InlineData("Files/Binaries/PublishAck.packet")]
-		[InlineData("Files/Binaries/PublishComplete.packet")]
-		[InlineData("Files/Binaries/PublishReceived.packet")]
-		[InlineData("Files/Binaries/PublishRelease.packet")]
-		[InlineData("Files/Binaries/Subscribe_MultiTopic.packet")]
-		[InlineData("Files/Binaries/Subscribe_SingleTopic.packet")]
-		[InlineData("Files/Binaries/SubscribeAck_MultiTopic.packet")]
-		[InlineData("Files/Binaries/SubscribeAck_SingleTopic.packet")]
-		[InlineData("Files/Binaries/Unsubscribe_MultiTopic.packet")]
-		[InlineData("Files/Binaries/Unsubscribe_SingleTopic.packet")]
-		[InlineData("Files/Binaries/UnsubscribeAck.packet")]
+		[TestCase("Files/Binaries/Connect_Full.packet")]
+		[TestCase("Files/Binaries/Connect_Min.packet")]
+		[TestCase("Files/Binaries/ConnectAck.packet")]
+		[TestCase("Files/Binaries/Disconnect.packet")]
+		[TestCase("Files/Binaries/PingRequest.packet")]
+		[TestCase("Files/Binaries/PingResponse.packet")]
+		[TestCase("Files/Binaries/Publish_Full.packet")]
+		[TestCase("Files/Binaries/Publish_Min.packet")]
+		[TestCase("Files/Binaries/PublishAck.packet")]
+		[TestCase("Files/Binaries/PublishComplete.packet")]
+		[TestCase("Files/Binaries/PublishReceived.packet")]
+		[TestCase("Files/Binaries/PublishRelease.packet")]
+		[TestCase("Files/Binaries/Subscribe_MultiTopic.packet")]
+		[TestCase("Files/Binaries/Subscribe_SingleTopic.packet")]
+		[TestCase("Files/Binaries/SubscribeAck_MultiTopic.packet")]
+		[TestCase("Files/Binaries/SubscribeAck_SingleTopic.packet")]
+		[TestCase("Files/Binaries/Unsubscribe_MultiTopic.packet")]
+		[TestCase("Files/Binaries/Unsubscribe_SingleTopic.packet")]
+		[TestCase("Files/Binaries/UnsubscribeAck.packet")]
 		public void when_processing_packet_in_multi_sequences_then_get_packet(string packetPath)
 		{
 			var buffer = new PacketBuffer ();
@@ -81,13 +81,13 @@ namespace Tests
 
 			Assert.False (bufferedFirst);
 			Assert.True (bufferedSecond);
-			Assert.Equal (readPacket, bufferedPackets.First());
+			readPacket.Should().BeEquivalentTo( bufferedPackets.First());
 		}
 
 		[Theory]
-		[InlineData("Files/Binaries/Connect_Full.packet", "Files/Binaries/PingRequest.packet")]
-		[InlineData("Files/Binaries/Subscribe_MultiTopic.packet", "Files/Binaries/Publish_Full.packet")]
-		[InlineData("Files/Binaries/Unsubscribe_MultiTopic.packet", "Files/Binaries/Disconnect.packet")]
+		[TestCase("Files/Binaries/Connect_Full.packet", "Files/Binaries/PingRequest.packet")]
+		[TestCase("Files/Binaries/Subscribe_MultiTopic.packet", "Files/Binaries/Publish_Full.packet")]
+		[TestCase("Files/Binaries/Unsubscribe_MultiTopic.packet", "Files/Binaries/Disconnect.packet")]
 		public void when_processing_multi_packets_in_multi_sequences_then_get_packets(string packet1Path, string packet2Path)
 		{
 			var buffer = new PacketBuffer ();
@@ -112,14 +112,14 @@ namespace Tests
 
 			Assert.True (bufferedFirst);
 			Assert.True (bufferedSecond);
-			Assert.Equal (readPacket1, bufferedPackets1.First());
-			Assert.Equal (readPacket2, bufferedPackets2.First());
+			readPacket1.Should().BeEquivalentTo( bufferedPackets1.First());
+			readPacket2.Should().BeEquivalentTo( bufferedPackets2.First());
 		}
 
 		[Theory]
-		[InlineData("Files/Binaries/Connect_Full.packet", "Files/Binaries/PingRequest.packet", "Files/Binaries/Subscribe_MultiTopic.packet")]
-		[InlineData("Files/Binaries/Subscribe_MultiTopic.packet", "Files/Binaries/Publish_Full.packet", "Files/Binaries/Publish_Full.packet")]
-		[InlineData("Files/Binaries/Publish_Full.packet", "Files/Binaries/Unsubscribe_MultiTopic.packet", "Files/Binaries/Disconnect.packet")]
+		[TestCase("Files/Binaries/Connect_Full.packet", "Files/Binaries/PingRequest.packet", "Files/Binaries/Subscribe_MultiTopic.packet")]
+		[TestCase("Files/Binaries/Subscribe_MultiTopic.packet", "Files/Binaries/Publish_Full.packet", "Files/Binaries/Publish_Full.packet")]
+		[TestCase("Files/Binaries/Publish_Full.packet", "Files/Binaries/Unsubscribe_MultiTopic.packet", "Files/Binaries/Disconnect.packet")]
 		public void when_processing_multi_packets_in_one_sequence_then_get_packets(string packet1Path, string packet2Path, string packet3Path)
 		{
 			var buffer = new PacketBuffer ();
@@ -142,32 +142,32 @@ namespace Tests
 			var bufferedFirst = buffer.TryGetPackets (sequence, out bufferedPackets);
 
 			Assert.True (bufferedPackets.Any());
-			Assert.Equal (3, bufferedPackets.Count ());
-			Assert.Equal (readPacket1, bufferedPackets.First());
-			Assert.Equal (readPacket2, bufferedPackets.Skip(1).First());
-			Assert.Equal (readPacket3, bufferedPackets.Skip(2).First());
+			3.Should().Be(bufferedPackets.Count ());
+			readPacket1.Should().BeEquivalentTo( bufferedPackets.First());
+			readPacket2.Should().BeEquivalentTo( bufferedPackets.Skip(1).First());
+			readPacket3.Should().BeEquivalentTo( bufferedPackets.Skip(2).First());
 		}
 
 		[Theory]
-		[InlineData("Files/Binaries/Connect_Full.packet")]
-		[InlineData("Files/Binaries/Connect_Min.packet")]
-		[InlineData("Files/Binaries/ConnectAck.packet")]
-		[InlineData("Files/Binaries/Disconnect.packet")]
-		[InlineData("Files/Binaries/PingRequest.packet")]
-		[InlineData("Files/Binaries/PingResponse.packet")]
-		[InlineData("Files/Binaries/Publish_Full.packet")]
-		[InlineData("Files/Binaries/Publish_Min.packet")]
-		[InlineData("Files/Binaries/PublishAck.packet")]
-		[InlineData("Files/Binaries/PublishComplete.packet")]
-		[InlineData("Files/Binaries/PublishReceived.packet")]
-		[InlineData("Files/Binaries/PublishRelease.packet")]
-		[InlineData("Files/Binaries/Subscribe_MultiTopic.packet")]
-		[InlineData("Files/Binaries/Subscribe_SingleTopic.packet")]
-		[InlineData("Files/Binaries/SubscribeAck_MultiTopic.packet")]
-		[InlineData("Files/Binaries/SubscribeAck_SingleTopic.packet")]
-		[InlineData("Files/Binaries/Unsubscribe_MultiTopic.packet")]
-		[InlineData("Files/Binaries/Unsubscribe_SingleTopic.packet")]
-		[InlineData("Files/Binaries/UnsubscribeAck.packet")]
+		[TestCase("Files/Binaries/Connect_Full.packet")]
+		[TestCase("Files/Binaries/Connect_Min.packet")]
+		[TestCase("Files/Binaries/ConnectAck.packet")]
+		[TestCase("Files/Binaries/Disconnect.packet")]
+		[TestCase("Files/Binaries/PingRequest.packet")]
+		[TestCase("Files/Binaries/PingResponse.packet")]
+		[TestCase("Files/Binaries/Publish_Full.packet")]
+		[TestCase("Files/Binaries/Publish_Min.packet")]
+		[TestCase("Files/Binaries/PublishAck.packet")]
+		[TestCase("Files/Binaries/PublishComplete.packet")]
+		[TestCase("Files/Binaries/PublishReceived.packet")]
+		[TestCase("Files/Binaries/PublishRelease.packet")]
+		[TestCase("Files/Binaries/Subscribe_MultiTopic.packet")]
+		[TestCase("Files/Binaries/Subscribe_SingleTopic.packet")]
+		[TestCase("Files/Binaries/SubscribeAck_MultiTopic.packet")]
+		[TestCase("Files/Binaries/SubscribeAck_SingleTopic.packet")]
+		[TestCase("Files/Binaries/Unsubscribe_MultiTopic.packet")]
+		[TestCase("Files/Binaries/Unsubscribe_SingleTopic.packet")]
+		[TestCase("Files/Binaries/UnsubscribeAck.packet")]
 		public void when_processing_incomplete_packet_then_does_not_get_packet(string packetPath)
 		{
 			var buffer = new PacketBuffer ();

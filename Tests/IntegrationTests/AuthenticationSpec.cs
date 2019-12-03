@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using IntegrationTests.Context;
-using Xunit;
 using CK.MQTT;
+using FluentAssertions;
+using NUnit.Framework;
 
 namespace IntegrationTests
 {
@@ -15,7 +16,7 @@ namespace IntegrationTests
 			server = GetServerAsync (new TestAuthenticationProvider(expectedUsername: "foo", expectedPassword: "foo123")).Result;
 		}
 
-		[Fact]
+		[Test]
 		public async Task when_client_connects_with_invalid_credentials_and_authentication_is_supported_then_connection_is_closed()
 		{
 			var username = "foo";
@@ -28,10 +29,12 @@ namespace IntegrationTests
 			Assert.True (aggregateEx.InnerException is MqttClientException);
 			Assert.NotNull (aggregateEx.InnerException.InnerException);
 			Assert.True (aggregateEx.InnerException.InnerException is MqttConnectionException);
-			Assert.Equal (MqttConnectionStatus.BadUserNameOrPassword, ((MqttConnectionException)aggregateEx.InnerException.InnerException).ReturnCode);
-		}
 
-		[Fact]
+            ((MqttConnectionException) aggregateEx.InnerException.InnerException).ReturnCode.Should()
+                .Be( MqttConnectionStatus.BadUserNameOrPassword );
+        }
+
+		[Test]
 		public async Task when_client_connects_with_valid_credentials_and_authentication_is_supported_then_connection_succeeds()
 		{
 			var username = "foo";

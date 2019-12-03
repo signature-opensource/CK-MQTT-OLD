@@ -1,8 +1,5 @@
 using System;
-using System.Collections.Generic;
-using CK.MQTT;
 using CK.MQTT.Sdk;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace CK.MQTT.Ssl

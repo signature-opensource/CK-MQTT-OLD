@@ -5,44 +5,41 @@ using CK.MQTT.Sdk.Flows;
 using CK.MQTT.Sdk.Packets;
 using CK.MQTT.Sdk.Storage;
 using System.Reactive.Subjects;
-using Xunit;
-using Xunit.Extensions;
 using CK.MQTT.Sdk;
+using FluentAssertions;
+using NUnit.Framework;
 
 namespace Tests
 {
     public class ProtocolFlowProviderSpec
 	{
-		[Theory]
-		[InlineData(MqttPacketType.ConnectAck, typeof(ClientConnectFlow))]
-		[InlineData(MqttPacketType.PingResponse, typeof(PingFlow))]
-		[InlineData(MqttPacketType.Publish, typeof(PublishReceiverFlow))]
-		[InlineData(MqttPacketType.PublishAck, typeof(PublishSenderFlow))]
-		[InlineData(MqttPacketType.PublishReceived, typeof(PublishSenderFlow))]
-		[InlineData(MqttPacketType.PublishRelease, typeof(PublishReceiverFlow))]
-		[InlineData(MqttPacketType.PublishComplete, typeof(PublishSenderFlow))]
-		[InlineData(MqttPacketType.SubscribeAck, typeof(ClientSubscribeFlow))]
-		[InlineData(MqttPacketType.UnsubscribeAck, typeof(ClientUnsubscribeFlow))]
+		[TestCase(MqttPacketType.ConnectAck, typeof(ClientConnectFlow))]
+		[TestCase(MqttPacketType.PingResponse, typeof(PingFlow))]
+		[TestCase(MqttPacketType.Publish, typeof(PublishReceiverFlow))]
+		[TestCase(MqttPacketType.PublishAck, typeof(PublishSenderFlow))]
+		[TestCase(MqttPacketType.PublishReceived, typeof(PublishSenderFlow))]
+		[TestCase(MqttPacketType.PublishRelease, typeof(PublishReceiverFlow))]
+		[TestCase(MqttPacketType.PublishComplete, typeof(PublishSenderFlow))]
+		[TestCase(MqttPacketType.SubscribeAck, typeof(ClientSubscribeFlow))]
+		[TestCase(MqttPacketType.UnsubscribeAck, typeof(ClientUnsubscribeFlow))]
 		public void when_getting_client_flow_from_valid_packet_type_then_succeeds(MqttPacketType packetType, Type flowType)
 		{
 			var flowProvider = new ClientProtocolFlowProvider (Mock.Of<IMqttTopicEvaluator> (), Mock.Of<IRepositoryProvider>(), new MqttConfiguration ());
 
 			var flow = flowProvider.GetFlow (packetType);
-
-			Assert.Equal (flowType, flow.GetType ());
+            flowType.Should().Be( flow.GetType() );
 		}
 
-		[Theory]
-		[InlineData(MqttPacketType.Connect, typeof(ServerConnectFlow))]
-		[InlineData(MqttPacketType.Disconnect, typeof(DisconnectFlow))]
-		[InlineData(MqttPacketType.PingRequest, typeof(PingFlow))]
-		[InlineData(MqttPacketType.Publish, typeof(ServerPublishReceiverFlow))]
-		[InlineData(MqttPacketType.PublishAck, typeof(PublishSenderFlow))]
-		[InlineData(MqttPacketType.PublishReceived, typeof(PublishSenderFlow))]
-		[InlineData(MqttPacketType.PublishRelease, typeof(ServerPublishReceiverFlow))]
-		[InlineData(MqttPacketType.PublishComplete, typeof(PublishSenderFlow))]
-		[InlineData(MqttPacketType.Subscribe, typeof(ServerSubscribeFlow))]
-		[InlineData(MqttPacketType.Unsubscribe, typeof(ServerUnsubscribeFlow))]
+		[TestCase(MqttPacketType.Connect, typeof(ServerConnectFlow))]
+		[TestCase(MqttPacketType.Disconnect, typeof(DisconnectFlow))]
+		[TestCase(MqttPacketType.PingRequest, typeof(PingFlow))]
+		[TestCase(MqttPacketType.Publish, typeof(ServerPublishReceiverFlow))]
+		[TestCase(MqttPacketType.PublishAck, typeof(PublishSenderFlow))]
+		[TestCase(MqttPacketType.PublishReceived, typeof(PublishSenderFlow))]
+		[TestCase(MqttPacketType.PublishRelease, typeof(ServerPublishReceiverFlow))]
+		[TestCase(MqttPacketType.PublishComplete, typeof(PublishSenderFlow))]
+		[TestCase(MqttPacketType.Subscribe, typeof(ServerSubscribeFlow))]
+		[TestCase(MqttPacketType.Unsubscribe, typeof(ServerUnsubscribeFlow))]
 		public void when_getting_server_flow_from_valid_packet_type_then_succeeds(MqttPacketType packetType, Type flowType)
 		{
 			var authenticationProvider = Mock.Of<IMqttAuthenticationProvider> (p => p.Authenticate (It.IsAny<string>(), It.IsAny<string> (), It.IsAny<string> ()) == true);
@@ -51,10 +48,10 @@ namespace Tests
 
 			var flow = flowProvider.GetFlow (packetType);
 
-			Assert.Equal (flowType, flow.GetType ());
+            flowType.Should().Be( flow.GetType() );
 		}
 
-		[Fact]
+		[Test]
 		public void when_getting_explicit_server_flow_from_type_then_succeeds()
 		{
 			var authenticationProvider = Mock.Of<IMqttAuthenticationProvider> (p => p.Authenticate (It.IsAny<string>(), It.IsAny<string> (), It.IsAny<string> ()) == true);
@@ -76,7 +73,7 @@ namespace Tests
 			Assert.NotNull (disconnectFlow);
 		}
 
-		[Fact]
+		[Test]
 		public void when_getting_explicit_client_flow_from_type_then_succeeds()
 		{
 			var flowProvider = new ClientProtocolFlowProvider (Mock.Of<IMqttTopicEvaluator> (), Mock.Of<IRepositoryProvider>(), new MqttConfiguration ());

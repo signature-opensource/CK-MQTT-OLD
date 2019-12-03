@@ -1,13 +1,13 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Threading.Tasks;
 using CK.MQTT;
 using CK.MQTT.Sdk.Formatters;
 using CK.MQTT.Sdk.Packets;
 using Moq;
-using Xunit;
-using Xunit.Extensions;
 using CK.MQTT.Sdk;
+using FluentAssertions;
+using NUnit.Framework;
 
 namespace Tests.Formatters
 {
@@ -23,8 +23,8 @@ namespace Tests.Formatters
 		}
 		
 		[Theory]
-		[InlineData("Files/Binaries/Publish_Full.packet", "Files/Packets/Publish_Full.json")]
-		[InlineData("Files/Binaries/Publish_Min.packet", "Files/Packets/Publish_Min.json")]
+		[TestCase("Files/Binaries/Publish_Full.packet", "Files/Packets/Publish_Full.json")]
+		[TestCase("Files/Binaries/Publish_Min.packet", "Files/Packets/Publish_Min.json")]
 		public async Task when_reading_publish_packet_then_succeeds(string packetPath, string jsonPath)
 		{
 			packetPath = Path.Combine (Environment.CurrentDirectory, packetPath);
@@ -38,13 +38,13 @@ namespace Tests.Formatters
 			var result = await formatter.FormatAsync (packet)
 				.ConfigureAwait(continueOnCapturedContext: false);
 
-			Assert.Equal (expectedPublish, result);
+			expectedPublish.Should().Be(result);
 		}
 
 		[Theory]
-		[InlineData("Files/Binaries/Publish_Invalid_QualityOfService.packet")]
-		[InlineData("Files/Binaries/Publish_Invalid_Duplicated.packet")]
-		[InlineData("Files/Binaries/Publish_Invalid_Topic.packet")]
+		[TestCase("Files/Binaries/Publish_Invalid_QualityOfService.packet")]
+		[TestCase("Files/Binaries/Publish_Invalid_Duplicated.packet")]
+		[TestCase("Files/Binaries/Publish_Invalid_Topic.packet")]
 		public void when_reading_invalid_publish_packet_then_fails(string packetPath)
 		{
 			packetPath = Path.Combine (Environment.CurrentDirectory, packetPath);
@@ -59,8 +59,8 @@ namespace Tests.Formatters
 		}
 
 		[Theory]
-		[InlineData("Files/Packets/Publish_Full.json", "Files/Binaries/Publish_Full.packet")]
-		[InlineData("Files/Packets/Publish_Min.json", "Files/Binaries/Publish_Min.packet")]
+		[TestCase("Files/Packets/Publish_Full.json", "Files/Binaries/Publish_Full.packet")]
+		[TestCase("Files/Packets/Publish_Min.json", "Files/Binaries/Publish_Min.packet")]
 		public async Task when_writing_publish_packet_then_succeeds(string jsonPath, string packetPath)
 		{
 			jsonPath = Path.Combine (Environment.CurrentDirectory, jsonPath);
@@ -74,13 +74,13 @@ namespace Tests.Formatters
 			var result = await formatter.FormatAsync (publish)
 				.ConfigureAwait(continueOnCapturedContext: false);
 
-			Assert.Equal (expectedPacket, result);
+			expectedPacket.Should().BeEquivalentTo( result);
 		}
 
 		[Theory]
-		[InlineData("Files/Packets/Publish_Invalid_Duplicated.json")]
-		[InlineData("Files/Packets/Publish_Invalid_Topic.json")]
-		[InlineData("Files/Packets/Publish_Invalid_PacketId.json")]
+		[TestCase("Files/Packets/Publish_Invalid_Duplicated.json")]
+		[TestCase("Files/Packets/Publish_Invalid_Topic.json")]
+		[TestCase("Files/Packets/Publish_Invalid_PacketId.json")]
 		public void when_writing_invalid_publish_packet_then_fails(string jsonPath)
 		{
 			jsonPath = Path.Combine (Environment.CurrentDirectory, jsonPath);

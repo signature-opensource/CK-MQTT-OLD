@@ -1,18 +1,18 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Threading.Tasks;
 using CK.MQTT.Sdk.Formatters;
 using CK.MQTT.Sdk.Packets;
-using Xunit;
-using Xunit.Extensions;
 using CK.MQTT;
+using FluentAssertions;
+using NUnit.Framework;
 
 namespace Tests.Formatters
 {
 	public class PublishAckFormatterSpec
 	{
 		[Theory]
-		[InlineData("Files/Binaries/PublishAck.packet", "Files/Packets/PublishAck.json")]
+		[TestCase("Files/Binaries/PublishAck.packet", "Files/Packets/PublishAck.json")]
 		public async Task when_reading_publish_ack_packet_then_succeeds(string packetPath, string jsonPath)
 		{
 			packetPath = Path.Combine (Environment.CurrentDirectory, packetPath);
@@ -25,11 +25,11 @@ namespace Tests.Formatters
 			var result = await formatter.FormatAsync (packet)
 				.ConfigureAwait(continueOnCapturedContext: false);
 
-			Assert.Equal (expectedPublishAck, result);
+			expectedPublishAck.Should().Be(result);
 		}
 
 		[Theory]
-		[InlineData("Files/Binaries/PublishAck_Invalid_HeaderFlag.packet")]
+		[TestCase("Files/Binaries/PublishAck_Invalid_HeaderFlag.packet")]
 		public void when_reading_invalid_publish_ack_packet_then_fails(string packetPath)
 		{
 			packetPath = Path.Combine (Environment.CurrentDirectory, packetPath);
@@ -43,7 +43,7 @@ namespace Tests.Formatters
 		}
 
 		[Theory]
-		[InlineData("Files/Packets/PublishAck.json", "Files/Binaries/PublishAck.packet")]
+		[TestCase("Files/Packets/PublishAck.json", "Files/Binaries/PublishAck.packet")]
 		public async Task when_writing_publish_ack_packet_then_succeeds(string jsonPath, string packetPath)
 		{
 			jsonPath = Path.Combine (Environment.CurrentDirectory, jsonPath);
@@ -56,7 +56,7 @@ namespace Tests.Formatters
 			var result = await formatter.FormatAsync (publishAck)
 				.ConfigureAwait(continueOnCapturedContext: false);
 
-			Assert.Equal (expectedPacket, result);
+			expectedPacket.Should().BeEquivalentTo(result);
 		}
 	}
 }

@@ -5,9 +5,9 @@ using CK.MQTT;
 using CK.MQTT.Sdk.Formatters;
 using CK.MQTT.Sdk.Packets;
 using Moq;
-using Xunit;
-using Xunit.Extensions;
 using CK.MQTT.Sdk;
+using FluentAssertions;
+using NUnit.Framework;
 
 namespace Tests.Formatters
 {
@@ -23,9 +23,9 @@ namespace Tests.Formatters
 		}
 		
 		[Theory]
-		[InlineData("Files/Binaries/PingResponse.packet", MqttPacketType.PingResponse, typeof(PingResponse))]
-		[InlineData("Files/Binaries/PingRequest.packet", MqttPacketType.PingRequest, typeof(PingRequest))]
-		[InlineData("Files/Binaries/Disconnect.packet", MqttPacketType.Disconnect, typeof(Disconnect))]
+		[TestCase("Files/Binaries/PingResponse.packet", MqttPacketType.PingResponse, typeof(PingResponse))]
+		[TestCase("Files/Binaries/PingRequest.packet", MqttPacketType.PingRequest, typeof(PingRequest))]
+		[TestCase("Files/Binaries/Disconnect.packet", MqttPacketType.Disconnect, typeof(Disconnect))]
 		public async Task when_reading_empty_packet_then_succeeds(string packetPath, MqttPacketType packetType, Type type)
 		{
 			packetPath = Path.Combine (Environment.CurrentDirectory, packetPath);
@@ -40,9 +40,9 @@ namespace Tests.Formatters
 		}
 
 		[Theory]
-		[InlineData("Files/Binaries/PingResponse_Invalid_HeaderFlag.packet", MqttPacketType.PingResponse, typeof(PingResponse))]
-		[InlineData("Files/Binaries/PingRequest_Invalid_HeaderFlag.packet", MqttPacketType.PingRequest, typeof(PingRequest))]
-		[InlineData("Files/Binaries/Disconnect_Invalid_HeaderFlag.packet", MqttPacketType.Disconnect, typeof(Disconnect))]
+		[TestCase("Files/Binaries/PingResponse_Invalid_HeaderFlag.packet", MqttPacketType.PingResponse, typeof(PingResponse))]
+		[TestCase("Files/Binaries/PingRequest_Invalid_HeaderFlag.packet", MqttPacketType.PingRequest, typeof(PingRequest))]
+		[TestCase("Files/Binaries/Disconnect_Invalid_HeaderFlag.packet", MqttPacketType.Disconnect, typeof(Disconnect))]
 		public void when_reading_invalid_empty_packet_then_fails(string packetPath, MqttPacketType packetType, Type type)
 		{
 			packetPath = Path.Combine (Environment.CurrentDirectory, packetPath);
@@ -56,9 +56,9 @@ namespace Tests.Formatters
 		}
 
 		[Theory]
-		[InlineData("Files/Binaries/PingResponse.packet", MqttPacketType.PingResponse, typeof(PingResponse))]
-		[InlineData("Files/Binaries/PingRequest.packet", MqttPacketType.PingRequest, typeof(PingRequest))]
-		[InlineData("Files/Binaries/Disconnect.packet", MqttPacketType.Disconnect, typeof(Disconnect))]
+		[TestCase("Files/Binaries/PingResponse.packet", MqttPacketType.PingResponse, typeof(PingResponse))]
+		[TestCase("Files/Binaries/PingRequest.packet", MqttPacketType.PingRequest, typeof(PingRequest))]
+		[TestCase("Files/Binaries/Disconnect.packet", MqttPacketType.Disconnect, typeof(Disconnect))]
 		public async Task when_writing_empty_packet_then_succeeds(string packetPath, MqttPacketType packetType, Type type)
 		{
 			packetPath = Path.Combine (Environment.CurrentDirectory, packetPath);
@@ -70,7 +70,7 @@ namespace Tests.Formatters
 			var result = await formatter.FormatAsync (packet)
 				.ConfigureAwait(continueOnCapturedContext: false);
 
-			Assert.Equal (expectedPacket, result);
+            expectedPacket.Should().BeEquivalentTo( result );
 		}
 
 		IFormatter GetFormatter(MqttPacketType packetType, Type type)

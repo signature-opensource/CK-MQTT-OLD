@@ -1,4 +1,4 @@
-﻿using Moq;
+using Moq;
 using System;
 using System.Collections.Generic;
 using CK.MQTT;
@@ -7,13 +7,14 @@ using CK.MQTT.Sdk.Flows;
 using CK.MQTT.Sdk.Packets;
 using CK.MQTT.Sdk.Storage;
 using System.Threading.Tasks;
-using Xunit;
+using FluentAssertions;
+using NUnit.Framework;
 
 namespace Tests.Flows
 {
 	public class UnsubscribeFlowSpec
 	{
-		[Fact]
+		[Test]
 		public async Task when_unsubscribing_existing_subscriptions_then_subscriptions_are_deleted_and_ack_is_sent()
 		{
 			var sessionRepository = new Mock<IRepository<ClientSession>> ();
@@ -53,15 +54,15 @@ namespace Tests.Flows
 				.ConfigureAwait(continueOnCapturedContext: false);
 
 			Assert.NotNull (response);
-			Assert.Equal (0, updatedSession.Subscriptions.Count);
+			0.Should().Be(updatedSession.Subscriptions.Count);
 
 			var unsubscribeAck = response as UnsubscribeAck;
 
 			Assert.NotNull (unsubscribeAck);
-			Assert.Equal (packetId, unsubscribeAck.PacketId);
+			packetId.Should().Be(unsubscribeAck.PacketId);
 		}
 
-		[Fact]
+		[Test]
 		public async Task when_unsubscribing_not_existing_subscriptions_then_ack_is_sent()
 		{
 			var sessionRepository = new Mock<IRepository<ClientSession>> ();
@@ -98,7 +99,7 @@ namespace Tests.Flows
 			var unsubscribeAck = response as UnsubscribeAck;
 
 			Assert.NotNull (unsubscribeAck);
-			Assert.Equal (packetId, unsubscribeAck.PacketId);
+			packetId.Should().Be(unsubscribeAck.PacketId);
 		}
 	}
 }

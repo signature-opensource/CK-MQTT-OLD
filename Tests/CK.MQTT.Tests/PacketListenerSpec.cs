@@ -1,4 +1,4 @@
-﻿using Moq;
+using Moq;
 using System;
 using CK.MQTT;
 using CK.MQTT.Sdk.Flows;
@@ -7,14 +7,14 @@ using CK.MQTT.Sdk.Storage;
 using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
-using Xunit;
 using CK.MQTT.Sdk;
+using NUnit.Framework;
 
 namespace Tests
 {
     public class PacketListenerSpec
 	{
-		[Fact]
+		[Test]
 		public void when_packet_is_received_then_it_is_dispatched_to_proper_flow()
 		{
 			var connectionProvider = new Mock<IConnectionProvider> ();
@@ -68,7 +68,7 @@ namespace Tests
 			flow.Verify (f => f.ExecuteAsync (It.Is<string> (s => s == clientId), It.Is<IPacket> (p => p is Publish), It.Is<IMqttChannel<IPacket>>(c => c == packetChannel.Object)));
 		}
 
-		[Fact]
+		[Test]
 		public void when_connect_received_then_client_id_is_added()
 		{
 			var connectionProvider = new Mock<IConnectionProvider> ();
@@ -93,7 +93,7 @@ namespace Tests
 			connectionProvider.Verify (m => m.AddConnection (It.Is<string> (s => s == clientId), It.Is<IMqttChannel<IPacket>> (c => c == packetChannel.Object)));
 		}
 
-		[Fact]
+		[Test]
 		public void when_no_connect_is_received_then_times_out()
 		{
 			var connectionProvider = new Mock<IConnectionProvider> ();
@@ -122,7 +122,7 @@ namespace Tests
 			Assert.True (timeoutOccurred);
 		}
 
-		[Fact]
+		[Test]
 		public void when_connect_is_received_then_does_not_time_out()
 		{
 			var connectionProvider = new Mock<IConnectionProvider> ();
@@ -154,7 +154,7 @@ namespace Tests
 			Assert.False (timeoutOccured);
 		}
 
-		[Fact]
+		[Test]
 		public void when_first_packet_is_not_connect_then_fails()
 		{
 			var connectionProvider = new Mock<IConnectionProvider> ();
@@ -182,7 +182,7 @@ namespace Tests
 			Assert.True (errorOccured);
 		}
 
-		[Fact]
+		[Test]
 		public void when_second_connect_received_then_fails()
 		{
 			var connectionProvider = new Mock<IConnectionProvider> ();
@@ -222,7 +222,7 @@ namespace Tests
 			connectionProvider.Verify (p => p.RemoveConnection (It.Is<string> (s => s == clientId)));
 		}
 
-		[Fact]
+		[Test]
 		public void when_keep_alive_enabled_and_no_packet_received_then_times_out ()
 		{
 			var connectionProvider = new Mock<IConnectionProvider> ();
@@ -271,7 +271,7 @@ namespace Tests
 			Assert.True (timeoutOccurred);
 		}
 
-		[Fact]
+		[Test]
 		public void when_keep_alive_enabled_and_packet_received_then_does_not_time_out ()
 		{
 			var connectionProvider = new Mock<IConnectionProvider> ();
@@ -309,7 +309,7 @@ namespace Tests
 			Assert.False (timeoutOccured);
 		}
 
-		[Fact]
+		[Test]
 		public void when_keep_alive_disabled_and_no_packet_received_then_does_not_time_out ()
 		{
 			var connectionProvider = new Mock<IConnectionProvider> ();

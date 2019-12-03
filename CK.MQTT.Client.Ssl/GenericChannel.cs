@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using CK.MQTT;
 using CK.MQTT.Sdk;
 using System.Net.Sockets;
 using System.Reactive.Concurrency;

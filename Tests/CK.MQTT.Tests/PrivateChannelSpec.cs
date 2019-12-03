@@ -1,14 +1,15 @@
-﻿using System;
+using System;
 using CK.MQTT;
 using CK.MQTT.Sdk.Bindings;
 using System.Threading.Tasks;
-using Xunit;
+using FluentAssertions;
+using NUnit.Framework;
 
 namespace Tests
 {
     public class PrivateChannelSpec
     {
-        [Fact]
+        [Test]
         public void when_creating_channel_with_stream_ready_then_it_is_connected ()
         {
             var configuration = new MqttConfiguration ();
@@ -20,7 +21,7 @@ namespace Tests
             Assert.NotNull (channel.SenderStream);
         }
 
-        [Fact]
+        [Test]
         public void when_creating_channel_with_stream_disposed_then_fails ()
         {
             var configuration = new MqttConfiguration ();
@@ -33,7 +34,7 @@ namespace Tests
             Assert.NotNull (ex);
          }
 
-        [Fact]
+        [Test]
         public async Task when_sending_packet_then_stream_receives_successfully ()
         {
             var configuration = new MqttConfiguration ();
@@ -56,10 +57,10 @@ namespace Tests
 
             await Task.Delay (TimeSpan.FromMilliseconds(1000));
 
-            Assert.Equal (5, packetsReceived);
+            5.Should().Be(packetsReceived);
         }
 
-        [Fact]
+        [Test]
         public async Task when_sending_to_stream_then_channel_receives_successfully ()
         {
             var configuration = new MqttConfiguration ();
@@ -80,10 +81,10 @@ namespace Tests
 
             await Task.Delay (TimeSpan.FromMilliseconds (1000));
 
-            Assert.Equal(5, packetsReceived);
+            5.Should().Be(packetsReceived);
         }
 
-        [Fact]
+        [Test]
         public void when_disposing_channel_then_became_disconnected ()
         {
             var configuration = new MqttConfiguration ();

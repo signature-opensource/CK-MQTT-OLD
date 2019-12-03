@@ -1,17 +1,17 @@
-﻿using Moq;
+using Moq;
 using System;
 using CK.MQTT.Sdk;
 using CK.MQTT.Sdk.Flows;
 using CK.MQTT.Sdk.Packets;
 using CK.MQTT.Sdk.Storage;
 using System.Threading.Tasks;
-using Xunit;
+using NUnit.Framework;
 
 namespace Tests.Flows
 {
 	public class DisconnectFlowSpec
 	{
-		[Fact]
+		[Test]
 		public async Task when_sending_disconnect_and_client_session_has_clean_state_then_disconnects_and_delete_will_and_session()
 		{
 			var connectionProvider = new Mock<IConnectionProvider> ();
@@ -39,7 +39,7 @@ namespace Tests.Flows
 			sessionRepository.Verify(r => r.Delete(It.Is<string>(s => s == session.Id)));
 		}
 
-		[Fact]
+		[Test]
 		public async Task when_sending_disconnect_and_client_session_has_persistent_state_then_disconnects_and_preserves_session()
 		{
 			var connectionProvider = new Mock<IConnectionProvider> ();

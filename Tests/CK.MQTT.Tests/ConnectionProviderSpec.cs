@@ -1,17 +1,18 @@
-﻿using Moq;
+using Moq;
 using System;
 using System.Linq;
 using CK.MQTT;
 using CK.MQTT.Sdk.Packets;
 using System.Reactive.Subjects;
-using Xunit;
 using CK.MQTT.Sdk;
+using FluentAssertions;
+using NUnit.Framework;
 
 namespace Tests
 {
 	public class ConnectionProviderSpec
 	{
-        [Fact]
+        [Test]
         public void when_registering_private_client_then_private_client_list_increases()
         {
             var provider = new ConnectionProvider ();
@@ -20,11 +21,10 @@ namespace Tests
             var clientId = Guid.NewGuid ().ToString ();
 
             provider.RegisterPrivateClient (clientId);
-
-            Assert.Equal (existingPrivateClients + 1, provider.PrivateClients.Count ());
+            provider.PrivateClients.Should().HaveCount( existingPrivateClients + 1 );
         }
 
-        [Fact]
+        [Test]
         public void when_registering_existing_private_client_then_fails()
         {
             var provider = new ConnectionProvider ();
@@ -38,7 +38,7 @@ namespace Tests
             Assert.NotNull (ex);
         }
 
-        [Fact]
+        [Test]
         public void when_removing_private_connection_then_private_client_list_decreases()
         {
             var provider = new ConnectionProvider ();
@@ -53,11 +53,10 @@ namespace Tests
             provider.RemoveConnection (clientId);
 
             var currentPrivateClients = provider.PrivateClients.Count ();
-
-            Assert.Equal (previousPrivateClients - 1, currentPrivateClients);
+            currentPrivateClients.Should().Be( previousPrivateClients - 1 );
         }
 
-        [Fact]
+        [Test]
 		public void when_adding_new_client_then_connection_list_increases()
 		{
 			var provider = new ConnectionProvider ();
@@ -66,11 +65,10 @@ namespace Tests
 			var clientId = Guid.NewGuid ().ToString ();
 
 			provider.AddConnection (clientId, Mock.Of<IMqttChannel<IPacket>> (c => c.IsConnected == true));
-
-			Assert.Equal (existingClients + 1, provider.Connections);
+            provider.Connections.Should().Be( existingClients + 1 );
 		}
 
-		[Fact]
+		[Test]
 		public void when_adding_disconnected_client_then_active_clients_list_does_not_increases()
 		{
 			var provider = new ConnectionProvider ();
@@ -80,10 +78,10 @@ namespace Tests
 
 			provider.AddConnection (clientId, Mock.Of<IMqttChannel<IPacket>> (c => c.IsConnected == false));
 
-			Assert.Equal (existingClients, provider.ActiveClients.Count());
+            provider.ActiveClients.Should().HaveCount( existingClients );
 		}
 
-		[Fact]
+		[Test]
 		public void when_adding_new_client_and_disconnect_it_then_active_clients_list_decreases()
 		{
 			var provider = new ConnectionProvider ();
@@ -102,12 +100,11 @@ namespace Tests
 			connection.Setup (c => c.IsConnected).Returns (false);
 
 			var finalClients = provider.ActiveClients.Count();
-
-			Assert.Equal (existingClients + 1, currentClients);
-			Assert.Equal (existingClients, finalClients);
+            currentClients.Should().Be( existingClients + 1 );
+            existingClients.Should().Be( finalClients );
 		}
 
-		[Fact]
+		[Test]
 		public void when_removing_clients_then_connection_list_decreases()
 		{
 			var provider = new ConnectionProvider ();
@@ -123,12 +120,11 @@ namespace Tests
 			provider.RemoveConnection (clientId);
 
 			var finalClients = provider.Connections;
-
-            Assert.Equal (initialClients + 1, newClients);
-            Assert.Equal (initialClients, finalClients);
+            newClients.Should().Be( initialClients + 1 );
+            initialClients.Should().Be( finalClients );
 		}
 
-		[Fact]
+		[Test]
 		public void when_adding_existing_client_id_then_existing_client_is_disconnected()
 		{
 			var provider = new ConnectionProvider ();
@@ -154,7 +150,7 @@ namespace Tests
 			channel2.Verify(c => c.Dispose(), Times.Never);
 		}
 
-		[Fact]
+		[Test]
 		public void when_getting_connection_from_client_then_succeeds()
 		{
 			var provider = new ConnectionProvider ();
@@ -167,7 +163,7 @@ namespace Tests
 			Assert.NotNull (connection);
 		}
 
-		[Fact]
+		[Test]
 		public void when_getting_connection_from_disconnected_client_then_no_connection_is_returned()
 		{
 			var provider = new ConnectionProvider ();

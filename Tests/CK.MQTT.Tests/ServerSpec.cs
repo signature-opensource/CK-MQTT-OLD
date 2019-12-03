@@ -1,18 +1,19 @@
-﻿using Moq;
+using Moq;
 using System;
 using CK.MQTT;
 using CK.MQTT.Sdk.Flows;
 using CK.MQTT.Sdk.Packets;
 using System.Reactive.Subjects;
 using System.Threading.Tasks;
-using Xunit;
 using CK.MQTT.Sdk;
+using FluentAssertions;
+using NUnit.Framework;
 
 namespace Tests
 {
     public class ServerSpec
 	{
-		[Fact]
+		[Test]
 		public void when_server_does_not_start_then_connections_are_ignored ()
 		{
 			var sockets = new Subject<IMqttChannel<byte[]>> ();
@@ -47,10 +48,10 @@ namespace Tests
 			sockets.OnNext (Mock.Of<IMqttChannel<byte[]>> (x => x.ReceiverStream == new Subject<byte[]> ()));
 			sockets.OnNext (Mock.Of<IMqttChannel<byte[]>> (x => x.ReceiverStream == new Subject<byte[]> ()));
 
-			Assert.Equal (0, server.ActiveConnections);
+			0.Should().Be(server.ActiveConnections);
 		}
 
-		[Fact]
+		[Test]
 		public void when_connection_established_then_active_connections_increases ()
 		{
 			var sockets = new Subject<IMqttChannel<byte[]>> ();
@@ -87,10 +88,10 @@ namespace Tests
 			sockets.OnNext (Mock.Of<IMqttChannel<byte[]>> (x => x.ReceiverStream == new Subject<byte[]> ()));
 			sockets.OnNext (Mock.Of<IMqttChannel<byte[]>> (x => x.ReceiverStream == new Subject<byte[]> ()));
 
-			Assert.Equal (3, server.ActiveConnections);
+			3.Should().Be(server.ActiveConnections);
 		}
 
-		[Fact]
+		[Test]
 		public void when_server_closed_then_pending_connection_is_closed ()
 		{
 			var sockets = new Subject<IMqttChannel<byte[]>> ();
@@ -131,7 +132,7 @@ namespace Tests
 			packetChannel.Verify (x => x.Dispose ());
 		}
 
-		[Fact]
+		[Test]
 		public async Task when_receiver_error_then_closes_connection ()
 		{
 			var sockets = new Subject<IMqttChannel<byte[]>> ();

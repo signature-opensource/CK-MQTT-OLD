@@ -1,16 +1,17 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using CK.MQTT.Sdk.Flows;
 using CK.MQTT.Sdk.Packets;
 using Moq;
-using Xunit;
 using CK.MQTT.Sdk;
+using FluentAssertions;
+using NUnit.Framework;
 
 namespace Tests.Flows
 {
 	public class PingFlowSpec
 	{
-		[Fact]
+		[Test]
 		public async Task when_sending_ping_request_then_ping_response_is_sent()
 		{
 			var clientId = Guid.NewGuid ().ToString ();
@@ -29,7 +30,7 @@ namespace Tests.Flows
 			var pingResponse = sentPacket as PingResponse;
 
 			Assert.NotNull (pingResponse);
-			Assert.Equal (MqttPacketType.PingResponse, pingResponse.Type);
+			MqttPacketType.PingResponse.Should().Be(pingResponse.Type);
 		}
 	}
 }

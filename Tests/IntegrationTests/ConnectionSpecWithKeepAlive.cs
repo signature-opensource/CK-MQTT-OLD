@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using IntegrationTests.Context;
-using Xunit;
 using CK.MQTT;
+using NUnit.Framework;
 
 namespace IntegrationTests
 {
@@ -19,7 +19,7 @@ namespace IntegrationTests
 			server = GetServerAsync ().Result;
 		}
 
-		[Fact]
+		[Test]
 		public async Task when_keep_alive_enabled_and_client_is_disposed_then_server_refresh_active_client_list()
 		{
 			var client = await GetClientAsync ();
@@ -65,7 +65,7 @@ namespace IntegrationTests
 			Assert.False (server.ActiveClients.Any (c => c == clientId));
 		}
 
-		[Fact]
+		[Test]
 		public async Task when_keep_alive_enabled_and_no_packets_are_sent_then_connection_is_maintained()
 		{
 			var client = await GetClientAsync ();

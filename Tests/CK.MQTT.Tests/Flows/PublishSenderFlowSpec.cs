@@ -1,4 +1,4 @@
-﻿using Moq;
+using Moq;
 using System;
 using System.Collections.Generic;
 using CK.MQTT;
@@ -10,13 +10,13 @@ using System.Reactive.Subjects;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Xunit;
+using NUnit.Framework;
 
 namespace Tests.Flows
 {
 	public class PublishSenderFlowSpec
 	{
-		[Fact]
+		[Test]
 		public void when_sending_publish_with_qos1_and_publish_ack_is_not_received_then_publish_is_re_transmitted()
 		{
 			var clientId = Guid.NewGuid ().ToString ();
@@ -76,7 +76,7 @@ namespace Tests.Flows
 				((Publish)p).PacketId == packetId)), Times.AtLeast(2));
 		}
 
-		[Fact]
+		[Test]
 		public void when_sending_publish_with_qos2_and_publish_received_is_not_received_then_publish_is_re_transmitted()
 		{
 			var clientId = Guid.NewGuid ().ToString ();
@@ -136,7 +136,7 @@ namespace Tests.Flows
 				((Publish)p).PacketId == packetId)), Times.AtLeast(2));
 		}
 
-		[Fact]
+		[Test]
 		public void when_sending_publish_received_then_publish_release_is_sent()
 		{
 			var clientId = Guid.NewGuid ().ToString ();
@@ -185,7 +185,7 @@ namespace Tests.Flows
 				&& (p as PublishRelease).PacketId == packetId)), Times.AtLeastOnce);
 		}
 
-		[Fact]
+		[Test]
 		public void when_sending_publish_received_and_no_complete_is_sent_after_receiving_publish_release_then_publish_release_is_re_transmitted()
 		{
 			var clientId = Guid.NewGuid ().ToString ();

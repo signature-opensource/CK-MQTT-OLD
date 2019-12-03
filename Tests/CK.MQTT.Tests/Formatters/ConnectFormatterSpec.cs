@@ -1,18 +1,19 @@
-﻿using System;
+using System;
 using System.IO;
 using CK.MQTT;
 using CK.MQTT.Sdk.Formatters;
 using CK.MQTT.Sdk.Packets;
 using System.Threading.Tasks;
-using Xunit;
+using FluentAssertions;
+using NUnit.Framework;
 
 namespace Tests.Formatters
 {
 	public class ConnectFormatterSpec
 	{
 		[Theory]
-		[InlineData("Files/Binaries/Connect_Full.packet", "Files/Packets/Connect_Full.json")]
-		[InlineData("Files/Binaries/Connect_Min.packet", "Files/Packets/Connect_Min.json")]
+		[TestCase("Files/Binaries/Connect_Full.packet", "Files/Packets/Connect_Full.json")]
+		[TestCase("Files/Binaries/Connect_Min.packet", "Files/Packets/Connect_Min.json")]
 		public async Task when_reading_connect_packet_then_succeeds(string packetPath, string jsonPath)
 		{
 			packetPath = Path.Combine (Environment.CurrentDirectory, packetPath);
@@ -25,17 +26,17 @@ namespace Tests.Formatters
 			var result = await formatter.FormatAsync (packet)
 				.ConfigureAwait(continueOnCapturedContext: false);
 
-			Assert.Equal (expectedConnect, result);
+			expectedConnect.Should().Be(result);
 		}
 
 		[Theory]
-		[InlineData("Files/Binaries/Connect_Invalid_HeaderFlag.packet")]
-		[InlineData("Files/Binaries/Connect_Invalid_ProtocolName.packet")]
-		[InlineData("Files/Binaries/Connect_Invalid_ConnectReservedFlag.packet")]
-		[InlineData("Files/Binaries/Connect_Invalid_QualityOfService.packet")]
-		[InlineData("Files/Binaries/Connect_Invalid_WillFlags.packet")]
-		[InlineData("Files/Binaries/Connect_Invalid_UserNamePassword.packet")]
-		[InlineData("Files/Binaries/Connect_Invalid_ProtocolLevel.packet")]
+		[TestCase("Files/Binaries/Connect_Invalid_HeaderFlag.packet")]
+		[TestCase("Files/Binaries/Connect_Invalid_ProtocolName.packet")]
+		[TestCase("Files/Binaries/Connect_Invalid_ConnectReservedFlag.packet")]
+		[TestCase("Files/Binaries/Connect_Invalid_QualityOfService.packet")]
+		[TestCase("Files/Binaries/Connect_Invalid_WillFlags.packet")]
+		[TestCase("Files/Binaries/Connect_Invalid_UserNamePassword.packet")]
+		[TestCase("Files/Binaries/Connect_Invalid_ProtocolLevel.packet")]
 		public void when_reading_invalid_connect_packet_then_fails(string packetPath)
 		{
 			packetPath = Path.Combine (Environment.CurrentDirectory, packetPath);
@@ -49,8 +50,8 @@ namespace Tests.Formatters
 		}
 
 		[Theory]
-		[InlineData("Files/Binaries/Connect_Invalid_ClientIdEmptyAndNoCleanSession.packet")]
-		[InlineData("Files/Binaries/Connect_Invalid_ClientIdBadFormat.packet")]
+		[TestCase("Files/Binaries/Connect_Invalid_ClientIdEmptyAndNoCleanSession.packet")]
+		[TestCase("Files/Binaries/Connect_Invalid_ClientIdBadFormat.packet")]
         public void when_reading_invalid_client_id_in_connect_packet_then_fails(string packetPath)
 		{
 			packetPath = Path.Combine (Environment.CurrentDirectory, packetPath);
@@ -64,8 +65,8 @@ namespace Tests.Formatters
 		}
 
 		[Theory]
-		[InlineData("Files/Packets/Connect_Full.json", "Files/Binaries/Connect_Full.packet")]
-		[InlineData("Files/Packets/Connect_Min.json", "Files/Binaries/Connect_Min.packet")]
+		[TestCase("Files/Packets/Connect_Full.json", "Files/Binaries/Connect_Full.packet")]
+		[TestCase("Files/Packets/Connect_Min.json", "Files/Binaries/Connect_Min.packet")]
 		public async Task when_writing_connect_packet_then_succeeds(string jsonPath, string packetPath)
 		{
 			jsonPath = Path.Combine (Environment.CurrentDirectory, jsonPath);
@@ -78,13 +79,13 @@ namespace Tests.Formatters
 			var result = await formatter.FormatAsync (connect)
 				.ConfigureAwait(continueOnCapturedContext: false);
 
-			Assert.Equal (expectedPacket, result);
+			expectedPacket.Should().BeEquivalentTo(result);
 		}
 
 		[Theory]
-		[InlineData("Files/Packets/Connect_Invalid_UserNamePassword.json")]
-		[InlineData("Files/Packets/Connect_Invalid_ClientIdBadFormat.json")]
-		[InlineData("Files/Packets/Connect_Invalid_ClientIdInvalidLength.json")]
+		[TestCase("Files/Packets/Connect_Invalid_UserNamePassword.json")]
+		[TestCase("Files/Packets/Connect_Invalid_ClientIdBadFormat.json")]
+		[TestCase("Files/Packets/Connect_Invalid_ClientIdInvalidLength.json")]
 		public void when_writing_invalid_connect_packet_then_fails(string jsonPath)
 		{
 			jsonPath = Path.Combine (Environment.CurrentDirectory, jsonPath);

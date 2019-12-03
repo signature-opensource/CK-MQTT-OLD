@@ -12,13 +12,15 @@ using System.Reactive.Subjects;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Xunit;
+using FluentAssertions;
+using NUnit.Framework;
 
 namespace Tests.Flows
 {
+    [TestFixture]
 	public class PublishReceiverFlowSpec
 	{
-		[Fact]
+		[Test]
 		public async Task when_sending_publish_with_qos0_then_publish_is_sent_to_subscribers_and_no_ack_is_sent()
 		{
 			var clientId = Guid.NewGuid ().ToString ();
@@ -37,7 +39,7 @@ namespace Tests.Flows
 			var packetIdProvider = Mock.Of<IPacketIdProvider> ();
             var undeliveredMessagesListener = new Subject<MqttUndeliveredMessage> ();
 
-			var topic = "foo/bar";
+			const string topic = "foo/bar";
 
 			var flow = new ServerPublishReceiverFlow (topicEvaluator.Object, connectionProvider.Object,
 				publishSenderFlow.Object, retainedRepository.Object, sessionRepository.Object, willRepository.Object, 
@@ -45,8 +47,8 @@ namespace Tests.Flows
 
 			var subscribedClientId1 = Guid.NewGuid().ToString();
 			var subscribedClientId2 = Guid.NewGuid().ToString();
-			var requestedQoS1 = MqttQualityOfService.AtLeastOnce;
-			var requestedQoS2 = MqttQualityOfService.ExactlyOnce;
+			const MqttQualityOfService requestedQoS1 = MqttQualityOfService.AtLeastOnce;
+			const MqttQualityOfService requestedQoS2 = MqttQualityOfService.ExactlyOnce;
 			var sessions = new List<ClientSession> { 
 				new ClientSession (subscribedClientId1,  clean: false) {
 					Subscriptions = new List<ClientSubscription> { 
@@ -80,11 +82,12 @@ namespace Tests.Flows
 				.Setup (p => p.GetConnection (It.Is<string> (s => s == subscribedClientId2)))
 				.Returns (client2Channel.Object);
 
-			var publish = new Publish (topic, MqttQualityOfService.AtMostOnce, retain: false, duplicated: false);
+            var publish = new Publish( topic, MqttQualityOfService.AtMostOnce, retain: false, duplicated: false )
+            {
+                Payload = Encoding.UTF8.GetBytes( "Publish Receiver Flow Test" )
+            };
 
-			publish.Payload = Encoding.UTF8.GetBytes ("Publish Receiver Flow Test");
-
-			var receiver = new Subject<IPacket> ();
+            var receiver = new Subject<IPacket> ();
 			var channel = new Mock<IMqttChannel<IPacket>> ();
 
 			channel.Setup (c => c.ReceiverStream).Returns (receiver);
@@ -104,7 +107,7 @@ namespace Tests.Flows
 			channel.Verify (c => c.SendAsync (It.IsAny<IPacket> ()), Times.Never);
 		}
 
-		[Fact]
+		[Test]
 		public async Task when_sending_publish_with_qos1_then_publish_is_sent_to_subscribers_and_publish_ack_is_sent()
 		{
 			var clientId = Guid.NewGuid ().ToString ();
@@ -152,11 +155,12 @@ namespace Tests.Flows
 				.Returns (clientChannel.Object);
 
 			var packetId = (ushort?)new Random ().Next (0, ushort.MaxValue);
-			var publish = new Publish (topic, MqttQualityOfService.AtLeastOnce, retain: false, duplicated: false, packetId: packetId);
+            var publish = new Publish( topic, MqttQualityOfService.AtLeastOnce, retain: false, duplicated: false, packetId: packetId )
+            {
+                Payload = Encoding.UTF8.GetBytes( "Publish Flow Test" )
+            };
 
-			publish.Payload = Encoding.UTF8.GetBytes ("Publish Flow Test");
-
-			var receiver = new Subject<IPacket> ();
+            var receiver = new Subject<IPacket> ();
 			var channel = new Mock<IMqttChannel<IPacket>> ();
 
 			channel.Setup (c => c.IsConnected).Returns (true);
@@ -171,13 +175,15 @@ namespace Tests.Flows
 					p.Payload.ToList().SequenceEqual(publish.Payload)),
 				It.Is<IMqttChannel<IPacket>>(c => c == clientChannel.Object), It.Is<PendingMessageStatus>(x => x == PendingMessageStatus.PendingToSend)));
 			channel.Verify (c => c.SendAsync (It.Is<IPacket> (p => p is PublishAck && 
-				(p as PublishAck).PacketId == packetId.Value)));
+				((PublishAck) p).PacketId == packetId.Value)));
 		}
 
-		[Fact (Skip = "To be investigated and fixed accordingly")]
+		[Test]
 		public async Task when_sending_publish_with_qos2_then_publish_is_sent_to_subscribers_and_publish_received_is_sent()
 		{
-			var clientId = Guid.NewGuid ().ToString ();
+            Assume.That( false, "To be investigated and fixed accordingly." );
+
+            var clientId = Guid.NewGuid ().ToString ();
 
 			var configuration = new MqttConfiguration { MaximumQualityOfService = MqttQualityOfService.ExactlyOnce };
 			var topicEvaluator = new Mock<IMqttTopicEvaluator> ();
@@ -199,7 +205,7 @@ namespace Tests.Flows
 			var packetIdProvider = Mock.Of<IPacketIdProvider> ();
             var undeliveredMessagesListener = new Subject<MqttUndeliveredMessage> ();
 
-            var topic = "foo/bar";
+            const string topic = "foo/bar";
 
 			var flow = new ServerPublishReceiverFlow (topicEvaluator.Object, connectionProvider.Object, publishSenderFlow.Object, 
 				retainedRepository.Object, sessionRepository.Object, willRepository.Object, packetIdProvider, undeliveredMessagesListener, configuration);
@@ -224,11 +230,12 @@ namespace Tests.Flows
 				.Setup (p => p.GetConnection (It.Is<string> (s => s == subscribedClientId)))
 				.Returns (clientChannel.Object);
 
-			var publish = new Publish (topic, MqttQualityOfService.ExactlyOnce, retain: false, duplicated: false, packetId: packetId);
+            var publish = new Publish( topic, MqttQualityOfService.ExactlyOnce, retain: false, duplicated: false, packetId: packetId )
+            {
+                Payload = Encoding.UTF8.GetBytes( "Publish Flow Test" )
+            };
 
-			publish.Payload = Encoding.UTF8.GetBytes ("Publish Flow Test");
-
-			var receiver = new Subject<IPacket> ();
+            var receiver = new Subject<IPacket> ();
 			var sender = new Subject<IPacket> ();
 			var channelMock = new Mock<IMqttChannel<IPacket>> ();
 
@@ -263,9 +270,9 @@ namespace Tests.Flows
 				It.Is<IMqttChannel<IPacket>>(c => c == clientChannel.Object), It.Is<PendingMessageStatus>(x => x == PendingMessageStatus.PendingToSend)));
 			retainedRepository.Verify (r => r.Create (It.IsAny<RetainedMessage> ()), Times.Never);
 			channelMock.Verify (c => c.SendAsync (It.Is<IPacket> (p => p is PublishReceived && (p as PublishReceived).PacketId == packetId.Value)));
-		}
+        }
 
-		[Fact]
+		[Test]
 		public void when_sending_publish_with_qos2_and_no_release_is_sent_after_receiving_publish_received_then_publish_received_is_re_transmitted()
 		{
 			var clientId = Guid.NewGuid ().ToString ();
@@ -311,11 +318,12 @@ namespace Tests.Flows
 			sessionRepository.Setup (r => r.ReadAll ()).Returns ( sessions.AsQueryable());
 
 			var packetId = (ushort?)new Random ().Next (0, ushort.MaxValue);
-			var publish = new Publish (topic, MqttQualityOfService.ExactlyOnce, retain: false, duplicated: false, packetId: packetId);
+            var publish = new Publish( topic, MqttQualityOfService.ExactlyOnce, retain: false, duplicated: false, packetId: packetId )
+            {
+                Payload = Encoding.UTF8.GetBytes( "Publish Receiver Flow Test" )
+            };
 
-			publish.Payload = Encoding.UTF8.GetBytes ("Publish Receiver Flow Test");
-
-			var receiver = new Subject<IPacket> ();
+            var receiver = new Subject<IPacket> ();
 			var sender = new Subject<IPacket> ();
 			var channel = new Mock<IMqttChannel<IPacket>> ();
 
@@ -348,7 +356,7 @@ namespace Tests.Flows
 				&& (p as PublishReceived).PacketId == packetId)), Times.AtLeast(2));
 		}
 
-		[Fact]
+		[Test]
 		public async Task when_sending_publish_with_retain_then_retain_message_is_created()
 		{
 			var clientId = Guid.NewGuid ().ToString ();
@@ -378,11 +386,12 @@ namespace Tests.Flows
 
 			var qos = MqttQualityOfService.AtMostOnce;
 			var payload = "Publish Flow Test";
-			var publish = new Publish (topic, qos, retain: true, duplicated: false);
+            var publish = new Publish( topic, qos, retain: true, duplicated: false )
+            {
+                Payload = Encoding.UTF8.GetBytes( payload )
+            };
 
-			publish.Payload = Encoding.UTF8.GetBytes (payload);
-
-			var receiver = new Subject<IPacket> ();
+            var receiver = new Subject<IPacket> ();
 			var channel = new Mock<IMqttChannel<IPacket>> ();
 
 			channel.Setup (c => c.ReceiverStream).Returns (receiver);
@@ -397,7 +406,7 @@ namespace Tests.Flows
 			channel.Verify (c => c.SendAsync (It.IsAny<IPacket> ()), Times.Never);
 		}
 
-		[Fact]
+		[Test]
 		public async Task when_sending_publish_with_retain_then_retain_message_is_replaced()
 		{
 			var clientId = Guid.NewGuid ().ToString ();
@@ -429,11 +438,12 @@ namespace Tests.Flows
 
 			var qos = MqttQualityOfService.AtMostOnce;
 			var payload = "Publish Flow Test";
-			var publish = new Publish (topic, qos, retain: true, duplicated: false);
+            var publish = new Publish( topic, qos, retain: true, duplicated: false )
+            {
+                Payload = Encoding.UTF8.GetBytes( payload )
+            };
 
-			publish.Payload = Encoding.UTF8.GetBytes (payload);
-
-			var receiver = new Subject<IPacket> ();
+            var receiver = new Subject<IPacket> ();
 			var channel = new Mock<IMqttChannel<IPacket>> ();
 
 			channel.Setup (c => c.ReceiverStream).Returns (receiver);
@@ -449,7 +459,7 @@ namespace Tests.Flows
 			channel.Verify (c => c.SendAsync (It.IsAny<IPacket> ()), Times.Never);
 		}
 
-		[Fact]
+		[Test]
 		public async Task when_sending_publish_with_qos_higher_than_supported_then_supported_is_used()
 		{
 			var clientId = Guid.NewGuid ().ToString ();
@@ -496,11 +506,12 @@ namespace Tests.Flows
 				.Returns (clientChannel.Object);
 
 			var packetId = (ushort?)new Random ().Next (0, ushort.MaxValue);
-			var publish = new Publish (topic, MqttQualityOfService.ExactlyOnce, retain: false, duplicated: false, packetId: packetId);
+            var publish = new Publish( topic, MqttQualityOfService.ExactlyOnce, retain: false, duplicated: false, packetId: packetId )
+            {
+                Payload = Encoding.UTF8.GetBytes( "Publish Flow Test" )
+            };
 
-			publish.Payload = Encoding.UTF8.GetBytes ("Publish Flow Test");
-
-			var receiver = new Subject<IPacket> ();
+            var receiver = new Subject<IPacket> ();
 			var channel = new Mock<IMqttChannel<IPacket>> ();
 
 			channel.Setup (c => c.IsConnected).Returns (true);
@@ -517,7 +528,7 @@ namespace Tests.Flows
 			channel.Verify (c => c.SendAsync (It.Is<IPacket> (p => p is PublishAck && (p as PublishAck).PacketId == packetId.Value)));
 		}
 		
-		[Fact]
+		[Test]
 		public void when_sending_publish_with_qos_higher_than_zero_and_without_packet_id_then_fails()
 		{
 			var clientId = Guid.NewGuid ().ToString ();
@@ -545,11 +556,12 @@ namespace Tests.Flows
 
 			sessionRepository.Setup (r => r.ReadAll ()).Returns (sessions.AsQueryable());
 
-			var publish = new Publish (topic, MqttQualityOfService.AtLeastOnce, retain: false, duplicated: false);
+            var publish = new Publish( topic, MqttQualityOfService.AtLeastOnce, retain: false, duplicated: false )
+            {
+                Payload = Encoding.UTF8.GetBytes( "Publish Flow Test" )
+            };
 
-			publish.Payload = Encoding.UTF8.GetBytes ("Publish Flow Test");
-
-			var receiver = new Subject<IPacket> ();
+            var receiver = new Subject<IPacket> ();
 			var channel = new Mock<IMqttChannel<IPacket>> ();
 
 			channel.Setup (c => c.ReceiverStream).Returns (receiver);
@@ -562,7 +574,7 @@ namespace Tests.Flows
 			Assert.True (ex.InnerException is MqttException);
 		}
 
-		[Fact]
+		[Test]
 		public async Task when_sending_publish_and_subscriber_with_qos1_send_publish_ack_then_publish_is_not_re_transmitted()
 		{
 			var clientId = Guid.NewGuid ().ToString ();
@@ -620,11 +632,12 @@ namespace Tests.Flows
 				.Returns (clientChannel.Object);
 
 			var packetId = (ushort?)new Random ().Next (0, ushort.MaxValue);
-			var publish = new Publish (topic, MqttQualityOfService.ExactlyOnce, retain: false, duplicated: false, packetId: packetId);
+            var publish = new Publish( topic, MqttQualityOfService.ExactlyOnce, retain: false, duplicated: false, packetId: packetId )
+            {
+                Payload = Encoding.UTF8.GetBytes( "Publish Receiver Flow Test" )
+            };
 
-			publish.Payload = Encoding.UTF8.GetBytes ("Publish Receiver Flow Test");
-
-			var receiver = new Subject<IPacket> ();
+            var receiver = new Subject<IPacket> ();
 			var channel = new Mock<IMqttChannel<IPacket>> ();
 
 			channel.Setup (c => c.ReceiverStream).Returns (receiver);
@@ -639,7 +652,7 @@ namespace Tests.Flows
 			clientChannel.Verify (c => c.SendAsync (It.Is<IPacket> (p => p is Publish)), Times.Never);
 		}
 
-		[Fact]
+		[Test]
 		public async Task when_sending_publish_and_subscriber_with_qos2_send_publish_received_then_publish_is_not_re_transmitted()
 		{
 			var clientId = Guid.NewGuid ().ToString ();
@@ -697,11 +710,12 @@ namespace Tests.Flows
 				.Returns (clientChannel.Object);
 
 			var packetId = (ushort?)new Random ().Next (0, ushort.MaxValue);
-			var publish = new Publish (topic, MqttQualityOfService.ExactlyOnce, retain: false, duplicated: false, packetId: packetId);
+            var publish = new Publish( topic, MqttQualityOfService.ExactlyOnce, retain: false, duplicated: false, packetId: packetId )
+            {
+                Payload = Encoding.UTF8.GetBytes( "Publish Receiver Flow Test" )
+            };
 
-			publish.Payload = Encoding.UTF8.GetBytes ("Publish Receiver Flow Test");
-
-			var receiver = new Subject<IPacket> ();
+            var receiver = new Subject<IPacket> ();
 			var channel = new Mock<IMqttChannel<IPacket>> ();
 
 			channel.Setup (c => c.ReceiverStream).Returns (receiver);
@@ -716,7 +730,7 @@ namespace Tests.Flows
 			clientChannel.Verify (c => c.SendAsync (It.Is<IPacket> (p => p is Publish)), Times.Never);
 		}
 
-		[Fact]
+		[Test]
 		public async Task when_sending_publish_release_then_publish_complete_is_sent()
 		{
 			var clientId = Guid.NewGuid ().ToString ();
@@ -753,7 +767,7 @@ namespace Tests.Flows
 			channel.Verify (c => c.SendAsync (It.Is<IPacket> (p => p is PublishComplete && (p as PublishComplete).PacketId == packetId)));
 		}
 
-        [Fact]
+        [Test]
         public void when_sending_publish_to_a_system_topic_with_remote_client_then_fails()
         {
             var clientId = Guid.NewGuid ().ToString ();
@@ -780,9 +794,10 @@ namespace Tests.Flows
                 publishSenderFlow.Object, retainedRepository.Object, sessionRepository.Object, willRepository.Object,
                 packetIdProvider, undeliveredMessagesListener, configuration.Object);
 
-            var publish = new Publish (systemTopic, MqttQualityOfService.AtMostOnce, retain: false, duplicated: false);
-
-            publish.Payload = Encoding.UTF8.GetBytes ("Publish Receiver Flow Test");
+            var publish = new Publish( systemTopic, MqttQualityOfService.AtMostOnce, retain: false, duplicated: false )
+            {
+                Payload = Encoding.UTF8.GetBytes( "Publish Receiver Flow Test" )
+            };
 
             var receiver = new Subject<IPacket> ();
             var channel = new Mock<IMqttChannel<IPacket>> ();
@@ -794,10 +809,13 @@ namespace Tests.Flows
             Assert.NotNull (ex);
             Assert.NotNull (ex.InnerException);
             Assert.True (ex.InnerException is MqttException);
-            Assert.Equal (ServerProperties.Resources.GetString("ServerPublishReceiverFlow_SystemMessageNotAllowedForClient"), ex.InnerException.Message);
+            ex.InnerException.Message.Should()
+                .Be(
+                    ServerProperties.Resources.GetString(
+                        "ServerPublishReceiverFlow_SystemMessageNotAllowedForClient" ) );
         }
 
-        [Fact]
+        [Test]
         public async Task when_sending_publish_to_a_system_topic_with_private_client_then_succeeds()
         {
             var clientId = Guid.NewGuid ().ToString ();
@@ -827,9 +845,10 @@ namespace Tests.Flows
                 publishSenderFlow.Object, retainedRepository.Object, sessionRepository.Object, willRepository.Object,
                 packetIdProvider, undeliveredMessagesListener, configuration.Object);
 
-            var publish = new Publish (systemTopic, MqttQualityOfService.AtMostOnce, retain: false, duplicated: false);
-
-            publish.Payload = Encoding.UTF8.GetBytes ("Publish Receiver Flow Test");
+            var publish = new Publish( systemTopic, MqttQualityOfService.AtMostOnce, retain: false, duplicated: false )
+            {
+                Payload = Encoding.UTF8.GetBytes( "Publish Receiver Flow Test" )
+            };
 
             var receiver = new Subject<IPacket> ();
             var channel = new Mock<IMqttChannel<IPacket>> ();

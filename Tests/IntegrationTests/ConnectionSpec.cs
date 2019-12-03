@@ -1,7 +1,6 @@
 using IntegrationTests.Context;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using CK.MQTT;
 using CK.MQTT.Sdk;
@@ -9,12 +8,12 @@ using System.Net.Sockets;
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using FluentAssertions;
+using NUnit.Framework;
 using Tests;
-using Xunit;
 
 namespace IntegrationTests
 {
-    [CollectionDefinition( "Non-Parallel Collection", DisableParallelization = true )]
     public sealed class ConnectionSpec : IntegrationContext, IDisposable
     {
         readonly IMqttServer server;
@@ -24,7 +23,7 @@ namespace IntegrationTests
             server = GetServerAsync().Result;
         }
 
-        [Fact]
+        [Test]
         public async Task when_connecting_client_to_non_existing_server_then_fails()
         {
             try
@@ -45,7 +44,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [Test]
         public async Task when_clients_connect_and_disconnect_then_server_raises_events()
         {
             using( var fooClient = await GetClientAsync() )
@@ -67,25 +66,25 @@ namespace IntegrationTests
 
                 await fooClient.ConnectAsync( new MqttClientCredentials( clientId1 ) );
 
-                Assert.Equal( new[] { clientId1 }, connected );
+                connected.Should().BeEquivalentTo( clientId1 );
 
                 await barClient.ConnectAsync( new MqttClientCredentials( clientId2 ) );
 
-                Assert.Equal( new[] { clientId1, clientId2 }, connected );
+                connected.Should().BeEquivalentTo( clientId1, clientId2 );
 
                 await barClient.DisconnectAsync();
 
-                Assert.Equal( new[] { clientId2 }, disconnected );
-                Assert.Equal( new[] { clientId1 }, connected );
+                disconnected.Should().BeEquivalentTo( clientId2 );
+                connected.Should().BeEquivalentTo( clientId1 );
 
                 await fooClient.DisconnectAsync();
 
-                Assert.Equal( new[] { clientId2, clientId1 }, disconnected );
-                Assert.Empty( connected );
+                disconnected.Should().BeEquivalentTo( clientId2, clientId1 );
+                connected.Should().BeEmpty();
             }
         }
 
-        [Fact]
+        [Test]
         public async Task when_connect_clients_and_one_client_drops_connection_then_other_client_survives()
         {
             using( var fooClient = await GetClientAsync() )
@@ -125,13 +124,13 @@ namespace IntegrationTests
 
                 var finalConnectedClients = server.ActiveClients.Where( c => clientIds.Contains( c ) ).Count();
 
-                Assert.Equal( 2, initialConnectedClients );
+                initialConnectedClients.Should().Be( 2 );
                 Assert.True( exceptionThrown );
-                Assert.Equal( 1, finalConnectedClients );
+                finalConnectedClients.Should().Be( 1 );
             }
         }
 
-        [Fact]
+        [Test]
         public async Task when_connect_clients_then_succeeds()
         {
             var count = GetTestLoad();
@@ -151,7 +150,7 @@ namespace IntegrationTests
 
             await Task.WhenAll( tasks );
 
-            Assert.Equal( count, server.ActiveClients.Where( c => clientIds.Contains( c ) ).Count() );
+            server.ActiveClients.Where( c => clientIds.Contains( c ) ).Should().HaveCount( count );
             Assert.True( clients.All( c => c.IsConnected ) );
             Assert.True( clients.All( c => !string.IsNullOrEmpty( c.Id ) ) );
 
@@ -161,7 +160,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [Test]
         public async Task when_connecting_twice_with_same_client_with_disconnecting_then_succeeds()
         {
             using( var client = await GetClientAsync() )
@@ -171,8 +170,7 @@ namespace IntegrationTests
                 await client.ConnectAsync( new MqttClientCredentials( clientId ) );
                 await client.DisconnectAsync();
                 await client.ConnectAsync( new MqttClientCredentials( clientId ) );
-
-                Assert.Equal( 1, server.ActiveClients.Count( c => c == clientId ) );
+                server.ActiveClients.Count( c => c == clientId ).Should().Be( 1 );
             }
         }
 
@@ -181,7 +179,7 @@ namespace IntegrationTests
         /// This test will be useful for [MQTT-3.1.4-2].
         /// </summary>
         /// <returns></returns>
-        [Fact]
+        [Test]
         public async Task when_connecting_twice_from_two_client_with_same_id_server_first_client_disconnect_in_right_order()
         {
             var clientId = GetClientId();
@@ -219,7 +217,7 @@ namespace IntegrationTests
                 }
 
                 Assert.True( didNotTimeout );
-                Assert.Equal( "c", string.Concat( events ) );
+                string.Concat( events ).Should().Be( "c" );
 
                 await clientBar.ConnectAsync( new MqttClientCredentials( clientId ) );
                 lock( events )
@@ -228,14 +226,14 @@ namespace IntegrationTests
                 }
 
                 Assert.True( didNotTimeout );
-                Assert.Equal( "ccdd", string.Concat( events ) );
+                string.Concat( events ).Should().Be( "ccdd" );
                 server.ClientDisconnected -= onDisconnect;
                 server.ClientConnected -= onConnect;
-                //Assert.Equal("cdc", events ); //Require MQTT-3.1.4-2
+                //"cdc".Should().Be(events ); //Require MQTT-3.1.4-2
             }
         }
 
-        [Fact]
+        [Test]
         public async Task when_connecting_twice_with_same_client_without_disconnecting_then_fails()
         {
             var client = await GetClientAsync();
@@ -250,7 +248,7 @@ namespace IntegrationTests
             Assert.True( ex.InnerException is MqttClientException );
         }
 
-        [Fact]
+        [Test]
         public async Task when_connecting_client_with_invalid_id_then_fails()
         {
             var client = await GetClientAsync();
@@ -265,7 +263,7 @@ namespace IntegrationTests
             Assert.True( ex.InnerException.InnerException is MqttException );
         }
 
-        [Fact]
+        [Test]
         public async Task when_connecting_client_with_empty_id_then_succeeds()
         {
             var client = await GetClientAsync();
@@ -274,10 +272,10 @@ namespace IntegrationTests
 
             Assert.True( client.IsConnected );
             Assert.False( string.IsNullOrEmpty( client.Id ) );
-            Assert.StartsWith( "anonymous", client.Id );
+            client.Id.Should().StartWith( "anonymous" );
         }
 
-        [Fact]
+        [Test]
         public async Task when_connecting_client_with_empty_id_and_clean_session_true_then_succeeds()
         {
             var client = await GetClientAsync();
@@ -286,10 +284,10 @@ namespace IntegrationTests
 
             Assert.True( client.IsConnected );
             Assert.False( string.IsNullOrEmpty( client.Id ) );
-            Assert.StartsWith( "anonymous", client.Id );
+            client.Id.Should().StartWith( "anonymous" );
         }
 
-        [Fact]
+        [Test]
         public async Task when_connecting_client_with_empty_id_and_clean_session_false_then_fails()
         {
             var client = await GetClientAsync();
@@ -302,47 +300,47 @@ namespace IntegrationTests
             Assert.True( ex.InnerException is MqttClientException );
         }
 
-        [Fact]
+        [Test]
         public async Task when_connecting_client_with_clean_session_true_then_session_is_not_preserved()
         {
-            var client = await GetClientAsync();
-            var clientId = GetClientId();
+            using (var client = await GetClientAsync())
+            {
+                var clientId = GetClientId();
 
-            var sessionState1 = await client.ConnectAsync( new MqttClientCredentials( clientId ), cleanSession: true );
+                var sessionState1 = await client.ConnectAsync( new MqttClientCredentials( clientId ), cleanSession: true );
 
-            await client.DisconnectAsync();
+                await client.DisconnectAsync();
 
-            var sessionState2 = await client.ConnectAsync( new MqttClientCredentials( clientId ), cleanSession: true );
+                var sessionState2 = await client.ConnectAsync( new MqttClientCredentials( clientId ), cleanSession: true );
 
-            await client.DisconnectAsync();
+                await client.DisconnectAsync();
+                sessionState1.Should().Be( SessionState.CleanSession );
+                sessionState2.Should().Be( SessionState.CleanSession );
 
-            Assert.Equal( SessionState.CleanSession, sessionState1 );
-            Assert.Equal( SessionState.CleanSession, sessionState2 );
-
-            client?.Dispose();
+                client.Dispose();
+            }
         }
 
-        [Fact]
+        [Test]
         public async Task when_connecting_client_with_clean_session_false_and_then_true_then_session_is_not_preserved()
         {
-            var client = await GetClientAsync();
-            var clientId = GetClientId();
+            using (var client = await GetClientAsync())
+            {
+                var clientId = GetClientId();
 
-            var sessionState1 = await client.ConnectAsync( new MqttClientCredentials( clientId ), cleanSession: false );
+                var sessionState1 = await client.ConnectAsync( new MqttClientCredentials( clientId ), cleanSession: false );
 
-            await client.DisconnectAsync();
+                await client.DisconnectAsync();
 
-            var sessionState2 = await client.ConnectAsync( new MqttClientCredentials( clientId ), cleanSession: true );
+                var sessionState2 = await client.ConnectAsync( new MqttClientCredentials( clientId ), cleanSession: true );
 
-            await client.DisconnectAsync();
-
-            Assert.Equal( SessionState.CleanSession, sessionState1 );
-            Assert.Equal( SessionState.CleanSession, sessionState2 );
-
-            client?.Dispose();
+                await client.DisconnectAsync();
+                sessionState1.Should().Be( SessionState.CleanSession );
+                sessionState2.Should().Be( SessionState.CleanSession );
+            }
         }
 
-        [Fact]
+        [Test]
         public async Task when_connecting_client_with_clean_session_false_then_session_is_preserved()
         {
             var client = await GetClientAsync();
@@ -356,13 +354,13 @@ namespace IntegrationTests
 
             await client.DisconnectAsync();
 
-            Assert.Equal( SessionState.CleanSession, sessionState1 );
-            Assert.Equal( SessionState.SessionPresent, sessionState2 );
+            sessionState1.Should().Be( SessionState.CleanSession );
+            sessionState2.Should().Be( SessionState.SessionPresent );
 
             client?.Dispose();
         }
 
-        [Fact]
+        [Test]
         public async Task when_disconnect_clients_then_succeeds()
         {
             var count = GetTestLoad();
@@ -396,8 +394,8 @@ namespace IntegrationTests
                 }
             }
 
-            Assert.Equal( clients.Count, initialConnectedClients );
-            Assert.Empty( server.ActiveClients.Where( c => clientIds.Contains( c ) ) );
+            initialConnectedClients.Should().Be( clients.Count );
+            server.ActiveClients.Where( c => clientIds.Contains( c ) ).Should().BeEmpty();
             Assert.True( clients.All( c => !c.IsConnected ) );
             Assert.True( clients.All( c => string.IsNullOrEmpty( c.Id ) ) );
 
@@ -407,7 +405,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [Test]
         public async Task when_disconnect_client_then_server_decrease_active_client_list()
         {
             using( var client = await GetClientAsync() )
@@ -451,17 +449,17 @@ namespace IntegrationTests
                  } )
                 .Subscribe(
                     _ => { },
-                    ex => { Console.WriteLine( string.Format( "Error: {0}", ex.Message ) ); } );
+                    ex => { Console.WriteLine( "Error: {0}", ex.Message ); } );
 
                 var clientDisconnected = clientClosed.Wait( 2000 );
 
                 Assert.True( existClientAfterConnect );
                 Assert.True( clientDisconnected );
-                Assert.DoesNotContain( server.ActiveClients, c => c == clientId );
+                server.ActiveClients.Should().NotContain( c => c == clientId );
             }
         }
 
-        [Fact]
+        [Test]
         public async Task when_client_disconnects_by_protocol_then_will_message_is_not_sent()
         {
             using( var client1 = await GetClientAsync() )
@@ -507,7 +505,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [Test]
         public async Task when_client_disconnects_unexpectedly_then_will_message_is_sent()
         {
             var client1 = await GetClientAsync();
@@ -555,14 +553,14 @@ namespace IntegrationTests
 
             Assert.True( willReceived );
             Assert.NotNull( willMessage );
-            Assert.Equal( topic, willApplicationMessage.Topic );
-            Assert.Equal( willMessage.Message, FooWillMessage.GetMessage( willApplicationMessage.Payload ).Message );
+            willApplicationMessage.Topic.Should().Be( topic );
+            FooWillMessage.GetMessage( willApplicationMessage.Payload ).Message.Should().Be( willMessage.Message );
 
             client2.Dispose();
             client3.Dispose();
         }
 
-        [Fact]
+        [Test]
         public async Task when_client_disconnects_then_message_stream_completes()
         {
             var streamCompletedSignal = new ManualResetEventSlim( initialState: false );

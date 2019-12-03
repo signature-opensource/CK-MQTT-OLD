@@ -1,30 +1,31 @@
-﻿using System;
+using System;
 using System.Net;
 using CK.MQTT;
 using CK.MQTT.Sdk;
 using CK.MQTT.Sdk.Bindings;
 using System.Net.Sockets;
 using System.Threading.Tasks;
-using Xunit;
+using FluentAssertions;
+using NUnit.Framework;
 
 namespace Tests
 {
 	public class InitializerSpec
 	{
-		[Fact]
+		[Test]
 		public void when_creating_protocol_configuration_then_default_values_are_set()
 		{
 			var configuration = new MqttConfiguration ();
 
-			Assert.Equal (MqttProtocol.DefaultNonSecurePort, configuration.Port);
-			Assert.Equal (8192, configuration.BufferSize);
-			Assert.Equal (MqttQualityOfService.AtMostOnce, configuration.MaximumQualityOfService);
-			Assert.Equal (0, configuration.KeepAliveSecs);
-			Assert.Equal (5, configuration.WaitTimeoutSecs);
-			Assert.Equal (true, configuration.AllowWildcardsInTopicFilters);
+			MqttProtocol.DefaultNonSecurePort.Should().Be(configuration.Port);
+			8192.Should().Be(configuration.BufferSize);
+			MqttQualityOfService.AtMostOnce.Should().Be(configuration.MaximumQualityOfService);
+			0.Should().Be(configuration.KeepAliveSecs);
+			5.Should().Be(configuration.WaitTimeoutSecs);
+			true.Should().Be(configuration.AllowWildcardsInTopicFilters);
 		}
 
-		[Fact]
+		[Test]
 		public void when_initializing_server_then_succeeds()
 		{
 			var configuration = new MqttConfiguration {
@@ -40,7 +41,7 @@ namespace Tests
 			server.Stop ();
 		}
 
-		[Fact]
+		[Test]
 		public async Task when_initializing_client_then_succeeds()
 		{
 			var port = new Random().Next(IPEndPoint.MinPort, IPEndPoint.MaxPort);

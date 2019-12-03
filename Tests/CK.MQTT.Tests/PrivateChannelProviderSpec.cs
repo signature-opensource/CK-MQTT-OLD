@@ -1,15 +1,16 @@
-﻿using System;
+using System;
 using CK.MQTT;
 using CK.MQTT.Sdk.Bindings;
 using System.Reactive.Subjects;
 using System.Threading.Tasks;
-using Xunit;
+using FluentAssertions;
+using NUnit.Framework;
 
 namespace Tests
 {
     public class PrivateChannelProviderSpec
     {
-        [Fact]
+        [Test]
         public async Task when_gettting_channels_with_stream_then_succeeds ()
         {
             var configuration = new MqttConfiguration ();
@@ -30,10 +31,10 @@ namespace Tests
 
             await Task.Delay (TimeSpan.FromMilliseconds(1000));
 
-            Assert.Equal (3, channelsCreated);
+            3.Should().Be(channelsCreated);
         }
 
-        [Fact]
+        [Test]
         public async Task when_gettting_channels_without_stream_then_fails ()
         {
             var configuration = new MqttConfiguration ();
@@ -50,7 +51,7 @@ namespace Tests
 
             await Task.Delay (TimeSpan.FromMilliseconds(1000));
 
-            Assert.Equal (0, channelsCreated);
+            0.Should().Be(channelsCreated);
         }
     }
 }

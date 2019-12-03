@@ -1,13 +1,14 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using CK.MQTT.Sdk;
 using System.Threading.Tasks;
-using Xunit;
+using FluentAssertions;
+using NUnit.Framework;
 
 namespace Tests
 {
 	public class PacketIdProviderSpec
 	{
-		[Fact]
+		[Test]
 		public void when_getting_packet_id_then_is_sequencial()
 		{
 			var packetIdProvider = new PacketIdProvider ();
@@ -19,10 +20,10 @@ namespace Tests
 
 			var packetId = packetIdProvider.GetPacketId ();
 
-			Assert.Equal (count + 1, packetId);
+			(count + 1).Should().Be(packetId);
 		}
 
-		[Fact]
+		[Test]
 		public void when_getting_packet_id_and_reaches_limit_then_resets()
 		{
 			var packetIdProvider = new PacketIdProvider ();
@@ -33,10 +34,10 @@ namespace Tests
 
 			var packetId = packetIdProvider.GetPacketId ();
 
-			Assert.Equal ((ushort)1, packetId);
+			1.Should().Be(packetId);
 		}
 
-		[Fact]
+		[Test]
 		public void when_getting_packet_id_in_parallel_then_maintains_sequence()
 		{
 			var packetIdProvider = new PacketIdProvider ();
@@ -51,7 +52,7 @@ namespace Tests
 
 			var packetId = packetIdProvider.GetPacketId ();
 
-			Assert.Equal (count + 1, packetId);
+			(count + 1).Should().Be(packetId);
 		}
 	}
 }

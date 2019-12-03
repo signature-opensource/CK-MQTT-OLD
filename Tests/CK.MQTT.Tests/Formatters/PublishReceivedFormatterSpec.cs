@@ -1,18 +1,18 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Threading.Tasks;
 using CK.MQTT.Sdk.Formatters;
 using CK.MQTT.Sdk.Packets;
-using Xunit;
-using Xunit.Extensions;
 using CK.MQTT;
+using FluentAssertions;
+using NUnit.Framework;
 
 namespace Tests.Formatters
 {
 	public class PublishReceivedFormatterSpec
 	{
 		[Theory]
-		[InlineData("Files/Binaries/PublishReceived.packet", "Files/Packets/PublishReceived.json")]
+		[TestCase("Files/Binaries/PublishReceived.packet", "Files/Packets/PublishReceived.json")]
 		public async Task when_reading_publish_received_packet_then_succeeds(string packetPath, string jsonPath)
 		{
 			packetPath = Path.Combine (Environment.CurrentDirectory, packetPath);
@@ -25,11 +25,11 @@ namespace Tests.Formatters
 			var result = await formatter.FormatAsync (packet)
 				.ConfigureAwait(continueOnCapturedContext: false);
 
-			Assert.Equal (expectedPublishReceived, result);
+			expectedPublishReceived.Should().Be(result);
 		}
 
 		[Theory]
-		[InlineData("Files/Binaries/PublishReceived_Invalid_HeaderFlag.packet")]
+		[TestCase("Files/Binaries/PublishReceived_Invalid_HeaderFlag.packet")]
 		public void when_reading_invalid_publish_received_packet_then_fails(string packetPath)
 		{
 			packetPath = Path.Combine (Environment.CurrentDirectory, packetPath);
@@ -43,7 +43,7 @@ namespace Tests.Formatters
 		}
 
 		[Theory]
-		[InlineData("Files/Packets/PublishReceived.json", "Files/Binaries/PublishReceived.packet")]
+		[TestCase("Files/Packets/PublishReceived.json", "Files/Binaries/PublishReceived.packet")]
 		public async Task when_writing_publish_received_packet_then_succeeds(string jsonPath, string packetPath)
 		{
 			jsonPath = Path.Combine (Environment.CurrentDirectory, jsonPath);
@@ -56,7 +56,7 @@ namespace Tests.Formatters
 			var result = await formatter.FormatAsync (publishReceived)
 				.ConfigureAwait(continueOnCapturedContext: false);
 
-			Assert.Equal (expectedPacket, result);
+			expectedPacket.Should().BeEquivalentTo( result);
 		}
 	}
 }

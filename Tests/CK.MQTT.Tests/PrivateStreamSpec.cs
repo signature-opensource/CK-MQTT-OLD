@@ -1,15 +1,15 @@
-﻿using System;
+using System;
 using CK.MQTT;
 using CK.MQTT.Sdk.Bindings;
-using System.Reactive.Linq;
 using System.Threading.Tasks;
-using Xunit;
+using FluentAssertions;
+using NUnit.Framework;
 
 namespace Tests
 {
     public class PrivateStreamSpec
     {
-        [Fact]
+        [Test]
         public void when_creating_stream_then_becomes_ready ()
         {
             var configuration = new MqttConfiguration ();
@@ -18,7 +18,7 @@ namespace Tests
             Assert.True (!stream.IsDisposed);
         }
 
-        [Fact]
+        [Test]
         public async Task when_sending_payload_with_identifier_then_receives_on_same_identifier ()
         {
             var configuration = new MqttConfiguration ();
@@ -47,11 +47,11 @@ namespace Tests
 
             await Task.Delay (TimeSpan.FromMilliseconds (1000));
 
-            Assert.Equal (3, clientReceived);
-            Assert.Equal (3, serverReceived);
+            3.Should().Be(clientReceived);
+            3.Should().Be(serverReceived);
         }
 
-        [Fact]
+        [Test]
         public async Task when_sending_payload_with_identifier_then_does_not_receive_on_other_identifier()
         {
             var configuration = new MqttConfiguration ();
@@ -70,10 +70,10 @@ namespace Tests
 
             await Task.Delay (TimeSpan.FromMilliseconds(1000));
 
-            Assert.Equal (0, serverReceived);
+            0.Should().Be(serverReceived);
         }
 
-        [Fact]
+        [Test]
         public void when_disposing_stream_then_becomes_not_ready ()
         {
             var configuration = new MqttConfiguration();

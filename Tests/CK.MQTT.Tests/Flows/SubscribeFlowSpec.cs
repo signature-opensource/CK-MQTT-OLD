@@ -1,4 +1,4 @@
-﻿using Moq;
+using Moq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,13 +9,14 @@ using CK.MQTT.Sdk.Packets;
 using CK.MQTT.Sdk.Storage;
 using System.Text;
 using System.Threading.Tasks;
-using Xunit;
+using FluentAssertions;
+using NUnit.Framework;
 
 namespace Tests.Flows
 {
 	public class SubscribeFlowSpec
 	{
-		[Fact]
+		[Test]
 		public async Task when_subscribing_new_topics_then_subscriptions_are_created_and_ack_is_sent()
 		{
 			var configuration = new MqttConfiguration { MaximumQualityOfService = MqttQualityOfService.AtLeastOnce };
@@ -68,13 +69,13 @@ namespace Tests.Flows
 			var subscribeAck = response as SubscribeAck;
 
 			Assert.NotNull (subscribeAck);
-			Assert.Equal (packetId, subscribeAck.PacketId);
-			Assert.Equal (2, subscribeAck.ReturnCodes.Count ());
+			packetId.Should().Be(subscribeAck.PacketId);
+			2.Should().Be(subscribeAck.ReturnCodes.Count ());
 			Assert.True (subscribeAck.ReturnCodes.Any (c => c == SubscribeReturnCode.MaximumQoS0));
 			Assert.True (subscribeAck.ReturnCodes.Any (c => c == SubscribeReturnCode.MaximumQoS1));
 		}
 
-		[Fact]
+		[Test]
 		public async Task when_subscribing_existing_topics_then_subscriptions_are_updated_and_ack_is_sent()
 		{
 			var configuration = new MqttConfiguration { MaximumQualityOfService = MqttQualityOfService.AtLeastOnce };
@@ -129,12 +130,12 @@ namespace Tests.Flows
 			var subscribeAck = response as SubscribeAck;
 
 			Assert.NotNull (subscribeAck);
-			Assert.Equal (packetId, subscribeAck.PacketId);
-			Assert.Equal (1, subscribeAck.ReturnCodes.Count ());
+			packetId.Should().Be(subscribeAck.PacketId);
+			1.Should().Be(subscribeAck.ReturnCodes.Count ());
 			Assert.True (subscribeAck.ReturnCodes.Any (c => c == SubscribeReturnCode.MaximumQoS1));
 		}
 
-		[Fact]
+		[Test]
 		public async Task when_subscribing_invalid_topic_then_failure_is_sent_in_ack()
 		{
 			var configuration = new MqttConfiguration { MaximumQualityOfService = MqttQualityOfService.AtLeastOnce };
@@ -183,12 +184,12 @@ namespace Tests.Flows
 			var subscribeAck = response as SubscribeAck;
 
 			Assert.NotNull (subscribeAck);
-			Assert.Equal (packetId, subscribeAck.PacketId);
-			Assert.Equal (1, subscribeAck.ReturnCodes.Count ());
-			Assert.Equal(SubscribeReturnCode.Failure, subscribeAck.ReturnCodes.First());
+			packetId.Should().Be(subscribeAck.PacketId);
+			1.Should().Be(subscribeAck.ReturnCodes.Count ());
+			SubscribeReturnCode.Failure.Should().Be(subscribeAck.ReturnCodes.First());
 		}
 
-		[Fact]
+		[Test]
 		public async Task when_subscribing_topic_with_retain_message_then_retained_is_sent()
 		{
 			var configuration = new MqttConfiguration { MaximumQualityOfService = MqttQualityOfService.AtLeastOnce };

@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using CK.MQTT.Sdk;
 using System.Threading.Tasks;
 

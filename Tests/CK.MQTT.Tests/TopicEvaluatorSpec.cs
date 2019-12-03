@@ -1,7 +1,6 @@
-﻿using CK.MQTT;
+using CK.MQTT;
 using CK.MQTT.Sdk;
-using Xunit;
-using Xunit.Extensions;
+using NUnit.Framework;
 
 namespace Tests
 {
@@ -10,10 +9,10 @@ namespace Tests
 	public class TopicEvaluatorSpec
 	{
 		[Theory]
-		[InlineData("foo/bar")]
-		[InlineData("foo/bar/")]
-		[InlineData("/foo/bar")]
-		[InlineData("/")]
+		[TestCase("foo/bar")]
+		[TestCase("foo/bar/")]
+		[TestCase("/foo/bar")]
+		[TestCase("/")]
 		public void when_evaluating_valid_topic_name_then_is_valid(string topicName)
 		{
 			var topicEvaluator = new MqttTopicEvaluator (new MqttConfiguration());
@@ -22,9 +21,9 @@ namespace Tests
 		}
 
 		[Theory]
-		[InlineData("foo/+")]
-		[InlineData("#")]
-		[InlineData("")]
+		[TestCase("foo/+")]
+		[TestCase("#")]
+		[TestCase("")]
 		public void when_evaluating_invalid_topic_name_then_is_invalid(string topicName)
 		{
 			var topicEvaluator = new MqttTopicEvaluator (new MqttConfiguration());
@@ -33,14 +32,14 @@ namespace Tests
 		}
 
 		[Theory]
-		[InlineData("foo/bar")]
-		[InlineData("foo/#")]
-		[InlineData("#")]
-		[InlineData("foo/bar/")]
-		[InlineData("foo/+/+/bar")]
-		[InlineData("+/bar/test")]
-		[InlineData("/foo")]
-		[InlineData("/")]
+		[TestCase("foo/bar")]
+		[TestCase("foo/#")]
+		[TestCase("#")]
+		[TestCase("foo/bar/")]
+		[TestCase("foo/+/+/bar")]
+		[TestCase("+/bar/test")]
+		[TestCase("/foo")]
+		[TestCase("/")]
 		public void when_evaluating_valid_topic_filter_then_is_valid(string topicFilter)
 		{
 			var topicEvaluator = new MqttTopicEvaluator (new MqttConfiguration());
@@ -49,11 +48,11 @@ namespace Tests
 		}
 
 		[Theory]
-		[InlineData("foo/#/#")]
-		[InlineData("foo/bar#/")]
-		[InlineData("foo/bar+/test")]
-		[InlineData("")]
-		[InlineData("foo/#/bar")]
+		[TestCase("foo/#/#")]
+		[TestCase("foo/bar#/")]
+		[TestCase("foo/bar+/test")]
+		[TestCase("")]
+		[TestCase("foo/#/bar")]
 		public void when_evaluating_invalid_topic_filter_then_is_invalid(string topicFilter)
 		{
 			var topicEvaluator = new MqttTopicEvaluator (new MqttConfiguration());
@@ -62,10 +61,10 @@ namespace Tests
 		}
 
 		[Theory]
-		[InlineData("foo/#")]
-		[InlineData("#")]
-		[InlineData("foo/+/+/bar")]
-		[InlineData("+/bar/test")]
+		[TestCase("foo/#")]
+		[TestCase("#")]
+		[TestCase("foo/+/+/bar")]
+		[TestCase("+/bar/test")]
 		public void when_evaluating_topic_filter_with_wildcards_and_configuration_does_not_allow_wildcards_then_is_invalid(string topicFilter)
 		{
 			var topicEvaluator = new MqttTopicEvaluator (new MqttConfiguration { 
@@ -75,19 +74,19 @@ namespace Tests
 		}
 
 		[Theory]
-		[InlineData("sport/tennis/player1/#", "sport/tennis/player1")]
-		[InlineData("sport/tennis/player1/#", "sport/tennis/player1/ranking")]
-		[InlineData("sport/tennis/player1/#", "sport/tennis/player1/score/wimbledon")]
-		[InlineData("sport/#", "sport")]
-		[InlineData("#", "foo/bar")]
-		[InlineData("#", "/")]
-		[InlineData("#", "foo/bar/test")]
-		[InlineData("#", "foo/bar/")]
-		[InlineData("games/table tennis/players", "games/table tennis/players")]
-		[InlineData("games/+/players", "games/table tennis/players")]
-		[InlineData("#", "games/table tennis/players/ranking")]
-		[InlineData("Accounts payable", "Accounts payable")]
-		[InlineData("/", "/")]
+		[TestCase("sport/tennis/player1/#", "sport/tennis/player1")]
+		[TestCase("sport/tennis/player1/#", "sport/tennis/player1/ranking")]
+		[TestCase("sport/tennis/player1/#", "sport/tennis/player1/score/wimbledon")]
+		[TestCase("sport/#", "sport")]
+		[TestCase("#", "foo/bar")]
+		[TestCase("#", "/")]
+		[TestCase("#", "foo/bar/test")]
+		[TestCase("#", "foo/bar/")]
+		[TestCase("games/table tennis/players", "games/table tennis/players")]
+		[TestCase("games/+/players", "games/table tennis/players")]
+		[TestCase("#", "games/table tennis/players/ranking")]
+		[TestCase("Accounts payable", "Accounts payable")]
+		[TestCase("/", "/")]
 		public void when_matching_valid_topic_name_with_multi_level_wildcard_topic_filter_then_matches(string topicFilter, string topicName)
 		{
 			var topicEvaluator = new MqttTopicEvaluator (new MqttConfiguration());
@@ -96,11 +95,11 @@ namespace Tests
 		}
 
 		[Theory]
-		[InlineData("sport/tennis/+", "sport/tennis/player1")]
-		[InlineData("sport/tennis/+", "sport/tennis/player2")]
-		[InlineData("sport/+", "sport/")]
-		[InlineData("+/+", "/finance")]
-		[InlineData("/+", "/finance")]
+		[TestCase("sport/tennis/+", "sport/tennis/player1")]
+		[TestCase("sport/tennis/+", "sport/tennis/player2")]
+		[TestCase("sport/+", "sport/")]
+		[TestCase("+/+", "/finance")]
+		[TestCase("/+", "/finance")]
 		public void when_matching_valid_topic_name_with_single_level_wildcard_topic_filter_then_matches(string topicFilter, string topicName)
 		{
 			var topicEvaluator = new MqttTopicEvaluator (new MqttConfiguration());
@@ -109,14 +108,14 @@ namespace Tests
 		}
 
 		[Theory]
-		[InlineData("+/tennis/#", "sport/tennis/player1/ranking/")]
-		[InlineData("+/tennis/#", "sport/tennis/player1/ranking/player2")]
-		[InlineData("+/tennis/#", "sport/tennis")]
-		[InlineData("+/tennis/#", "sport/tennis/")]
-		[InlineData("+/tennis/#", "games/tennis/player1/ranking/player2")]
-		[InlineData("+/foo/+/bar/#", "sport/foo/players/bar")]
-		[InlineData("+/foo/+/bar/#", "game/foo/ranking/bar/test/player1")]
-		[InlineData("+/foo/+/bar/#", "game/foo/ranking/bar/test/player1/")]
+		[TestCase("+/tennis/#", "sport/tennis/player1/ranking/")]
+		[TestCase("+/tennis/#", "sport/tennis/player1/ranking/player2")]
+		[TestCase("+/tennis/#", "sport/tennis")]
+		[TestCase("+/tennis/#", "sport/tennis/")]
+		[TestCase("+/tennis/#", "games/tennis/player1/ranking/player2")]
+		[TestCase("+/foo/+/bar/#", "sport/foo/players/bar")]
+		[TestCase("+/foo/+/bar/#", "game/foo/ranking/bar/test/player1")]
+		[TestCase("+/foo/+/bar/#", "game/foo/ranking/bar/test/player1/")]
 		public void when_matching_valid_topic_name_with_mixed_wildcards_topic_filter_then_matches(string topicFilter, string topicName)
 		{
 			var topicEvaluator = new MqttTopicEvaluator (new MqttConfiguration());
@@ -125,12 +124,12 @@ namespace Tests
 		}
 		
 		[Theory]
-		[InlineData("$SYS/#", "$SYS/foo/bar")]
-		[InlineData("$SYS/#", "$SYS/foo/bar/test")]
-		[InlineData("$SYS/#", "$SYS")]
-		[InlineData("$SYS/#", "$SYS/")]
-		[InlineData("$SYS/monitor/+", "$SYS/monitor/Clients")]
-		[InlineData("$/+/test", "$/foo/test")]
+		[TestCase("$SYS/#", "$SYS/foo/bar")]
+		[TestCase("$SYS/#", "$SYS/foo/bar/test")]
+		[TestCase("$SYS/#", "$SYS")]
+		[TestCase("$SYS/#", "$SYS/")]
+		[TestCase("$SYS/monitor/+", "$SYS/monitor/Clients")]
+		[TestCase("$/+/test", "$/foo/test")]
 		public void when_matching_reserved_topic_names_then_matches(string topicFilter, string topicName)
 		{
 			var topicEvaluator = new MqttTopicEvaluator (new MqttConfiguration());
@@ -139,9 +138,9 @@ namespace Tests
 		}
 
 		[Theory]
-		[InlineData("sport/tennis/+", "sport/tennis/player1/ranking")]
-		[InlineData("sport/+", "sport")]
-		[InlineData("+", "/finance")]
+		[TestCase("sport/tennis/+", "sport/tennis/player1/ranking")]
+		[TestCase("sport/+", "sport")]
+		[TestCase("+", "/finance")]
 		public void when_matching_invalid_topic_name_with_single_level_wildcard_topic_filter_then_does_not_match(string topicFilter, string topicName)
 		{
 			var topicEvaluator = new MqttTopicEvaluator (new MqttConfiguration());
@@ -150,11 +149,11 @@ namespace Tests
 		}
 
 		[Theory]
-		[InlineData("foo/bar/test", "FOO/BAR/TEST")]
-		[InlineData("foo/bar/test", "foo/bar/Test")]
-		[InlineData("FOO/BAR/TEST", "FOO/bar/TEST")]
-		[InlineData("+/BAR/TEST", "FOO/BAR/TESt")]
-		[InlineData("ACCOUNTS", "Accounts")]
+		[TestCase("foo/bar/test", "FOO/BAR/TEST")]
+		[TestCase("foo/bar/test", "foo/bar/Test")]
+		[TestCase("FOO/BAR/TEST", "FOO/bar/TEST")]
+		[TestCase("+/BAR/TEST", "FOO/BAR/TESt")]
+		[TestCase("ACCOUNTS", "Accounts")]
 		public void when_matching_topic_name_and_topic_filter_with_different_case_then_does_not_match(string topicFilter, string topicName)
 		{
 			var topicEvaluator = new MqttTopicEvaluator (new MqttConfiguration());
@@ -163,10 +162,10 @@ namespace Tests
 		}
 
 		[Theory]
-		[InlineData("#", "$/test")]
-		[InlineData("#", "$SYS/test/foo")]
-		[InlineData("+/monitor/#", "$/monitor/Clients")]
-		[InlineData("+/monitor/Clients", "$SYS/monitor/Clients")]
+		[TestCase("#", "$/test")]
+		[TestCase("#", "$SYS/test/foo")]
+		[TestCase("+/monitor/#", "$/monitor/Clients")]
+		[TestCase("+/monitor/Clients", "$SYS/monitor/Clients")]
 		public void when_matching_reserved_topic_names_with_starting_wildcards_then_does_not_match(string topicFilter, string topicName)
 		{
 			var topicEvaluator = new MqttTopicEvaluator (new MqttConfiguration());
@@ -175,9 +174,9 @@ namespace Tests
 		}
 
 		[Theory]
-		[InlineData("foo/+")]
-		[InlineData("#")]
-		[InlineData("")]
+		[TestCase("foo/+")]
+		[TestCase("#")]
+		[TestCase("")]
 		public void when_matching_with_invalid_topic_name_then_fails(string topicName)
 		{
 			var topicEvaluator = new MqttTopicEvaluator (new MqttConfiguration());
@@ -186,11 +185,11 @@ namespace Tests
 		}
 
 		[Theory]
-		[InlineData("foo/#/#")]
-		[InlineData("foo/bar#/")]
-		[InlineData("foo/bar+/test")]
-		[InlineData("")]
-		[InlineData("foo/#/bar")]
+		[TestCase("foo/#/#")]
+		[TestCase("foo/bar#/")]
+		[TestCase("foo/bar+/test")]
+		[TestCase("")]
+		[TestCase("foo/#/bar")]
 		public void when_matching_with_invalid_topic_filter_then_fails(string topicFilter)
 		{
 			var topicEvaluator = new MqttTopicEvaluator (new MqttConfiguration());
@@ -199,12 +198,12 @@ namespace Tests
 		}
 
 		[Theory]
-		[InlineData("test/foo", "test/foo/testClient")]
-		[InlineData("test", "test/")]
-		[InlineData("foo/bar/test/", "foo/bar/test")]
-		[InlineData("test/foo/testClient", "test/foo")]
-		[InlineData("test/", "test")]
-		[InlineData("foo/bar/test", "foo/bar/test/")]
+		[TestCase("test/foo", "test/foo/testClient")]
+		[TestCase("test", "test/")]
+		[TestCase("foo/bar/test/", "foo/bar/test")]
+		[TestCase("test/foo/testClient", "test/foo")]
+		[TestCase("test/", "test")]
+		[TestCase("foo/bar/test", "foo/bar/test/")]
 		public void when_matching_not_compatible_topics_then_does_not_match(string topicFilter, string topicName)
 		{
 			var topicEvaluator = new MqttTopicEvaluator (new MqttConfiguration());
@@ -213,12 +212,12 @@ namespace Tests
 		}
 
 		[Theory]
-		[InlineData("test/foo", "test/foo")]
-		[InlineData("test/", "test/")]
-		[InlineData("foo/bar/test/", "foo/bar/test/")]
-		[InlineData("test/foo/testClient", "test/foo/testClient")]
-		[InlineData("test", "test")]
-		[InlineData("foo/bar/test", "foo/bar/test")]
+		[TestCase("test/foo", "test/foo")]
+		[TestCase("test/", "test/")]
+		[TestCase("foo/bar/test/", "foo/bar/test/")]
+		[TestCase("test/foo/testClient", "test/foo/testClient")]
+		[TestCase("test", "test")]
+		[TestCase("foo/bar/test", "foo/bar/test")]
 		public void when_matching_compatible_topics_then_matches(string topicFilter, string topicName)
 		{
 			var topicEvaluator = new MqttTopicEvaluator (new MqttConfiguration());

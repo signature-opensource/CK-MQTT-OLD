@@ -1,21 +1,21 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Threading.Tasks;
 using CK.MQTT;
 using CK.MQTT.Sdk.Formatters;
 using CK.MQTT.Sdk.Packets;
 using Moq;
-using Xunit;
-using Xunit.Extensions;
 using CK.MQTT.Sdk;
+using FluentAssertions;
+using NUnit.Framework;
 
 namespace Tests.Formatters
 {
 	public class SubscribeFormatterSpec
 	{
 		[Theory]
-		[InlineData("Files/Binaries/Subscribe_SingleTopic.packet", "Files/Packets/Subscribe_SingleTopic.json")]
-		[InlineData("Files/Binaries/Subscribe_MultiTopic.packet", "Files/Packets/Subscribe_MultiTopic.json")]
+		[TestCase("Files/Binaries/Subscribe_SingleTopic.packet", "Files/Packets/Subscribe_SingleTopic.json")]
+		[TestCase("Files/Binaries/Subscribe_MultiTopic.packet", "Files/Packets/Subscribe_MultiTopic.json")]
 		public async Task when_reading_subscribe_packet_then_succeeds(string packetPath, string jsonPath)
 		{
 			packetPath = Path.Combine (Environment.CurrentDirectory, packetPath);
@@ -29,11 +29,11 @@ namespace Tests.Formatters
 			var result = await formatter.FormatAsync (packet)
 				.ConfigureAwait(continueOnCapturedContext: false);
 
-			Assert.Equal (expectedSubscribe, result);
+			expectedSubscribe.Should().Be(result);
 		}
 
 		[Theory]
-		[InlineData("Files/Binaries/Subscribe_Invalid_HeaderFlag.packet")]
+		[TestCase("Files/Binaries/Subscribe_Invalid_HeaderFlag.packet")]
 		public void when_reading_invalid_subscribe_packet_then_fails(string packetPath)
 		{
 			packetPath = Path.Combine (Environment.CurrentDirectory, packetPath);
@@ -48,9 +48,9 @@ namespace Tests.Formatters
 		}
 
 		[Theory]
-		[InlineData("Files/Binaries/Subscribe_Invalid_TopicFilterQosPair.packet")]
-		[InlineData("Files/Binaries/Subscribe_Invalid_TopicFilterQosPair2.packet")]
-		[InlineData("Files/Binaries/Subscribe_Invalid_TopicFilterQos.packet")]
+		[TestCase("Files/Binaries/Subscribe_Invalid_TopicFilterQosPair.packet")]
+		[TestCase("Files/Binaries/Subscribe_Invalid_TopicFilterQosPair2.packet")]
+		[TestCase("Files/Binaries/Subscribe_Invalid_TopicFilterQos.packet")]
 		public void when_reading_invalid_topic_filter_in_subscribe_packet_then_fails(string packetPath)
 		{
 			packetPath = Path.Combine (Environment.CurrentDirectory, packetPath);
@@ -65,8 +65,8 @@ namespace Tests.Formatters
 		}
 
 		[Theory]
-		[InlineData("Files/Packets/Subscribe_SingleTopic.json", "Files/Binaries/Subscribe_SingleTopic.packet")]
-		[InlineData("Files/Packets/Subscribe_MultiTopic.json", "Files/Binaries/Subscribe_MultiTopic.packet")]
+		[TestCase("Files/Packets/Subscribe_SingleTopic.json", "Files/Binaries/Subscribe_SingleTopic.packet")]
+		[TestCase("Files/Packets/Subscribe_MultiTopic.json", "Files/Binaries/Subscribe_MultiTopic.packet")]
 		public async Task when_writing_subscribe_packet_then_succeeds(string jsonPath, string packetPath)
 		{
 			jsonPath = Path.Combine (Environment.CurrentDirectory, jsonPath);
@@ -80,11 +80,11 @@ namespace Tests.Formatters
 			var result = await formatter.FormatAsync (subscribe)
 				.ConfigureAwait(continueOnCapturedContext: false);
 
-			Assert.Equal (expectedPacket, result);
+			expectedPacket.Should().BeEquivalentTo( result);
 		}
 
 		[Theory]
-		[InlineData("Files/Packets/Subscribe_Invalid_EmptyTopicFilters.json")]
+		[TestCase("Files/Packets/Subscribe_Invalid_EmptyTopicFilters.json")]
 		public void when_writing_invalid_subscribe_packet_then_fails(string jsonPath)
 		{
 			jsonPath = Path.Combine (Environment.CurrentDirectory, jsonPath);

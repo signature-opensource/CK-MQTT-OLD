@@ -1,4 +1,4 @@
-﻿using Moq;
+using Moq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,13 +8,14 @@ using CK.MQTT.Sdk.Flows;
 using CK.MQTT.Sdk.Packets;
 using CK.MQTT.Sdk.Storage;
 using System.Threading.Tasks;
-using Xunit;
+using FluentAssertions;
+using NUnit.Framework;
 
 namespace Tests.Flows
 {
 	public class ConnectFlowSpec
 	{
-		[Fact]
+		[Test]
 		public async Task when_sending_connect_then_session_is_created_and_ack_is_sent()
 		{
 			var authenticationProvider = Mock.Of<IMqttAuthenticationProvider> (p => p.Authenticate (It.IsAny<string>(), It.IsAny<string> (), It.IsAny<string> ()) == true);
@@ -51,12 +52,12 @@ namespace Tests.Flows
 			var connectAck = sentPacket as ConnectAck;
 
 			Assert.NotNull (connectAck);
-			Assert.Equal (MqttPacketType.ConnectAck, connectAck.Type);
-			Assert.Equal (MqttConnectionStatus.Accepted, connectAck.Status);
-			Assert.False (connectAck.SessionPresent);
+            connectAck.Type.Should().Be( MqttPacketType.ConnectAck );
+            connectAck.Status.Should().Be( MqttConnectionStatus.Accepted );
+            connectAck.SessionPresent.Should().BeFalse();
 		}
 
-		[Fact]
+		[Test]
 		public async Task when_sending_connect_with_existing_session_and_without_clean_session_then_session_is_not_deleted_and_ack_is_sent_with_session_present()
 		{
 			var authenticationProvider = Mock.Of<IMqttAuthenticationProvider> (p => p.Authenticate (It.IsAny<string>(), It.IsAny<string> (), It.IsAny<string> ()) == true);
@@ -98,12 +99,13 @@ namespace Tests.Flows
 			var connectAck = sentPacket as ConnectAck;
 
 			Assert.NotNull (connectAck);
-			Assert.Equal (MqttPacketType.ConnectAck, connectAck.Type);
-			Assert.Equal (MqttConnectionStatus.Accepted, connectAck.Status);
-			Assert.True (connectAck.SessionPresent);
+            connectAck.Type.Should().Be( MqttPacketType.ConnectAck );
+            connectAck.Status.Should().Be( MqttConnectionStatus.Accepted );
+
+            connectAck.SessionPresent.Should().BeTrue();
 		}
 
-		[Fact]
+		[Test]
 		public async Task when_sending_connect_with_existing_session_and_clean_session_then_session_is_deleted_and_ack_is_sent_with_session_present()
 		{
 			var authenticationProvider = Mock.Of<IMqttAuthenticationProvider> (p => p.Authenticate (It.IsAny<string>(), It.IsAny<string> (), It.IsAny<string> ()) == true);
@@ -145,12 +147,12 @@ namespace Tests.Flows
 			willRepository.Verify (r => r.Create (It.IsAny<ConnectionWill> ()), Times.Never);
 
 			Assert.NotNull (connectAck);
-			Assert.Equal (MqttPacketType.ConnectAck, connectAck.Type);
-			Assert.Equal (MqttConnectionStatus.Accepted, connectAck.Status);
+            connectAck.Type.Should().Be( MqttPacketType.ConnectAck );
+            connectAck.Status.Should().Be( MqttConnectionStatus.Accepted );
 			Assert.False (connectAck.SessionPresent);
 		}
 
-		[Fact]
+		[Test]
 		public async Task when_sending_connect_without_existing_session_and_without_clean_session_then_ack_is_sent_with_no_session_present()
 		{
 			var authenticationProvider = Mock.Of<IMqttAuthenticationProvider> (p => p.Authenticate (It.IsAny<string>(), It.IsAny<string> (), It.IsAny<string> ()) == true);
@@ -189,7 +191,7 @@ namespace Tests.Flows
 			Assert.False (connectAck.SessionPresent);
 		}
 
-		[Fact]
+		[Test]
 		public async Task when_sending_connect_with_will_then_will_is_created_and_ack_is_sent()
 		{
 			var authenticationProvider = Mock.Of<IMqttAuthenticationProvider> (p => p.Authenticate (It.IsAny<string>(), It.IsAny<string> (), It.IsAny<string> ()) == true);
@@ -231,12 +233,12 @@ namespace Tests.Flows
 			willRepository.Verify (r => r.Create (It.Is<ConnectionWill> (w => w.Id == clientId && w.Will == will)));
 
 			Assert.NotNull (connectAck);
-			Assert.Equal (MqttPacketType.ConnectAck, connectAck.Type);
-			Assert.Equal (MqttConnectionStatus.Accepted, connectAck.Status);
+            connectAck.Type.Should().Be( MqttPacketType.ConnectAck );
+            connectAck.Status.Should().Be( MqttConnectionStatus.Accepted );
 			Assert.False (connectAck.SessionPresent);
 		}
 
-		[Fact]
+		[Test]
 		public void when_sending_connect_with_invalid_user_credentials_then_connection_exception_is_thrown()
 		{
 			var authenticationProvider = Mock.Of<IMqttAuthenticationProvider> (p => p.Authenticate (It.IsAny<string>(), It.IsAny<string> (), It.IsAny<string> ()) == false);
@@ -265,10 +267,11 @@ namespace Tests.Flows
 
 			Assert.NotNull (aggregateEx.InnerException);
 			Assert.True (aggregateEx.InnerException is MqttConnectionException);
-			Assert.Equal (MqttConnectionStatus.BadUserNameOrPassword, ((MqttConnectionException)aggregateEx.InnerException).ReturnCode);
+            ((MqttConnectionException) aggregateEx.InnerException).ReturnCode.Should()
+                .Be( MqttConnectionStatus.BadUserNameOrPassword );
 		}
 
-		[Fact]
+		[Test]
 		public async Task when_sending_connect_with_existing_session_and_without_clean_session_then_pending_messages_and_acks_are_sent()
 		{
 			var authenticationProvider = Mock.Of<IMqttAuthenticationProvider>(p => p.Authenticate(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()) == true);
@@ -378,11 +381,13 @@ namespace Tests.Flows
 
 			var connectAck = firstPacket as ConnectAck;
 
-			Assert.True(connectAck != null, userMessage: "The first packet sent by the Server must be a CONNACK");
-			Assert.Equal(MqttPacketType.ConnectAck, connectAck.Type);
-			Assert.Equal(MqttConnectionStatus.Accepted, connectAck.Status);
+			Assert.True(connectAck != null, "The first packet sent by the Server must be a CONNACK");
+            connectAck.Type.Should().Be( MqttPacketType.ConnectAck );
+            connectAck.Status.Should().Be( MqttConnectionStatus.Accepted );
+
 			Assert.True(connectAck.SessionPresent);
-			Assert.Equal(3, nextPackets.Count);
+            nextPackets.Count.Should().Be( 3 );
+
 			Assert.False(nextPackets.Any(x => x is ConnectAck));
 		}
 	}

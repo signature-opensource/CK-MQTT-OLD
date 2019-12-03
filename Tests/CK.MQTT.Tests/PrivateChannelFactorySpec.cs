@@ -1,15 +1,15 @@
-﻿using Moq;
+using Moq;
 using CK.MQTT;
 using CK.MQTT.Sdk.Bindings;
 using System.Reactive.Subjects;
 using System.Threading.Tasks;
-using Xunit;
+using NUnit.Framework;
 
 namespace Tests
 {
     public class PrivateChannelFactorySpec
     {
-        [Fact]
+        [Test]
         public async Task when_creating_channel_then_succeeds ()
         {
             var factory = new PrivateChannelFactory (Mock.Of<ISubject<PrivateStream>> (), EndpointIdentifier.Client, new MqttConfiguration ());

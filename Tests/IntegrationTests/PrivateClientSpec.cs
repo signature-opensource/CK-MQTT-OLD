@@ -1,10 +1,11 @@
-﻿using IntegrationTests.Context;
+using IntegrationTests.Context;
 using IntegrationTests.Messages;
 using System;
 using System.Linq;
 using CK.MQTT;
 using System.Threading.Tasks;
-using Xunit;
+using FluentAssertions;
+using NUnit.Framework;
 
 namespace IntegrationTests
 {
@@ -17,7 +18,7 @@ namespace IntegrationTests
             server = GetServerAsync ().Result;
         }
 
-        [Fact]
+        [Test]
         public async Task when_creating_in_process_client_then_it_is_already_connected()
         {
             var client = await server.CreateClientAsync ();
@@ -30,7 +31,7 @@ namespace IntegrationTests
             client.Dispose ();
         }
 
-        [Fact]
+        [Test]
         public async Task when_in_process_client_subscribe_to_topic_then_succeeds()
         {
             var client = await server.CreateClientAsync ();
@@ -46,7 +47,7 @@ namespace IntegrationTests
             client.Dispose();
         }
 
-        [Fact]
+        [Test]
         public async Task when_in_process_client_subscribe_to_system_topic_then_succeeds()
         {
             var client = await server.CreateClientAsync ();
@@ -62,7 +63,7 @@ namespace IntegrationTests
             client.Dispose ();
         }
 
-        [Fact]
+        [Test]
         public async Task when_in_process_client_publish_messages_then_succeeds()
         {
             var client = await server.CreateClientAsync ();
@@ -83,7 +84,7 @@ namespace IntegrationTests
             client.Dispose ();
         }
 
-        [Fact]
+        [Test]
         public async Task when_in_process_client_publish_system_messages_then_succeeds()
         {
             var client = await server.CreateClientAsync ();
@@ -104,7 +105,7 @@ namespace IntegrationTests
             client.Dispose ();
         }
 
-        [Fact]
+        [Test]
         public async Task when_in_process_client_disconnect_then_succeeds()
         {
             var client = await server.CreateClientAsync ();
@@ -119,7 +120,7 @@ namespace IntegrationTests
             client.Dispose ();
         }
 
-        [Fact]
+        [Test]
         public async Task when_in_process_clients_communicate_each_other_then_succeeds()
         {
             var fooClient = await server.CreateClientAsync ();
@@ -145,13 +146,13 @@ namespace IntegrationTests
 
             Assert.True (fooClient.IsConnected);
             Assert.True (barClient.IsConnected);
-            Assert.Equal (3, messagesReceived);
+            messagesReceived.Should().Be( 3 );
 
             fooClient.Dispose ();
             barClient.Dispose ();
         }
 
-        [Fact]
+        [Test]
         public async Task when_in_process_client_communicate_with_tcp_client_then_succeeds()
         {
             var inProcessClient = await server.CreateClientAsync ();
@@ -195,8 +196,8 @@ namespace IntegrationTests
 
             Assert.True (inProcessClient.IsConnected);
             Assert.True (remoteClient.IsConnected);
-            Assert.Equal (3, fooMessagesReceived);
-            Assert.Equal (3, barMessagesReceived);
+            fooMessagesReceived.Should().Be( 3 );
+            barMessagesReceived.Should().Be( 3 );
 
             inProcessClient.Dispose ();
             remoteClient.Dispose ();

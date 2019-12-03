@@ -3,7 +3,8 @@ using System;
 using System.Collections.Generic;
 using CK.MQTT;
 using System.Threading.Tasks;
-using Xunit;
+using FluentAssertions;
+using NUnit.Framework;
 
 namespace IntegrationTests
 {
@@ -16,7 +17,7 @@ namespace IntegrationTests
 			server = GetServerAsync ().Result;
 		}
 
-        [Fact]
+        [Test]
         public async Task when_server_is_closed_then_error_occurs_when_client_send_message()
         {
             var client = await GetClientAsync();
@@ -30,7 +31,7 @@ namespace IntegrationTests
             Assert.True(aggregateException.InnerException is MqttClientException || aggregateException.InnerException is ObjectDisposedException);
         }
 
-        [Fact]
+        [Test]
 		public async Task when_subscribe_topic_then_succeeds()
 		{
 			var client = await GetClientAsync ();
@@ -46,7 +47,7 @@ namespace IntegrationTests
 			client.Dispose ();
 		}
 
-		[Fact]
+		[Test]
 		public async Task when_subscribe_multiple_topics_then_succeeds()
 		{
 			var client = await GetClientAsync ();
@@ -71,10 +72,10 @@ namespace IntegrationTests
 		}
 
         [Theory]
-        [InlineData("foo/#/#")]
-        [InlineData("foo/bar#/")]
-        [InlineData("foo/bar+/test")]
-        [InlineData("foo/#/bar")]
+        [TestCase("foo/#/#")]
+        [TestCase("foo/bar#/")]
+        [TestCase("foo/bar+/test")]
+        [TestCase("foo/#/bar")]
         public async Task when_subscribing_invalid_topic_then_fails(string topicFilter)
         {
             var client = await GetClientAsync ();
@@ -86,10 +87,10 @@ namespace IntegrationTests
             Assert.True (ex.InnerException is MqttClientException);
             Assert.NotNull (ex.InnerException.InnerException);
             Assert.NotNull (ex.InnerException.InnerException is MqttException);
-            Assert.Equal (string.Format (Properties.Resources.GetString("SubscribeFormatter_InvalidTopicFilter"), topicFilter), ex.InnerException.InnerException.Message);
+            string.Format (Properties.Resources.GetString("SubscribeFormatter_InvalidTopicFilter"), topicFilter).Should().Be(ex.InnerException.InnerException.Message);
         }
 
-        [Fact]
+        [Test]
         public async Task when_subscribing_emtpy_topic_then_fails_with_protocol_violation()
         {
             var client = await GetClientAsync();
@@ -103,7 +104,7 @@ namespace IntegrationTests
             Assert.NotNull (ex.InnerException.InnerException is MqttProtocolViolationException);
         }
 
-        [Fact]
+        [Test]
 		public async Task when_unsubscribe_topic_then_succeeds()
 		{
 			var client = await GetClientAsync ();
@@ -127,7 +128,7 @@ namespace IntegrationTests
 			client.Dispose ();
 		}
 
-        [Fact]
+        [Test]
         public async Task when_unsubscribing_emtpy_topic_then_fails_with_protocol_violation()
         {
             var client = await GetClientAsync ();

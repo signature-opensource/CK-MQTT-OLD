@@ -1,4 +1,4 @@
-﻿/*
+/*
    Copyright 2014 NETFX
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -8,15 +8,17 @@
        http://www.apache.org/licenses/LICENSE-2.0
 */
 
+using FluentAssertions;
+using NUnit.Framework;
+
 namespace Tests
 {
 	using System.IO;
 	using System.Text.RegularExpressions;
-	using Xunit;
 
-	public class VersionInfoSpec
+    public class VersionInfoSpec
 	{
-		[Fact]
+		[Test]
 		public void when_parsing_version_info_then_can_retrieve_versions()
 		{
 			var version = @"Assembly=0.1.1
@@ -27,12 +29,12 @@ Package=0.1.0-pre";
 			var file = Regex.Match(version, "(?<=File=).*$", RegexOptions.Multiline).Value.Trim();
 			var package = Regex.Match(version, "(?<=Package=).*$", RegexOptions.Multiline).Value.Trim();
 
-			Assert.Equal("0.1.1", assembly);
-			Assert.Equal("0.1.0", file);
-			Assert.Equal("0.1.0-pre", package);
+			"0.1.1".Should().Be(assembly);
+			"0.1.0".Should().Be(file);
+			"0.1.0-pre".Should().Be(package);
 		}
 
-		[Fact]
+		[Test]
 		public void when_parsing_version_then_can_read_from_string()
 		{
 			var Version = "1.0.0-pre";

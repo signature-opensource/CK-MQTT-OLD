@@ -1,10 +1,10 @@
-﻿using Xunit;
+using NUnit.Framework;
 
 namespace Tests
 {
 	public class ClientSpec
 	{
-		//[Fact]
+		//[Test]
 		//public void when_creating_client_then_it_is_not_connected()
 		//{
 		//	var address = "192.168.1.1";
@@ -25,7 +25,7 @@ namespace Tests
 		//	Assert.False (client.IsConnected);
 		//}
 
-		[Fact]
+		[Test]
 		public void when_starting_connection_then_valid_client_is_created()
 		{
 

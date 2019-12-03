@@ -9,7 +9,8 @@ using System.Reactive.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Xunit;
+using FluentAssertions;
+using NUnit.Framework;
 
 namespace IntegrationTests
 {
@@ -23,7 +24,7 @@ namespace IntegrationTests
             server = GetServerAsync().Result;
         }
 
-        [Fact]
+        [Test]
         public async Task when_publish_messages_with_qos0_then_succeeds()
         {
             var client = await GetClientAsync();
@@ -46,7 +47,7 @@ namespace IntegrationTests
             client.Dispose();
         }
 
-        [Fact]
+        [Test]
         public async Task when_publish_messages_with_qos1_then_succeeds()
         {
             var client = await GetClientAsync();
@@ -83,7 +84,7 @@ namespace IntegrationTests
             client.Dispose();
         }
 
-        [Fact]
+        [Test]
         public async Task when_publish_messages_with_qos2_then_succeeds()
         {
             var client = await GetClientAsync();
@@ -126,7 +127,7 @@ namespace IntegrationTests
             client.Dispose();
         }
 
-        [Fact]
+        [Test]
         public async Task when_publish_message_to_topic_then_message_is_dispatched_to_subscribers()
         {
             var count = GetTestLoad();
@@ -187,8 +188,8 @@ namespace IntegrationTests
 
             var completed = WaitHandle.WaitAll( new WaitHandle[] { subscriber1Done.WaitHandle, subscriber2Done.WaitHandle }, TimeSpan.FromSeconds( Configuration.WaitTimeoutSecs ) );
 
-            Assert.Equal( count, subscriber1Received );
-            Assert.Equal( count, subscriber2Received );
+             count.Should().Be(subscriber1Received );
+             count.Should().Be(subscriber2Received );
             Assert.True( completed );
 
             await subscriber1.UnsubscribeAsync( topicFilter )
@@ -201,7 +202,7 @@ namespace IntegrationTests
             publisher.Dispose();
         }
 
-        [Fact]
+        [Test]
         public async Task when_publish_message_to_topic_and_there_is_no_subscribers_then_server_notifies()
         {
             var count = GetTestLoad();
@@ -235,13 +236,13 @@ namespace IntegrationTests
 
             var success = topicsNotSubscribedDone.Wait( TimeSpan.FromSeconds( keepAliveSecs * 2 ) );
 
-            Assert.Equal( count, topicsNotSubscribedCount );
+             count.Should().Be(topicsNotSubscribedCount );
             Assert.True( success );
 
             publisher.Dispose();
         }
 
-        [Fact]
+        [Test]
         public async Task when_publish_message_to_topic_and_expect_reponse_to_other_topic_then_succeeds()
         {
             var count = GetTestLoad();
@@ -301,7 +302,7 @@ namespace IntegrationTests
 
             var completed = subscriberDone.Wait( TimeSpan.FromSeconds( Configuration.WaitTimeoutSecs ) );
 
-            Assert.Equal( count, subscriberReceived );
+             count.Should().Be(subscriberReceived );
             Assert.True( completed );
 
             await subscriber.UnsubscribeAsync( requestTopic )
@@ -313,7 +314,7 @@ namespace IntegrationTests
             publisher.Dispose();
         }
 
-        [Fact]
+        [Test]
         public async Task when_publish_with_qos0_and_subscribe_with_same_client_intensively_then_succeeds()
         {
             var client = await GetClientAsync();
@@ -334,7 +335,7 @@ namespace IntegrationTests
             Assert.True( client.IsConnected );
         }
 
-        [Fact]
+        [Test]
         public async Task when_publish_with_qos1_and_subscribe_with_same_client_intensively_then_succeeds()
         {
             var client = await GetClientAsync();
@@ -355,7 +356,7 @@ namespace IntegrationTests
             Assert.True( client.IsConnected );
         }
 
-        [Fact]
+        [Test]
         public async Task when_publish_with_qos2_and_subscribe_with_same_client_intensively_then_succeeds()
         {
             var client = await GetClientAsync();
@@ -376,7 +377,7 @@ namespace IntegrationTests
             Assert.True( client.IsConnected );
         }
 
-        [Fact]
+        [Test]
         public async Task when_publish_system_messages_then_fails_and_server_disconnects_client()
         {
             var client = await GetClientAsync();
@@ -402,7 +403,7 @@ namespace IntegrationTests
             client.Dispose();
         }
 
-        [Fact]
+        [Test]
         public async Task when_publish_without_clean_session_then_pending_messages_are_sent_when_reconnect()
         {
             var client1 = await GetClientAsync();
@@ -454,8 +455,8 @@ namespace IntegrationTests
             var completed = WaitHandle.WaitAll( new WaitHandle[] { client1Done.WaitHandle, client2Done.WaitHandle }, TimeSpan.FromSeconds( Configuration.WaitTimeoutSecs ) );
 
             Assert.True( completed, $"Messages before disconnect weren't all received. Client 1 received: {client1Received}, Client 2 received: {client2Received}" );
-            Assert.Equal( messagesBeforeDisconnect, client1Received );
-            Assert.Equal( messagesBeforeDisconnect, client2Received );
+             messagesBeforeDisconnect.Should().Be(client1Received );
+             messagesBeforeDisconnect.Should().Be(client2Received );
 
             await client2.DisconnectAsync();
 
@@ -514,10 +515,10 @@ namespace IntegrationTests
             completed = WaitHandle.WaitAll( new WaitHandle[] { client1Done.WaitHandle, client2Done.WaitHandle }, TimeSpan.FromSeconds( Configuration.WaitTimeoutSecs ) );
 
             Assert.True( completed, $"Messages after re connect weren't all received. Client 1 received: {client1Received}, Client 2 received: {client2Received}" );
-            Assert.Equal( messagesAfterReconnect, client1Received );
-            Assert.Equal( messagesAfterReconnect, client2Received );
-            Assert.Equal( 0, client1OldMessagesReceived );
-            Assert.Equal( 0, client2OldMessagesReceived );
+             messagesAfterReconnect.Should().Be(client1Received );
+             messagesAfterReconnect.Should().Be(client2Received );
+             0.Should().Be(client1OldMessagesReceived );
+             0.Should().Be(client2OldMessagesReceived );
 
             await client1.UnsubscribeAsync( topic )
                 .ConfigureAwait( continueOnCapturedContext: false );
@@ -528,7 +529,7 @@ namespace IntegrationTests
             client2.Dispose();
         }
 
-        [Fact]
+        [Test]
         public async Task when_publish_with_client_with_session_present_then_subscriptions_are_re_used()
         {
             var count = GetTestLoad();
@@ -586,8 +587,8 @@ namespace IntegrationTests
             var completed = subscriberDone.Wait( TimeSpan.FromSeconds( Configuration.WaitTimeoutSecs ) );
 
             Assert.True( completed );
-            Assert.Equal( SessionState.SessionPresent, sessionState );
-            Assert.Equal( count, subscriberReceived );
+             SessionState.SessionPresent.Should().Be(sessionState );
+             count.Should().Be(subscriberReceived );
 
             await subscriber.UnsubscribeAsync( topic )
                 .ConfigureAwait( continueOnCapturedContext: false );
@@ -596,7 +597,7 @@ namespace IntegrationTests
             publisher.Dispose();
         }
 
-        [Fact]
+        [Test]
         public async Task when_publish_with_client_with_session_clared_then_subscriptions_are_not_re_used()
         {
             CleanSession = true;
@@ -644,8 +645,8 @@ namespace IntegrationTests
             var completed = subscriberDone.Wait( TimeSpan.FromSeconds( Configuration.WaitTimeoutSecs ) );
 
             Assert.False( completed );
-            Assert.Equal( SessionState.CleanSession, sessionState );
-            Assert.Equal( 0, subscriberReceived );
+             SessionState.CleanSession.Should().Be(sessionState );
+             0.Should().Be(subscriberReceived );
 
             await subscriber.UnsubscribeAsync( topic )
                 .ConfigureAwait( continueOnCapturedContext: false );
@@ -654,7 +655,7 @@ namespace IntegrationTests
             publisher.Dispose();
         }
 
-        [Fact]
+        [Test]
         public async Task when_publish_messages_and_client_disconnects_then_message_stream_is_reset()
         {
             var topic = Guid.NewGuid().ToString();
@@ -699,7 +700,7 @@ namespace IntegrationTests
             var completed = goalAchieved.Wait( TimeSpan.FromSeconds( Configuration.WaitTimeoutSecs ) );
 
             Assert.True( completed );
-            Assert.Equal( goal, received );
+             goal.Should().Be(received );
 
             await subscriber.DisconnectAsync();
 
@@ -721,7 +722,7 @@ namespace IntegrationTests
             completed = goalAchieved.Wait( TimeSpan.FromSeconds( Configuration.WaitTimeoutSecs ) );
 
             Assert.False( completed );
-            Assert.Equal( 0, received );
+             0.Should().Be(received );
 
             await subscriber.UnsubscribeAsync( topic ).ConfigureAwait( continueOnCapturedContext: false );
 

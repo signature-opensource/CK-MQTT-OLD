@@ -1,16 +1,16 @@
-﻿using System;
+using System;
 using System.Net;
 using CK.MQTT;
 using CK.MQTT.Sdk.Bindings;
 using System.Net.Sockets;
 using System.Threading.Tasks;
-using Xunit;
+using NUnit.Framework;
 
 namespace Tests
 {
 	public class TcpChannelFactorySpec
 	{
-		[Fact]
+		[Test]
 		public async Task when_creating_channel_then_succeeds()
 		{
 			var configuration = new MqttConfiguration { ConnectionTimeoutSecs = 2 };
@@ -27,13 +27,15 @@ namespace Tests
 			listener.Stop ();
 		}
 
-		[Fact]
+		[Test]
 		public void when_creating_channel_with_invalid_address_then_fails()
 		{
 			var configuration = new MqttConfiguration { ConnectionTimeoutSecs = 2 };
 			var factory = new TcpChannelFactory (IPAddress.Loopback.ToString (), configuration);
-
-			var ex = Assert.Throws<AggregateException> (() => factory.CreateAsync ().Result);
+			var ex = Assert.Throws<AggregateException> ( () =>
+            {
+                var a = factory.CreateAsync().Result;//Why this variable must exist ????
+            } );
 
 			Assert.NotNull (ex);
 			Assert.NotNull (ex.InnerException);

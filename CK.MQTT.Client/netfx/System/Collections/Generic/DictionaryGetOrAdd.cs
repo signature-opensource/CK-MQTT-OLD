@@ -1,4 +1,4 @@
-﻿#region BSD License
+#region BSD License
 /* 
 Copyright (c) 2010, NETFx
 All rights reserved.
@@ -16,8 +16,6 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 #endregion
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 /// <summary>
 /// Adds a key/value pair to the <see cref="IDictionary{TKey, TValue}"/> if the key does not already exist. 

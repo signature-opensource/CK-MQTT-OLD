@@ -1,16 +1,17 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using CK.MQTT.Sdk.Storage;
 using System.Threading.Tasks;
-using Xunit;
+using FluentAssertions;
+using NUnit.Framework;
 
 namespace Tests
 {
 	public class InMemoryRepositorySpec
     {
-		[Fact]
+		[Test]
 		public void when_creating_item_then_succeeds()
 		{
 			var repository = new InMemoryRepository<FooStorageObject>();
@@ -20,10 +21,10 @@ namespace Tests
 			repository.Create(new FooStorageObject { Id = "Foo3", Value = 3 });
 			repository.Create(new FooStorageObject { Id = "Foo4", Value = 4 });
 
-			Assert.Equal(4, repository.ReadAll().Count());
+			4.Should().Be(repository.ReadAll().Count());
 		}
 
-		[Fact]
+		[Test]
 		public void when_updating_item_then_succeeds()
 		{
 			var repository = new InMemoryRepository<FooStorageObject>();
@@ -35,10 +36,10 @@ namespace Tests
 
 			repository.Update(item);
 			
-			Assert.Equal(2, repository.ReadAll().First().Value);
+			2.Should().Be(repository.ReadAll().First().Value);
 		}
 
-		[Fact]
+		[Test]
 		public void when_deleting_item_then_succeeds()
 		{
 			var repository = new InMemoryRepository<FooStorageObject>();
@@ -46,11 +47,10 @@ namespace Tests
 
 			repository.Create(item);
 			repository.Delete("Foo1");
-
-			Assert.Empty(repository.ReadAll());
+            repository.ReadAll().Should().BeEmpty();
 		}
 
-		[Fact]
+		[Test]
 		public void when_deleting_item_with_invalid_id_then_does_not_delete()
 		{
 			var repository = new InMemoryRepository<FooStorageObject>();
@@ -58,11 +58,10 @@ namespace Tests
 
 			repository.Create(item);
 			repository.Delete("Foo2");
-
-			Assert.NotEmpty(repository.ReadAll());
+            repository.ReadAll().Should().NotBeEmpty();
 		}
 
-		[Fact]
+		[Test]
 		public async Task when_getting_element_by_id_in_multiple_threads_then_succeeds()
 		{
 			var count = 100;
@@ -91,7 +90,7 @@ namespace Tests
 				bag.Add(element);
 			});
 
-			Assert.Equal(count, bag.Count);
+			count.Should().Be(bag.Count);
 		}
 	}
 

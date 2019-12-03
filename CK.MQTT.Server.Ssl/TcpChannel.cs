@@ -1,5 +1,4 @@
 using System.Net.Sockets;
-using CK.MQTT;
 using CK.MQTT.Sdk;
 
 namespace CK.MQTT.Ssl
