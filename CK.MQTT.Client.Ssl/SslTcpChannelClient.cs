@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Text;
 
-namespace ConsoleApp1
+namespace CK.MQTT.Ssl
 {
 	public class SslTcpChannelClient : IChannelClient
 	{
@@ -22,7 +22,7 @@ namespace ConsoleApp1
 		public int PreferedSendBufferSize { get => _tcpClient.SendBufferSize; set => _tcpClient.SendBufferSize = value; }
 		public int PreferedReceiveBufferSize { get => _tcpClient.ReceiveBufferSize; set => _tcpClient.ReceiveBufferSize = value; }
 
-		public void Dispose()
+        public void Dispose()
 		{
 			_sslStream.Dispose();
 			_tcpClient.Dispose();

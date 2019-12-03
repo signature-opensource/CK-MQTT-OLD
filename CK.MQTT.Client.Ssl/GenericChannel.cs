@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -10,43 +10,43 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading.Tasks;
 
-namespace ConsoleApp1
+namespace CK.MQTT.Ssl
 {
-	internal class GenericChannel : IMqttChannel<byte[]>
+	public sealed class GenericChannel : IMqttChannel<byte[]>
 	{
-		static readonly ITracer tracer = Tracer.Get<GenericChannel>();
+		static readonly ITracer _tracer = Tracer.Get<GenericChannel>();
 
-		bool disposed;
+		bool _disposed;
 
-		readonly IChannelClient client;
-		readonly IPacketBuffer buffer;
-		readonly ReplaySubject<byte[]> receiver;
-		readonly ReplaySubject<byte[]> sender;
-		readonly IDisposable streamSubscription;
+		readonly IChannelClient _client;
+		readonly IPacketBuffer _buffer;
+		readonly ReplaySubject<byte[]> _receiver;
+		readonly ReplaySubject<byte[]> _sender;
+		readonly IDisposable _streamSubscription;
 
 		public GenericChannel(
 			IChannelClient client,
 			IPacketBuffer buffer,
 			MqttConfiguration configuration)
 		{
-			this.client = client;
-			this.client.PreferedReceiveBufferSize = configuration.BufferSize;
-			this.client.PreferedSendBufferSize = configuration.BufferSize;
-			this.buffer = buffer;
-			receiver = new ReplaySubject<byte[]>(window: TimeSpan.FromSeconds(configuration.WaitTimeoutSecs));
-			sender = new ReplaySubject<byte[]>(window: TimeSpan.FromSeconds(configuration.WaitTimeoutSecs));
-			streamSubscription = SubscribeStream();
+			_client = client;
+			_client.PreferedReceiveBufferSize = configuration.BufferSize;
+			_client.PreferedSendBufferSize = configuration.BufferSize;
+			_buffer = buffer;
+			_receiver = new ReplaySubject<byte[]>(window: TimeSpan.FromSeconds(configuration.WaitTimeoutSecs));
+			_sender = new ReplaySubject<byte[]>(window: TimeSpan.FromSeconds(configuration.WaitTimeoutSecs));
+			_streamSubscription = SubscribeStream();
 		}
 
 		public bool IsConnected
 		{
 			get
 			{
-				var connected = !disposed;
+				var connected = !_disposed;
 
 				try
 				{
-					connected = connected && client.Connected;
+					connected = connected && _client.Connected;
 				}
 				catch (Exception)
 				{
@@ -57,13 +57,13 @@ namespace ConsoleApp1
 			}
 		}
 
-		public IObservable<byte[]> ReceiverStream { get { return receiver; } }
+		public IObservable<byte[]> ReceiverStream { get { return _receiver; } }
 
-		public IObservable<byte[]> SenderStream { get { return sender; } }
+		public IObservable<byte[]> SenderStream { get { return _sender; } }
 
 		public async Task SendAsync(byte[] message)
 		{
-			if (disposed)
+			if (_disposed)
 			{
 				throw new ObjectDisposedException(GetType().FullName);
 			}
@@ -73,13 +73,13 @@ namespace ConsoleApp1
 				throw new MqttException("The underlying communication stream is not connected");
 			}
 
-			sender.OnNext(message);
+			_sender.OnNext(message);
 
 			try
 			{
-				tracer.Verbose("Sending packet of {0} bytes", message.Length);
+				_tracer.Verbose("Sending packet of {0} bytes", message.Length);
 
-				await client.GetStream()
+				await _client.GetStream()
 					.WriteAsync(message, 0, message.Length)
 					.ConfigureAwait(continueOnCapturedContext: false);
 			}
@@ -95,37 +95,37 @@ namespace ConsoleApp1
 			GC.SuppressFinalize(this);
 		}
 
-		protected virtual void Dispose(bool disposing)
+		void Dispose(bool disposing)
 		{
-			if (disposed) return;
+			if (_disposed) return;
 
 			if (disposing)
 			{
-				tracer.Info("Disposing {0}...", GetType().FullName);
+				_tracer.Info("Disposing {0}...", GetType().FullName);
 
-				streamSubscription.Dispose();
-				receiver.OnCompleted();
+				_streamSubscription.Dispose();
+				_receiver.OnCompleted();
 
 				try
 				{
-					client?.Dispose();
+					_client?.Dispose();
 				}
 				catch (SocketException socketEx)
 				{
-					tracer.Error(socketEx, "An error occurred while closing underlying communication channel. Error code: {0}", socketEx.SocketErrorCode);
+					_tracer.Error(socketEx, "An error occurred while closing underlying communication channel. Error code: {0}", socketEx.SocketErrorCode);
 				}
 
-				disposed = true;
+				_disposed = true;
 			}
 		}
 
 		IDisposable SubscribeStream()
 		{
 			return Observable.Defer(() => {
-				var buffer = new byte[client.PreferedReceiveBufferSize];
+				var buffer = new byte[_client.PreferedReceiveBufferSize];
 
 				return Observable.FromAsync<int>(() => {
-					return client.GetStream().ReadAsync(buffer, 0, buffer.Length);
+					return _client.GetStream().ReadAsync(buffer, 0, buffer.Length);
 				})
 				.Select(x => buffer.Take(x));
 			})
@@ -135,27 +135,27 @@ namespace ConsoleApp1
 			.Subscribe(bytes => {
 				var packets = default(IEnumerable<byte[]>);
 
-				if (buffer.TryGetPackets(bytes, out packets))
+				if (_buffer.TryGetPackets(bytes, out packets))
 				{
 					foreach (var packet in packets)
 					{
-						tracer.Verbose("Received packet of {0} bytes", packet.Length);
+						_tracer.Verbose("Received packet of {0} bytes", packet.Length);
 
-						receiver.OnNext(packet);
+						_receiver.OnNext(packet);
 					}
 				}
 			}, ex => {
 				if (ex is ObjectDisposedException)
 				{
-					receiver.OnError(new MqttException("The underlying communication stream is not available. The socket could have been disconnected", ex));
+					_receiver.OnError(new MqttException("The underlying communication stream is not available. The socket could have been disconnected", ex));
 				}
 				else
 				{
-					receiver.OnError(ex);
+					_receiver.OnError(ex);
 				}
 			}, () => {
-				tracer.Warn("The underlying communication stream has completed sending bytes. The observable sequence will be completed and the channel will be disposed");
-				receiver.OnCompleted();
+				_tracer.Warn("The underlying communication stream has completed sending bytes. The observable sequence will be completed and the channel will be disposed");
+				_receiver.OnCompleted();
 			});
 		}
 	}

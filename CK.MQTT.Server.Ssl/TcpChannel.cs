@@ -1,8 +1,8 @@
-﻿using System.Net.Sockets;
+using System.Net.Sockets;
 using CK.MQTT;
 using CK.MQTT.Sdk;
 
-namespace ConsoleApp1.Server
+namespace CK.MQTT.Ssl
 {
 	internal class TcpChannel
 	{

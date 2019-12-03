@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace ConsoleApp1
+namespace CK.MQTT.Ssl
 {
 	public interface IChannelClient : IDisposable
 	{

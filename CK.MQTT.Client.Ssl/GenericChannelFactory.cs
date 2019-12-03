@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using CK.MQTT;
 using CK.MQTT.Sdk;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ConsoleApp1
+namespace CK.MQTT.Ssl
 {
 	class GenericChannelFactory : IMqttChannelFactory
 	{

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using CK.MQTT;
 using CK.MQTT.Sdk;
@@ -7,23 +7,25 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ConsoleApp1
+namespace CK.MQTT.Ssl
 {
 	public class SslTcpChanneClientFactory
 	{
 		readonly SslTcpConfig _config;
-		readonly string _hostName;
+        private readonly MqttConfiguration _mqqtConfig;
+        readonly string _hostName;
 
-		public SslTcpChanneClientFactory(SslTcpConfig config, string hostName)
+		public SslTcpChanneClientFactory(SslTcpConfig config, MqttConfiguration mqqtConfig, string hostName)
 		{
 			_config = config;
-			_hostName = hostName;
+            _mqqtConfig = mqqtConfig;
+            _hostName = hostName;
 		}
 
 		public async Task<IChannelClient> CreateAsync()
 		{
 			var client = new TcpClient(_config.AddressFamily);
-			await client.ConnectAsync(_hostName, _config.Port);
+			await client.ConnectAsync(_hostName, _mqqtConfig.Port);
 			var ssl = new SslStream(
 				client.GetStream(),
 				false,
@@ -34,16 +36,14 @@ namespace ConsoleApp1
 			return new SslTcpChannelClient(client, ssl);
 		}
 
-		public static IMqttChannelFactory MqttChannelFactory(string hostName, SslTcpConfig sslConfig, MqttConfiguration mqqtConfig)
+		public static IMqttChannelFactory MqttChannelFactory(string hostName, SslTcpConfig sslConfig, MqttConfiguration mqttConfig)
 		{
-			return new GenericChannelFactory(new SslTcpChanneClientFactory(sslConfig, hostName).CreateAsync, mqqtConfig);
+			return new GenericChannelFactory(new SslTcpChanneClientFactory(sslConfig, mqttConfig, hostName).CreateAsync, mqttConfig);
 		}
 	}
 
 	public class SslTcpConfig
 	{
-		public int Port { get; set; }
-
 		public RemoteCertificateValidationCallback UserCertificateValidationCallback { get; set; }
 
 		public LocalCertificateSelectionCallback LocalCertificateSelectionCallback { get; set; }
