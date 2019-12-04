@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Linq;
 using CK.MQTT.Sdk.Flows;
 using CK.MQTT.Sdk.Packets;

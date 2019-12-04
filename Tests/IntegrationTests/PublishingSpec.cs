@@ -16,20 +16,32 @@ namespace IntegrationTests
 {
     public class PublishingSpec : ConnectedContext, IDisposable
     {
-        readonly IMqttServer server;
+        IMqttServer server;
 
-        public PublishingSpec()
-            : base( keepAliveSecs: 1 )
+        [SetUp]
+        public void SetUp()
         {
             server = GetServerAsync().Result;
         }
 
-        [Test]
-        public async Task when_publish_messages_with_qos0_then_succeeds()
+        [TearDown]
+        public void TearDown()
+        {
+            server?.Dispose();
+        }
+
+        public PublishingSpec()
+            : base( keepAliveSecs: 1 )
+        {
+        }
+
+        [TestCase( 100 )]
+        [TestCase( 500 )]
+        [TestCase( 1000 )]
+        public async Task when_publish_messages_with_qos0_then_succeeds(int count)
         {
             var client = await GetClientAsync();
             var topic = Guid.NewGuid().ToString();
-            var count = GetTestLoad();
             var tasks = new List<Task>();
 
             for( var i = 1; i <= count; i++ )
@@ -47,12 +59,13 @@ namespace IntegrationTests
             client.Dispose();
         }
 
-        [Test]
-        public async Task when_publish_messages_with_qos1_then_succeeds()
+        [TestCase( 100 )]
+        [TestCase( 500 )]
+        [TestCase( 1000 )]
+        public async Task when_publish_messages_with_qos1_then_succeeds(int count)
         {
             var client = await GetClientAsync();
             var topic = Guid.NewGuid().ToString();
-            var count = GetTestLoad();
             var tasks = new List<Task>();
 
             var publishAckPackets = 0;
@@ -84,12 +97,12 @@ namespace IntegrationTests
             client.Dispose();
         }
 
-        [Test]
-        public async Task when_publish_messages_with_qos2_then_succeeds()
+        [TestCase( 100 )]
+        [TestCase( 200 )]
+        public async Task when_publish_messages_with_qos2_then_succeeds(int count)
         {
             var client = await GetClientAsync();
             var topic = Guid.NewGuid().ToString();
-            var count = GetTestLoad();
             var tasks = new List<Task>();
 
             var publishReceivedPackets = 0;
@@ -127,10 +140,10 @@ namespace IntegrationTests
             client.Dispose();
         }
 
-        [Test]
-        public async Task when_publish_message_to_topic_then_message_is_dispatched_to_subscribers()
+        [TestCase( 100 )]
+        [TestCase( 200 )]
+        public async Task when_publish_message_to_topic_then_message_is_dispatched_to_subscribers(int count)
         {
-            var count = GetTestLoad();
 
             var guid = Guid.NewGuid().ToString();
             var topicFilter = guid + "/#";
@@ -188,8 +201,8 @@ namespace IntegrationTests
 
             var completed = WaitHandle.WaitAll( new WaitHandle[] { subscriber1Done.WaitHandle, subscriber2Done.WaitHandle }, TimeSpan.FromSeconds( Configuration.WaitTimeoutSecs ) );
 
-             count.Should().Be(subscriber1Received );
-             count.Should().Be(subscriber2Received );
+            count.Should().Be( subscriber1Received );
+            count.Should().Be( subscriber2Received );
             Assert.True( completed );
 
             await subscriber1.UnsubscribeAsync( topicFilter )
@@ -202,11 +215,10 @@ namespace IntegrationTests
             publisher.Dispose();
         }
 
-        [Test]
-        public async Task when_publish_message_to_topic_and_there_is_no_subscribers_then_server_notifies()
+        [TestCase( 100 )]
+        [TestCase( 500 )]
+        public async Task when_publish_message_to_topic_and_there_is_no_subscribers_then_server_notifies(int count)
         {
-            var count = GetTestLoad();
-
             var topic = Guid.NewGuid().ToString();
             var publisher = await GetClientAsync();
             var topicsNotSubscribedCount = 0;
@@ -236,17 +248,16 @@ namespace IntegrationTests
 
             var success = topicsNotSubscribedDone.Wait( TimeSpan.FromSeconds( keepAliveSecs * 2 ) );
 
-             count.Should().Be(topicsNotSubscribedCount );
+            topicsNotSubscribedCount.Should().Be( count );
             Assert.True( success );
 
             publisher.Dispose();
         }
 
-        [Test]
-        public async Task when_publish_message_to_topic_and_expect_reponse_to_other_topic_then_succeeds()
+        [TestCase(100)]
+        [TestCase(200 )]
+        public async Task when_publish_message_to_topic_and_expect_reponse_to_other_topic_then_succeeds( int count)
         {
-            var count = GetTestLoad();
-
             var guid = Guid.NewGuid().ToString();
             var requestTopic = guid;
             var responseTopic = guid + "/response";
@@ -302,7 +313,7 @@ namespace IntegrationTests
 
             var completed = subscriberDone.Wait( TimeSpan.FromSeconds( Configuration.WaitTimeoutSecs ) );
 
-             count.Should().Be(subscriberReceived );
+            subscriberReceived.Should().Be( count );
             Assert.True( completed );
 
             await subscriber.UnsubscribeAsync( requestTopic )
@@ -314,13 +325,12 @@ namespace IntegrationTests
             publisher.Dispose();
         }
 
-        [Test]
-        public async Task when_publish_with_qos0_and_subscribe_with_same_client_intensively_then_succeeds()
+        [TestCase( 100 )]
+        [TestCase( 200 )]
+        public async Task when_publish_with_qos0_and_subscribe_with_same_client_intensively_then_succeeds(int count)
         {
             var client = await GetClientAsync();
-            var count = GetTestLoad();
             var tasks = new List<Task>();
-
             for( var i = 1; i <= count; i++ )
             {
                 var subscribePublishTask = client
@@ -335,11 +345,11 @@ namespace IntegrationTests
             Assert.True( client.IsConnected );
         }
 
-        [Test]
-        public async Task when_publish_with_qos1_and_subscribe_with_same_client_intensively_then_succeeds()
+        [TestCase( 100 )]
+        [TestCase( 200 )]
+        public async Task when_publish_with_qos1_and_subscribe_with_same_client_intensively_then_succeeds(int count)
         {
             var client = await GetClientAsync();
-            var count = GetTestLoad();
             var tasks = new List<Task>();
 
             for( var i = 1; i <= count; i++ )
@@ -356,11 +366,11 @@ namespace IntegrationTests
             Assert.True( client.IsConnected );
         }
 
-        [Test]
-        public async Task when_publish_with_qos2_and_subscribe_with_same_client_intensively_then_succeeds()
+        [TestCase( 100 )]
+        [TestCase( 200 )]
+        public async Task when_publish_with_qos2_and_subscribe_with_same_client_intensively_then_succeeds(int count)
         {
             var client = await GetClientAsync();
-            var count = GetTestLoad();
             var tasks = new List<Task>();
 
             for( var i = 1; i <= count; i++ )
@@ -427,7 +437,7 @@ namespace IntegrationTests
                 .Where( m => m.Topic == topic )
                 .Subscribe( m =>
                 {
-                    client1Received++;
+                    Interlocked.Increment( ref client1Received );
 
                     if( client1Received == messagesBeforeDisconnect )
                         client1Done.Set();
@@ -438,7 +448,7 @@ namespace IntegrationTests
                 .Where( m => m.Topic == topic )
                 .Subscribe( m =>
                 {
-                    client2Received++;
+                    Interlocked.Increment(ref client2Received);
 
                     if( client2Received == messagesBeforeDisconnect )
                         client2Done.Set();
@@ -455,8 +465,8 @@ namespace IntegrationTests
             var completed = WaitHandle.WaitAll( new WaitHandle[] { client1Done.WaitHandle, client2Done.WaitHandle }, TimeSpan.FromSeconds( Configuration.WaitTimeoutSecs ) );
 
             Assert.True( completed, $"Messages before disconnect weren't all received. Client 1 received: {client1Received}, Client 2 received: {client2Received}" );
-             messagesBeforeDisconnect.Should().Be(client1Received );
-             messagesBeforeDisconnect.Should().Be(client2Received );
+            messagesBeforeDisconnect.Should().Be( client1Received );
+            messagesBeforeDisconnect.Should().Be( client2Received );
 
             await client2.DisconnectAsync();
 
@@ -478,7 +488,7 @@ namespace IntegrationTests
                     var testMessage = Serializer.Deserialize<TestMessage>( m.Payload );
 
                     if( testMessage.Id > messagesBeforeDisconnect )
-                        client1Received++;
+                        Interlocked.Increment( ref client1Received );
                     else
                         client1OldMessagesReceived++;
 
@@ -515,10 +525,10 @@ namespace IntegrationTests
             completed = WaitHandle.WaitAll( new WaitHandle[] { client1Done.WaitHandle, client2Done.WaitHandle }, TimeSpan.FromSeconds( Configuration.WaitTimeoutSecs ) );
 
             Assert.True( completed, $"Messages after re connect weren't all received. Client 1 received: {client1Received}, Client 2 received: {client2Received}" );
-             messagesAfterReconnect.Should().Be(client1Received );
-             messagesAfterReconnect.Should().Be(client2Received );
-             0.Should().Be(client1OldMessagesReceived );
-             0.Should().Be(client2OldMessagesReceived );
+            messagesAfterReconnect.Should().Be( client1Received );
+            messagesAfterReconnect.Should().Be( client2Received );
+            0.Should().Be( client1OldMessagesReceived );
+            0.Should().Be( client2OldMessagesReceived );
 
             await client1.UnsubscribeAsync( topic )
                 .ConfigureAwait( continueOnCapturedContext: false );
@@ -529,10 +539,9 @@ namespace IntegrationTests
             client2.Dispose();
         }
 
-        [Test]
-        public async Task when_publish_with_client_with_session_present_then_subscriptions_are_re_used()
+        [TestCase( 100 )]
+        public async Task when_publish_with_client_with_session_present_then_subscriptions_are_re_used(int count)
         {
-            var count = GetTestLoad();
             var topic = "topic/foo/bar";
 
             var publisher = await GetClientAsync();
@@ -551,7 +560,7 @@ namespace IntegrationTests
                 .Where( m => m.Topic == topic )
                 .Subscribe( m =>
                 {
-                    subscriberReceived++;
+                    Interlocked.Increment( ref subscriberReceived );
 
                     if( subscriberReceived == count )
                         subscriberDone.Set();
@@ -566,8 +575,7 @@ namespace IntegrationTests
                 .Where( m => m.Topic == topic )
                 .Subscribe( m =>
                 {
-                    subscriberReceived++;
-
+                    Interlocked.Increment( ref subscriberReceived );
                     if( subscriberReceived == count )
                         subscriberDone.Set();
                 } );
@@ -587,8 +595,8 @@ namespace IntegrationTests
             var completed = subscriberDone.Wait( TimeSpan.FromSeconds( Configuration.WaitTimeoutSecs ) );
 
             Assert.True( completed );
-             SessionState.SessionPresent.Should().Be(sessionState );
-             count.Should().Be(subscriberReceived );
+            SessionState.SessionPresent.Should().Be( sessionState );
+            count.Should().Be( subscriberReceived );
 
             await subscriber.UnsubscribeAsync( topic )
                 .ConfigureAwait( continueOnCapturedContext: false );
@@ -597,12 +605,13 @@ namespace IntegrationTests
             publisher.Dispose();
         }
 
-        [Test]
-        public async Task when_publish_with_client_with_session_clared_then_subscriptions_are_not_re_used()
+        [TestCase( 100 )]
+        [TestCase( 500 )]
+        [TestCase( 1000 )]
+        public async Task when_publish_with_client_with_session_clared_then_subscriptions_are_not_re_used(int count)
         {
             CleanSession = true;
 
-            var count = GetTestLoad();
             var topic = "topic/foo/bar";
 
             var publisher = await GetClientAsync();
@@ -621,7 +630,7 @@ namespace IntegrationTests
                 .Where( m => m.Topic == topic )
                 .Subscribe( m =>
                 {
-                    subscriberReceived++;
+                    Interlocked.Increment( ref subscriberReceived );
 
                     if( subscriberReceived == count )
                         subscriberDone.Set();
@@ -645,8 +654,8 @@ namespace IntegrationTests
             var completed = subscriberDone.Wait( TimeSpan.FromSeconds( Configuration.WaitTimeoutSecs ) );
 
             Assert.False( completed );
-             SessionState.CleanSession.Should().Be(sessionState );
-             0.Should().Be(subscriberReceived );
+            SessionState.CleanSession.Should().Be( sessionState );
+            0.Should().Be( subscriberReceived );
 
             await subscriber.UnsubscribeAsync( topic )
                 .ConfigureAwait( continueOnCapturedContext: false );
@@ -700,7 +709,7 @@ namespace IntegrationTests
             var completed = goalAchieved.Wait( TimeSpan.FromSeconds( Configuration.WaitTimeoutSecs ) );
 
             Assert.True( completed );
-             goal.Should().Be(received );
+            goal.Should().Be( received );
 
             await subscriber.DisconnectAsync();
 
@@ -722,7 +731,7 @@ namespace IntegrationTests
             completed = goalAchieved.Wait( TimeSpan.FromSeconds( Configuration.WaitTimeoutSecs ) );
 
             Assert.False( completed );
-             0.Should().Be(received );
+            0.Should().Be( received );
 
             await subscriber.UnsubscribeAsync( topic ).ConfigureAwait( continueOnCapturedContext: false );
 

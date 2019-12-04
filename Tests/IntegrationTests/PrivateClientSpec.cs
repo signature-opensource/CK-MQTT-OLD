@@ -11,11 +11,18 @@ namespace IntegrationTests
 {
 	public class PrivateClientSpec : IntegrationContext, IDisposable
     {
-        readonly IMqttServer server;
+        IMqttServer server;
 
-        public PrivateClientSpec()
+        [SetUp]
+        public void SetUp()
         {
-            server = GetServerAsync ().Result;
+            server = GetServerAsync().Result;
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            server?.Dispose();
         }
 
         [Test]

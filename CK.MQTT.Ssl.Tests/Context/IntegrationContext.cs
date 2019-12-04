@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Configuration;
 using System.Diagnostics;
@@ -96,15 +96,7 @@ namespace IntegrationTests.Context
 
 		static int GetPort()
 		{
-			var port = random.Next (minValue: 40000, maxValue: 65535);
-
-			if(usedPorts.Any(p => p == port)) {
-				port = GetPort ();
-			} else {
-				usedPorts.Add (port);
-			}
-
-			return port;
-		}
+            return 25565;
+        }
 	}
 }

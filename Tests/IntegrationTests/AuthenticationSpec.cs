@@ -9,12 +9,19 @@ namespace IntegrationTests
 {
 	public class AuthenticationSpec : IntegrationContext, IDisposable
 	{
-		readonly IMqttServer server;
+		IMqttServer server;
 
-		public AuthenticationSpec ()
-		{
-			server = GetServerAsync (new TestAuthenticationProvider(expectedUsername: "foo", expectedPassword: "foo123")).Result;
-		}
+        [SetUp]
+        public void SetUp()
+        {
+            server = GetServerAsync( new TestAuthenticationProvider( expectedUsername: "foo", expectedPassword: "foo123" ) ).Result;
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            server?.Dispose();
+        }
 
 		[Test]
 		public async Task when_client_connects_with_invalid_credentials_and_authentication_is_supported_then_connection_is_closed()
@@ -30,9 +37,8 @@ namespace IntegrationTests
 			Assert.NotNull (aggregateEx.InnerException.InnerException);
 			Assert.True (aggregateEx.InnerException.InnerException is MqttConnectionException);
 
-            ((MqttConnectionException) aggregateEx.InnerException.InnerException).ReturnCode.Should()
-                .Be( MqttConnectionStatus.BadUserNameOrPassword );
-        }
+            ((MqttConnectionException)aggregateEx.InnerException.InnerException).ReturnCode.Should().Be( MqttConnectionStatus.BadUserNameOrPassword );
+		}
 
 		[Test]
 		public async Task when_client_connects_with_valid_credentials_and_authentication_is_supported_then_connection_succeeds()

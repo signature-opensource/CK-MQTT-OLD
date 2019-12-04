@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -7,35 +7,35 @@ namespace CK.MQTT.Sdk
 {
 	internal sealed class SingleThreadScheduler : TaskScheduler, IDisposable
 	{
-		BlockingCollection<Task> tasks;
-		readonly Task runner;
+		BlockingCollection<Task> _tasks;
+		readonly Task _runner;
 
 		public SingleThreadScheduler ()
 		{
-			tasks = new BlockingCollection<Task> ();
-			runner = new Task (() => {
-				if (tasks == null) {
+			_tasks = new BlockingCollection<Task> ();
+			_runner = new Task (() => {
+				if (_tasks == null) {
 					return;
 				}
 
-				foreach (var task in tasks.GetConsumingEnumerable ()) {
+				foreach (var task in _tasks.GetConsumingEnumerable ()) {
 					TryExecuteTask (task);
 				}
 			}, TaskCreationOptions.LongRunning);
 
-			runner.Start (TaskScheduler.Default);
+			_runner.Start (TaskScheduler.Default);
 		}
 
-		public override int MaximumConcurrencyLevel { get { return 1; } }
+		public override int MaximumConcurrencyLevel => 1;
 
-		protected override void QueueTask (Task task)
+        protected override void QueueTask (Task task)
 		{
-			tasks.Add (task);
+			_tasks.Add (task);
 		}
 
 		protected override IEnumerable<Task> GetScheduledTasks ()
 		{
-			return tasks.ToArray ();
+			return _tasks.ToArray ();
 		}
 
 		protected override bool TryExecuteTaskInline (Task task, bool taskWasPreviouslyQueued)
@@ -52,9 +52,9 @@ namespace CK.MQTT.Sdk
 		void Dispose (bool disposing)
 		{
 			if (disposing) {
-				if (tasks != null) {
-					tasks.CompleteAdding ();
-					tasks = null;
+				if (_tasks != null) {
+					_tasks.CompleteAdding ();
+					_tasks = null;
 				}
 			}
 		}

@@ -11,12 +11,23 @@ namespace IntegrationTests
 {
 	public class ConnectionSpecWithKeepAlive : IntegrationContext, IDisposable
 	{
-		readonly IMqttServer server;
+		IMqttServer server;
 
-		public ConnectionSpecWithKeepAlive () 
+        [SetUp]
+        public void SetUp()
+        {
+            server = GetServerAsync().Result;
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            server?.Dispose();
+        }
+
+        public ConnectionSpecWithKeepAlive () 
 			: base(keepAliveSecs: 1)
 		{
-			server = GetServerAsync ().Result;
 		}
 
 		[Test]

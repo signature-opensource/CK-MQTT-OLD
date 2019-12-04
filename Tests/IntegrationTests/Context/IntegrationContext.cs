@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Configuration;
 using System.Diagnostics;
 using System.Linq;
@@ -70,16 +71,6 @@ namespace IntegrationTests.Context
             return string.Concat( "Client", Guid.NewGuid().ToString().Replace( "-", string.Empty ).Substring( 0, 15 ) );
         }
 
-        protected int GetTestLoad()
-        {
-            var testLoad = 0;
-            var loadValue = ConfigurationManager.AppSettings["testLoad"];
-
-            int.TryParse( loadValue, out testLoad );
-
-            return testLoad;
-        }
-
         void LoadConfiguration()
         {
             if( Configuration == null )
@@ -104,21 +95,7 @@ namespace IntegrationTests.Context
 
         static int GetPort()
         {
-            lock( _usedPorts )
-            {
-                var port = _random.Next( minValue: 40000, maxValue: 65535 );
-
-                if( _usedPorts.Any( p => p == port ) )
-                {
-                    port = GetPort();
-                }
-                else
-                {
-                    _usedPorts.Add( port );
-                }
-
-                return port;
-            }
+            return 25565;
         }
     }
 }
