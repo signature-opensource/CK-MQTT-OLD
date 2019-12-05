@@ -67,7 +67,7 @@ namespace IntegrationTests
 
 			client.Dispose ();
 
-			var serverDetectedClientClosed = clientClosed.Wait (TimeSpan.FromSeconds(keepAliveSecs * 2));
+			var serverDetectedClientClosed = clientClosed.Wait (TimeSpan.FromSeconds(KeepAliveSecs * 2));
 
 			subscription.Dispose ();
 
@@ -85,7 +85,7 @@ namespace IntegrationTests
 			await client.ConnectAsync (new MqttClientCredentials (clientId))
 				.ConfigureAwait(continueOnCapturedContext: false);
 
-            await Task.Delay (TimeSpan.FromSeconds (keepAliveSecs * 5));
+            await Task.Delay (TimeSpan.FromSeconds (KeepAliveSecs * 5));
 
 			Assert.True(server.ActiveClients.Any(c => c == clientId));
 			Assert.True(client.IsConnected);

@@ -25,7 +25,7 @@ namespace CK.MQTT.Ssl
 			var ssl = new SslStream(
 				client.GetStream(),
 				false,
-				_config.UserCertificateValidationCallback,
+				_config.RemoteCertificateValidationCallback,
 				_config.LocalCertificateSelectionCallback,
 				EncryptionPolicy.RequireEncryption);
 			await ssl.AuthenticateAsClientAsync(_hostName);
@@ -40,7 +40,7 @@ namespace CK.MQTT.Ssl
 
 	public class SslTcpConfig
 	{
-		public RemoteCertificateValidationCallback UserCertificateValidationCallback { get; set; }
+		public RemoteCertificateValidationCallback RemoteCertificateValidationCallback { get; set; }
 
 		public LocalCertificateSelectionCallback LocalCertificateSelectionCallback { get; set; }
 

@@ -240,7 +240,6 @@ namespace IntegrationTests
                 {
                     while( events.Count < 4 ) didNotTimeout &= Monitor.Wait( events, 500 );
                 }
-
                 Assert.True( didNotTimeout );
                 string.Concat( events ).Should().Be( "ccdd" );
                 server.ClientDisconnected -= onDisconnect;

@@ -2,6 +2,8 @@ using CK.MQTT.Sdk;
 using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
+using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 
 namespace CK.MQTT.Ssl
@@ -10,13 +12,15 @@ namespace CK.MQTT.Ssl
     {
         readonly TcpListener _listener;
         readonly MqttConfiguration _configuration;
-        private readonly SslTcpConfig _sslConfig;
+        readonly SslTcpConfig _sslConfig;
+        readonly ServerSslConfig _sslServerConfig;
 
-        public SslTcpChannelListener( MqttConfiguration configuration, SslTcpConfig sslConfig )
+        public SslTcpChannelListener( MqttConfiguration configuration, SslTcpConfig sslConfig, ServerSslConfig sslServerConfig )
         {
             _listener = new TcpListener( IPAddress.Any, configuration.Port );
             _configuration = configuration;
             _sslConfig = sslConfig;
+            _sslServerConfig = sslServerConfig;
         }
 
         public async Task<GenericChannel> AcceptClientAsync()
@@ -25,9 +29,15 @@ namespace CK.MQTT.Ssl
             var ssl = new SslStream(
                 client.GetStream(),
                 false,
-                _sslConfig.UserCertificateValidationCallback,
+                _sslConfig.RemoteCertificateValidationCallback,
                 _sslConfig.LocalCertificateSelectionCallback,
                 EncryptionPolicy.RequireEncryption
+            );
+            await ssl.AuthenticateAsServerAsync(
+                _sslServerConfig.ServerCertificate,
+                _sslConfig.RemoteCertificateValidationCallback != null,
+                _sslServerConfig.SslProtocols,
+                true
             );
             return new GenericChannel( new SslTcpChannelClient( client, ssl ), new PacketBuffer(), _configuration );
         }
@@ -35,5 +45,8 @@ namespace CK.MQTT.Ssl
         public void Start() => _listener.Start();
 
         public void Stop() => _listener.Stop();
+
+
+        
     }
 }

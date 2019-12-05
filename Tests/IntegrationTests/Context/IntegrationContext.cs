@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Configuration;
 using System.Diagnostics;
@@ -8,17 +9,17 @@ using CK.MQTT;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-
+using System.Net.Security;
+using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
+using CK.MQTT.Ssl;
+using static CK.Testing.BasicTestHelper;
 namespace IntegrationTests.Context
 {
     public abstract class IntegrationContext
     {
-        static readonly List<int> _usedPorts = new List<int>();
-        static readonly Random _random = new Random();
-
-        readonly object lockObject = new object();
-        protected readonly ushort keepAliveSecs;
-        protected readonly bool allowWildcardsInTopicFilters;
+        protected readonly ushort KeepAliveSecs;
+        protected readonly bool AllowWildcardsInTopicFilters;
 
         static IntegrationContext()
         {
@@ -28,8 +29,8 @@ namespace IntegrationTests.Context
 
         public IntegrationContext( ushort keepAliveSecs = 0, bool allowWildcardsInTopicFilters = true )
         {
-            this.keepAliveSecs = keepAliveSecs;
-            this.allowWildcardsInTopicFilters = allowWildcardsInTopicFilters;
+            this.KeepAliveSecs = keepAliveSecs;
+            this.AllowWildcardsInTopicFilters = allowWildcardsInTopicFilters;
         }
 
         protected MqttConfiguration Configuration { get; private set; }
@@ -39,11 +40,28 @@ namespace IntegrationTests.Context
             try
             {
                 LoadConfiguration();
-
-                var server = MqttServer.Create( Configuration, authenticationProvider: authenticationProvider );
-
+                var config = new SslTcpConfig()
+                {
+                    AddressFamily = AddressFamily.InterNetwork,
+                    
+                };
+                X509Certificate2Collection collection = new X509Certificate2Collection();
+                var certLocation = TestHelper.TestProjectFolder.AppendPart( "localhost.pfx" );
+                collection.Import( certLocation );
+                X509Certificate2 certificate = null;
+                foreach( X509Certificate2 singleHack in collection )
+                {
+                    certificate = singleHack;
+                    break;
+                }
+                if( certificate == null ) throw new InvalidOperationException();
+                var sslServerConfig = new ServerSslConfig
+                {
+                    ServerCertificate = certificate,
+                    SslProtocols = SslProtocols.Tls12
+                };
+                var server = MqttServer.Create( Configuration, new ServerTcpSslBinding(config, sslServerConfig ), authenticationProvider );
                 server.Start();
-
                 return server;
             }
             catch( MqttException protocolEx )
@@ -62,8 +80,11 @@ namespace IntegrationTests.Context
         protected virtual async Task<IMqttClient> GetClientAsync()
         {
             LoadConfiguration();
-
-            return await MqttClient.CreateAsync( IPAddress.Loopback.ToString(), Configuration );
+            SslTcpConfig sslConfig = new SslTcpConfig()
+            {
+                RemoteCertificateValidationCallback = ( s, c, ch, ssl ) => true
+            };
+            return await MqttClient.CreateAsync( IPAddress.Loopback.ToString(), Configuration, new SslTcpBinding( sslConfig ) );
         }
 
         protected string GetClientId()
@@ -73,24 +94,16 @@ namespace IntegrationTests.Context
 
         void LoadConfiguration()
         {
-            if( Configuration == null )
+            if( Configuration != null ) return;
+            Configuration = new MqttConfiguration
             {
-                lock( lockObject )
-                {
-                    if( Configuration == null )
-                    {
-                        Configuration = new MqttConfiguration
-                        {
-                            BufferSize = 128 * 1024,
-                            Port = GetPort(),
-                            KeepAliveSecs = keepAliveSecs,
-                            WaitTimeoutSecs = 2,
-                            MaximumQualityOfService = MqttQualityOfService.ExactlyOnce,
-                            AllowWildcardsInTopicFilters = allowWildcardsInTopicFilters
-                        };
-                    }
-                }
-            }
+                BufferSize = 128 * 1024,
+                Port = GetPort(),
+                KeepAliveSecs = KeepAliveSecs,
+                WaitTimeoutSecs = 5,
+                MaximumQualityOfService = MqttQualityOfService.ExactlyOnce,
+                AllowWildcardsInTopicFilters = AllowWildcardsInTopicFilters
+            };
         }
 
         static int GetPort()

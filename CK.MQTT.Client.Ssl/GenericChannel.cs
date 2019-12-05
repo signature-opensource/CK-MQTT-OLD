@@ -56,11 +56,11 @@ namespace CK.MQTT.Ssl
 			}
 		}
 
-		public IObservable<byte[]> ReceiverStream { get { return _receiver; } }
+		public IObservable<byte[]> ReceiverStream => _receiver;
 
-		public IObservable<byte[]> SenderStream { get { return _sender; } }
+        public IObservable<byte[]> SenderStream => _sender;
 
-		public async Task SendAsync(byte[] message)
+        public async Task SendAsync(byte[] message)
 		{
 			if (_disposed)
 			{

@@ -9,11 +9,13 @@ namespace CK.MQTT.Ssl
     /// </summary>
     public class ServerTcpSslBinding : SslTcpBinding, IMqttServerBinding
     {
-        private readonly SslTcpConfig _sslTcpConfig;
+        readonly SslTcpConfig _sslTcpConfig;
+        readonly ServerSslConfig _config;
 
-        public ServerTcpSslBinding( SslTcpConfig sslConfig ) : base (sslConfig)
+        public ServerTcpSslBinding( SslTcpConfig sslConfig, ServerSslConfig config ) : base( sslConfig )
         {
             _sslTcpConfig = sslConfig;
+            _config = config;
         }
         /// <summary>
         /// Provides a listener for incoming MQTT channels on top of TCP
@@ -24,6 +26,6 @@ namespace CK.MQTT.Ssl
         /// </param>
         /// <returns>A listener to accept and provide incoming MQTT channels on top of TCP</returns>
         public IMqttChannelListener GetChannelListener( MqttConfiguration config )
-            => new GenericListener<GenericChannel>( config, ( conf ) => new SslTcpChannelListener( config, _sslTcpConfig ) );
+            => new GenericListener<GenericChannel>( config, ( conf ) => new SslTcpChannelListener( config, _sslTcpConfig, _config ) );
     }
 }
