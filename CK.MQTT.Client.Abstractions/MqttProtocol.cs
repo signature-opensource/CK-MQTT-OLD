@@ -1,4 +1,4 @@
-﻿using CK.MQTT.Sdk;
+using CK.MQTT.Sdk;
 
 namespace CK.MQTT
 {
@@ -42,16 +42,16 @@ namespace CK.MQTT
         /// </summary>
         public const int ClientIdMaxLength = 65535;
 
-        internal const string Name = "MQTT";
+        public const string Name = "MQTT";
 
-        internal static readonly int NameLength = Name.Length + StringPrefixLength;
+        public static readonly int NameLength = Name.Length + StringPrefixLength;
 
-        internal const int MaxIntegerLength = 65535;
+        public const int MaxIntegerLength = 65535;
 
-		internal const int StringPrefixLength = 2;
+		public const int StringPrefixLength = 2;
 
-        internal const int PacketTypeLength = 1;
+        public const int PacketTypeLength = 1;
 
-		internal static MqttEncoder Encoding => MqttEncoder.Default;
+		public static MqttEncoder Encoding => MqttEncoder.Default;
 	}
 }
