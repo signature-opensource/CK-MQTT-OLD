@@ -1,4 +1,4 @@
-﻿namespace CK.MQTT
+namespace CK.MQTT
 {
     /// <summary>
     /// Credentials used to connect a Client to a Server as part of the protocol connection
@@ -30,7 +30,10 @@
 			Password = password;
         }
 
-		internal MqttClientCredentials () : this (clientId: string.Empty)
+        /// <summary>
+		/// Initializes a new instance of the <see cref="MqttClientCredentials" /> class.
+		/// </summary>
+		public MqttClientCredentials () : this (clientId: string.Empty)
 		{
 		}
 

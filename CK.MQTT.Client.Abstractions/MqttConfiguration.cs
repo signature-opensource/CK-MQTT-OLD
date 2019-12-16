@@ -1,4 +1,4 @@
-﻿namespace CK.MQTT
+namespace CK.MQTT
 {
 	/// <summary>
 	/// General configuration used across the protocol implementation

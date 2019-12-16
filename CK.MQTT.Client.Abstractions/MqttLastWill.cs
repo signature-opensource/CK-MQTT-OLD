@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.Text;
 using System.Linq;
 using System;
@@ -12,27 +12,6 @@ namespace CK.MQTT
     /// </summary>
 	public class MqttLastWill : IEquatable<MqttLastWill>
 	{
-        /// <summary>
-        /// Initializes a new instance of the <see cref="MqttLastWill" /> class,
-        /// specifying the topic to pusblish the last will message to, the Quality of Service (QoS)
-        /// to use, if the message should be sent as a retained message and also the content of the will message
-        /// to publish
-        /// </summary>
-        /// <param name="topic">Topic to publish the last will message to</param>
-        /// <param name="qualityOfService">
-        /// Quality of Service (QoS) to use when publishing the last will message.
-        /// See <see cref="MqttQualityOfService" /> for more details about the QoS meanings
-        /// </param>
-        /// <param name="retain">Specifies if the message should be retained or not</param>
-        /// <param name="message">Content of the will message to publish</param>
-		[Obsolete ("This constructor is obsolete, please use the constructor with the byte[] payload parameter instead.")]
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		public MqttLastWill (string topic, MqttQualityOfService qualityOfService, bool retain, string message)
-			: this (topic, qualityOfService, retain, payload: Encoding.UTF8.GetBytes (message))
-		{
-			Message = message;
-		}
-
 		/// <summary>
 		/// Initializes a new instance of the <see cref="MqttLastWill" /> class,
 		/// specifying the topic to pusblish the last will message to, the Quality of Service (QoS)
@@ -73,13 +52,6 @@ namespace CK.MQTT
         /// section for more information about retained messages
         /// </summary>
 		public bool Retain { get; }
-
-		/// <summary>
-		/// Content of the will message
-		/// </summary>
-		[Obsolete ("This property is obsolete, please use the byte[] Payload property instead.")]
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		public string Message { get; }
 
 		/// <summary>
 		/// Payload of the will message
