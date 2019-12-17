@@ -1,4 +1,4 @@
-﻿using CK.MQTT.Sdk;
+using CK.MQTT.Sdk;
 using CK.MQTT.Sdk.Bindings;
 
 namespace CK.MQTT
@@ -20,7 +20,6 @@ namespace CK.MQTT
 		/// <param name="binding">
 		/// The binding to use as the underlying transport layer.
 		/// Deafault value: <see cref="ServerTcpBinding"/>
-		/// Possible values: <see cref="ServerTcpBinding"/>, <see cref="ServerWebSocketBinding"/>
 		/// See <see cref="IMqttServerBinding"/> for more details about how 
 		/// to implement a custom binding
 		/// </param>

@@ -5,22 +5,14 @@ using NUnit.Framework;
 namespace CK.MQTT.TCP.Tests
 {
     [TestFixture]
-    public class AuthenticationSpecSslTcp : AuthenticationSpec
+    public class AuthenticationSpecWebSockets : AuthenticationSpec
     {
         protected override IMqttServerBinding MqttServerBinding => new ServerWebSocketBinding();
         protected override IMqttBinding MqttBinding => new WebSocketBinding();
     }
 
     [TestFixture]
-    public class ConnectionSpecSslTcp : ConnectionSpec
-    {
-        protected override IMqttServerBinding MqttServerBinding => new ServerWebSocketBinding();
-
-        protected override IMqttBinding MqttBinding => new WebSocketBinding();
-    }
-
-    [TestFixture]
-    public class ConnectionSpecWithKeepAliveSslTcp : ConnectionSpecWithKeepAlive
+    public class ConnectionSpecWebSockets : ConnectionSpec
     {
         protected override IMqttServerBinding MqttServerBinding => new ServerWebSocketBinding();
 
@@ -28,7 +20,7 @@ namespace CK.MQTT.TCP.Tests
     }
 
     [TestFixture]
-    public class PrivateClientSpecSslTcp : PrivateClientSpec
+    public class ConnectionSpecWithKeepAliveWebSockets : ConnectionSpecWithKeepAlive
     {
         protected override IMqttServerBinding MqttServerBinding => new ServerWebSocketBinding();
 
@@ -36,7 +28,7 @@ namespace CK.MQTT.TCP.Tests
     }
 
     [TestFixture]
-    public class PublishingSpecSslTcp : PublishingSpec
+    public class PrivateClientSpecWebSockets : PrivateClientSpec
     {
         protected override IMqttServerBinding MqttServerBinding => new ServerWebSocketBinding();
 
@@ -44,7 +36,15 @@ namespace CK.MQTT.TCP.Tests
     }
 
     [TestFixture]
-    public class SubscriptionSpecSslTcp : SubscriptionSpec
+    public class PublishingSpecWebSockets : PublishingSpec
+    {
+        protected override IMqttServerBinding MqttServerBinding => new ServerWebSocketBinding();
+
+        protected override IMqttBinding MqttBinding => new WebSocketBinding();
+    }
+
+    [TestFixture]
+    public class SubscriptionSpecWebSockets : SubscriptionSpec
     {
         protected override IMqttServerBinding MqttServerBinding => new ServerWebSocketBinding();
 

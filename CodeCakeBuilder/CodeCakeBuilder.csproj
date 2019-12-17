@@ -4,7 +4,6 @@
     <OutputType>Exe</OutputType>
     <LangVersion>7.2</LangVersion>
     <IsPackable>False</IsPackable>
-    <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="NuGet.Protocol" Version="5.3.0" />

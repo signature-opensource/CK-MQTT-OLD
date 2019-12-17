@@ -5,22 +5,14 @@ using NUnit.Framework;
 namespace CK.MQTT.TCP.Tests
 {
     [TestFixture]
-    public class AuthenticationSpecSslTcp : AuthenticationSpec
+    public class AuthenticationSpecTcp : AuthenticationSpec
     {
         protected override IMqttServerBinding MqttServerBinding => new ServerTcpBinding();
         protected override IMqttBinding MqttBinding => new TcpBinding();
     }
 
     [TestFixture]
-    public class ConnectionSpecSslTcp : ConnectionSpec
-    {
-        protected override IMqttServerBinding MqttServerBinding => new ServerTcpBinding();
-
-        protected override IMqttBinding MqttBinding => new TcpBinding();
-    }
-
-    [TestFixture]
-    public class ConnectionSpecWithKeepAliveSslTcp : ConnectionSpecWithKeepAlive
+    public class ConnectionSpecTcp : ConnectionSpec
     {
         protected override IMqttServerBinding MqttServerBinding => new ServerTcpBinding();
 
@@ -28,7 +20,7 @@ namespace CK.MQTT.TCP.Tests
     }
 
     [TestFixture]
-    public class PrivateClientSpecSslTcp : PrivateClientSpec
+    public class ConnectionSpecWithKeepAliveTcp : ConnectionSpecWithKeepAlive
     {
         protected override IMqttServerBinding MqttServerBinding => new ServerTcpBinding();
 
@@ -36,7 +28,7 @@ namespace CK.MQTT.TCP.Tests
     }
 
     [TestFixture]
-    public class PublishingSpecSslTcp : PublishingSpec
+    public class PrivateClientSpecTcp : PrivateClientSpec
     {
         protected override IMqttServerBinding MqttServerBinding => new ServerTcpBinding();
 
@@ -44,7 +36,15 @@ namespace CK.MQTT.TCP.Tests
     }
 
     [TestFixture]
-    public class SubscriptionSpecSslTcp : SubscriptionSpec
+    public class PublishingSpecTcp : PublishingSpec
+    {
+        protected override IMqttServerBinding MqttServerBinding => new ServerTcpBinding();
+
+        protected override IMqttBinding MqttBinding => new TcpBinding();
+    }
+
+    [TestFixture]
+    public class SubscriptionSpecTcp : SubscriptionSpec
     {
         protected override IMqttServerBinding MqttServerBinding => new ServerTcpBinding();
 
