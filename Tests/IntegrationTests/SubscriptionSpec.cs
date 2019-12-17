@@ -8,29 +8,14 @@ using NUnit.Framework;
 
 namespace IntegrationTests
 {
-	public class SubscriptionSpec : ConnectedContext
-	{
-		IMqttServer server;
-
-        [SetUp]
-        public void SetUp()
-        {
-            server = GetServerAsync().Result;
-        }
-
-        [TearDown]
-        public void TearDown()
-        {
-            server?.Dispose();
-        }
-
-
+	public abstract class SubscriptionSpec : ConnectedContext
+    {
         [Test]
         public async Task when_server_is_closed_then_error_occurs_when_client_send_message()
         {
             var client = await GetClientAsync();
 
-            server.Stop();
+            Server.Stop();
 
             var aggregateException = Assert.Throws<AggregateException>(() => client.SubscribeAsync("test\foo", MqttQualityOfService.AtLeastOnce).Wait());
 
@@ -151,11 +136,5 @@ namespace IntegrationTests
             Assert.NotNull (ex.InnerException.InnerException is MqttProtocolViolationException);
 
         }
-        public void Dispose ()
-		{
-			if (server != null) {
-				server.Stop ();
-			}
-		}
 	}
 }

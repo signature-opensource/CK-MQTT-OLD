@@ -61,11 +61,6 @@ namespace IntegrationTests.Context
 			return await MqttClient.CreateAsync (IPAddress.Loopback.ToString(), Configuration);
 		}
 
-		protected string GetClientId()
-		{
-			return string.Concat ("Client", Guid.NewGuid ().ToString ().Replace("-", string.Empty).Substring (0, 15));
-		}
-
 		protected int GetTestLoad()
 		{
 			var testLoad = 0;

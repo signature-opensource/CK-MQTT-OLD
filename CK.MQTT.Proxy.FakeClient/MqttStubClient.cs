@@ -1,6 +1,7 @@
 using CK.Core;
 using System;
 using System.Collections;
+using System.IO;
 using System.IO.Pipes;
 using System.Reactive.Subjects;
 using System.Threading;
@@ -39,7 +40,19 @@ namespace CK.MQTT.Proxy.FakeClient
             while(!token.IsCancellationRequested)
             {
                 var payload = await _pipeFormatter.ReceivePayloadAsync( token );
-                _receiver.OnNext( (MqttApplicationMessage) payload.Dequeue() );
+
+                if( !(payload.Dequeue() is RelayHeader serverHeader) ) throw new InvalidDataException("Header was not a RelayHeader.");
+                switch( serverHeader )
+                {
+                    case RelayHeader.Disconnected:
+                        Disconnected?.Invoke(this, (MqttEndpointDisconnected) payload.Dequeue());
+                        break;
+                    case RelayHeader.MessageEvent:
+                        _receiver.OnNext( (MqttApplicationMessage)payload.Dequeue() );
+                        break;
+                    default:
+                        throw new InvalidDataException( "Unknown Relay Header." );
+                }
             }
         }
 
@@ -58,7 +71,7 @@ namespace CK.MQTT.Proxy.FakeClient
             {
                 throw new NotSupportedException( "The transmission is only supported in message mode." );
             }
-            await _pipeFormatter.SendPayloadAsync( ClientHeader.Connect, credentials, will, cleanSession );
+            await _pipeFormatter.SendPayloadAsync( StubClientHeader.Connect, credentials, will, cleanSession );
             Stack result = _pipeFormatter.ReceivePayload();
             if( !(result.Pop() is SessionState state) ) throw new InvalidOperationException( "Unexpected payload return type." );
             return state;
@@ -71,7 +84,7 @@ namespace CK.MQTT.Proxy.FakeClient
             {
                 throw new NotSupportedException( "The transmission is only supported in message mode." );
             }
-            await _pipeFormatter.SendPayloadAsync( ClientHeader.Connect, will );
+            await _pipeFormatter.SendPayloadAsync( StubClientHeader.Connect, will );
             Stack result = _pipeFormatter.ReceivePayload();
             if( !(result.Pop() is SessionState state) ) throw new InvalidOperationException( "Unexpected payload return type." );
             if(result.Count != 0)
@@ -81,7 +94,7 @@ namespace CK.MQTT.Proxy.FakeClient
             return state;
         }
 
-        public Task DisconnectAsync() => _pipeFormatter.SendPayloadAsync( ClientHeader.Disconnect );
+        public Task DisconnectAsync() => _pipeFormatter.SendPayloadAsync( StubClientHeader.Disconnect );
 
         public void Dispose()
         {
@@ -90,10 +103,10 @@ namespace CK.MQTT.Proxy.FakeClient
             _pipe.Dispose();
         }
 
-        public Task PublishAsync( MqttApplicationMessage message, MqttQualityOfService qos, bool retain = false ) => _pipeFormatter.SendPayloadAsync( ClientHeader.Publish, message, qos, retain );
+        public Task PublishAsync( MqttApplicationMessage message, MqttQualityOfService qos, bool retain = false ) => _pipeFormatter.SendPayloadAsync( StubClientHeader.Publish, message, qos, retain );
 
-        public Task SubscribeAsync( string topicFilter, MqttQualityOfService qos ) => _pipeFormatter.SendPayloadAsync( ClientHeader.Subscribe, topicFilter, qos );
+        public Task SubscribeAsync( string topicFilter, MqttQualityOfService qos ) => _pipeFormatter.SendPayloadAsync( StubClientHeader.Subscribe, topicFilter, qos );
 
-        public Task UnsubscribeAsync( params string[] topics ) => _pipeFormatter.SendPayloadAsync( ClientHeader.Unsubscribe, topics );
+        public Task UnsubscribeAsync( params string[] topics ) => _pipeFormatter.SendPayloadAsync( StubClientHeader.Unsubscribe, topics );
     }
 }

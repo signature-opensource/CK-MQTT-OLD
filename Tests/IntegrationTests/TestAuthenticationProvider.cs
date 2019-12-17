@@ -1,4 +1,4 @@
-﻿using CK.MQTT;
+using CK.MQTT;
 
 namespace IntegrationTests
 {

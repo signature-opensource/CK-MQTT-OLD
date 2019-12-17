@@ -14,27 +14,8 @@ using NUnit.Framework;
 
 namespace IntegrationTests
 {
-    public class PublishingSpec : ConnectedContext, IDisposable
+    public abstract class PublishingSpec : ConnectedContext
     {
-        IMqttServer server;
-
-        [SetUp]
-        public void SetUp()
-        {
-            server = GetServerAsync().Result;
-        }
-
-        [TearDown]
-        public void TearDown()
-        {
-            server?.Dispose();
-        }
-
-        public PublishingSpec()
-            : base( keepAliveSecs: 4 )
-        {
-        }
-
         [TestCase( 100 )]
         [TestCase( 500 )]
         [TestCase( 1000 )]
@@ -224,7 +205,7 @@ namespace IntegrationTests
             var topicsNotSubscribedCount = 0;
             var topicsNotSubscribedDone = new ManualResetEventSlim();
 
-            server.MessageUndelivered += ( sender, e ) =>
+            Server.MessageUndelivered += ( sender, e ) =>
             {
                 Interlocked.Increment( ref topicsNotSubscribedCount );
 
@@ -743,14 +724,6 @@ namespace IntegrationTests
 
             subscriber.Dispose();
             publisher.Dispose();
-        }
-
-        public void Dispose()
-        {
-            if( server != null )
-            {
-                server.Stop();
-            }
         }
 
         TestMessage GetTestMessage( int id )

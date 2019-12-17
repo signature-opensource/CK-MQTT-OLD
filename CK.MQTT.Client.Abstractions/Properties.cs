@@ -12,8 +12,8 @@ namespace CK.MQTT
             get
             {
                 var assembly = Assembly.GetExecutingAssembly();
-                Debug.Assert( assembly.GetManifestResourceNames().Contains( "CK.MQTT.Client.Properties.Resources.resources" ));
-                return new ResourceManager( "CK.MQTT.Client.Properties.Resources", assembly );
+                Debug.Assert( assembly.GetManifestResourceNames().Contains( "CK.MQTT.Client.Abstractions.Properties.Resources.resources" ));
+                return new ResourceManager( "CK.MQTT.Client.Abstractions.Properties.Resources", assembly );
             }
         }
     }

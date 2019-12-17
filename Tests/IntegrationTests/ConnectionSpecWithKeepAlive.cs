@@ -9,24 +9,10 @@ using NUnit.Framework;
 
 namespace IntegrationTests
 {
-	public class ConnectionSpecWithKeepAlive : IntegrationContext, IDisposable
-	{
-		IMqttServer server;
-
-        [SetUp]
-        public void SetUp()
-        {
-            server = GetServerAsync().Result;
-        }
-
-        [TearDown]
-        public void TearDown()
-        {
-            server?.Dispose();
-        }
-
-        public ConnectionSpecWithKeepAlive () 
-			: base(keepAliveSecs: 1)
+	public abstract class ConnectionSpecWithKeepAlive : IntegrationContext
+    {
+        protected ConnectionSpecWithKeepAlive () 
+			: base( keepAliveSecs: 1 )
 		{
 		}
 
@@ -35,11 +21,11 @@ namespace IntegrationTests
 		{
 			var client = await GetClientAsync ();
 
-			await client.ConnectAsync (new MqttClientCredentials (GetClientId ()))
+			await client.ConnectAsync (new MqttClientCredentials ( MqttTestHelper.GetClientId ()))
 				.ConfigureAwait(continueOnCapturedContext: false);
 
 			var clientId = client.Id;
-			var existClientAfterConnect = server.ActiveClients.Any (c => c == clientId);
+			var existClientAfterConnect = Server.ActiveClients.Any (c => c == clientId);
 			var clientClosed = new ManualResetEventSlim ();
 
 			var subscription = Observable.Create<bool> (observer => {
@@ -47,7 +33,7 @@ namespace IntegrationTests
 
 				timer.Interval = 200;
 				timer.Elapsed += (sender, args) => {
-					if (server.ActiveClients.Any (c => c == clientId)) {
+					if (Server.ActiveClients.Any (c => c == clientId)) {
 						observer.OnNext (false);
 					} else {
 						observer.OnNext (true);
@@ -73,32 +59,25 @@ namespace IntegrationTests
 
 			Assert.True (existClientAfterConnect);
 			Assert.True (serverDetectedClientClosed);
-			Assert.False (server.ActiveClients.Any (c => c == clientId));
+			Assert.False (Server.ActiveClients.Any (c => c == clientId));
 		}
 
 		[Test]
 		public async Task when_keep_alive_enabled_and_no_packets_are_sent_then_connection_is_maintained()
 		{
 			var client = await GetClientAsync ();
-			var clientId = GetClientId ();
+			var clientId = MqttTestHelper.GetClientId ();
 
 			await client.ConnectAsync (new MqttClientCredentials (clientId))
 				.ConfigureAwait(continueOnCapturedContext: false);
 
             await Task.Delay (TimeSpan.FromSeconds (KeepAliveSecs * 5));
 
-			Assert.True(server.ActiveClients.Any(c => c == clientId));
+			Assert.True(Server.ActiveClients.Any(c => c == clientId));
 			Assert.True(client.IsConnected);
 			Assert.False (string.IsNullOrEmpty (client.Id));
 
 			client.Dispose ();
-		}
-
-		public void Dispose ()
-		{
-			if (server != null) {
-				server.Stop ();
-			}
 		}
 	}
 }

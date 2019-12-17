@@ -9,26 +9,12 @@ using NUnit.Framework;
 
 namespace IntegrationTests
 {
-	public class PrivateClientSpec : IntegrationContext, IDisposable
+	public abstract class PrivateClientSpec : IntegrationContext
     {
-        IMqttServer server;
-
-        [SetUp]
-        public void SetUp()
-        {
-            server = GetServerAsync().Result;
-        }
-
-        [TearDown]
-        public void TearDown()
-        {
-            server?.Dispose();
-        }
-
         [Test]
         public async Task when_creating_in_process_client_then_it_is_already_connected()
         {
-            var client = await server.CreateClientAsync ();
+            var client = await Server.CreateClientAsync ();
 
             Assert.NotNull (client);
             Assert.True (client.IsConnected);
@@ -41,7 +27,7 @@ namespace IntegrationTests
         [Test]
         public async Task when_in_process_client_subscribe_to_topic_then_succeeds()
         {
-            var client = await server.CreateClientAsync ();
+            var client = await Server.CreateClientAsync ();
             var topicFilter = Guid.NewGuid ().ToString () + "/#";
 
             await client.SubscribeAsync (topicFilter, MqttQualityOfService.AtMostOnce)
@@ -57,7 +43,7 @@ namespace IntegrationTests
         [Test]
         public async Task when_in_process_client_subscribe_to_system_topic_then_succeeds()
         {
-            var client = await server.CreateClientAsync ();
+            var client = await Server.CreateClientAsync ();
             var topicFilter = "$SYS/" + Guid.NewGuid ().ToString () + "/#";
 
             await client.SubscribeAsync (topicFilter, MqttQualityOfService.AtMostOnce)
@@ -73,7 +59,7 @@ namespace IntegrationTests
         [Test]
         public async Task when_in_process_client_publish_messages_then_succeeds()
         {
-            var client = await server.CreateClientAsync ();
+            var client = await Server.CreateClientAsync ();
             var topic = Guid.NewGuid ().ToString ();
             var testMessage = new TestMessage
             {
@@ -94,7 +80,7 @@ namespace IntegrationTests
         [Test]
         public async Task when_in_process_client_publish_system_messages_then_succeeds()
         {
-            var client = await server.CreateClientAsync ();
+            var client = await Server.CreateClientAsync ();
             var topic = "$SYS/" + Guid.NewGuid ().ToString ();
             var testMessage = new TestMessage
             {
@@ -115,12 +101,12 @@ namespace IntegrationTests
         [Test]
         public async Task when_in_process_client_disconnect_then_succeeds()
         {
-            var client = await server.CreateClientAsync ();
+            var client = await Server.CreateClientAsync ();
 			var clientId = client.Id;
 
             await client.DisconnectAsync ();
 
-            Assert.False (server.ActiveClients.Any (c => c == clientId));
+            Assert.False ( Server.ActiveClients.Any (c => c == clientId));
             Assert.False (client.IsConnected);
             Assert.True (string.IsNullOrEmpty (client.Id));
 
@@ -130,8 +116,8 @@ namespace IntegrationTests
         [Test]
         public async Task when_in_process_clients_communicate_each_other_then_succeeds()
         {
-            var fooClient = await server.CreateClientAsync ();
-            var barClient = await server.CreateClientAsync ();
+            var fooClient = await Server.CreateClientAsync ();
+            var barClient = await Server.CreateClientAsync ();
             var fooTopic = "foo/message";
 
             await fooClient.SubscribeAsync (fooTopic, MqttQualityOfService.ExactlyOnce);
@@ -162,10 +148,10 @@ namespace IntegrationTests
         [Test]
         public async Task when_in_process_client_communicate_with_tcp_client_then_succeeds()
         {
-            var inProcessClient = await server.CreateClientAsync ();
+            var inProcessClient = await Server.CreateClientAsync ();
             var remoteClient = await GetClientAsync ();
 
-            await remoteClient.ConnectAsync (new MqttClientCredentials (GetClientId ()));
+            await remoteClient.ConnectAsync (new MqttClientCredentials ( MqttTestHelper.GetClientId ()));
 
             var fooTopic = "foo/message";
             var barTopic = "bar/message";
@@ -208,11 +194,6 @@ namespace IntegrationTests
 
             inProcessClient.Dispose ();
             remoteClient.Dispose ();
-        }
-
-        public void Dispose()
-        {
-            server?.Stop();
         }
     }
 }

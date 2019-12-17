@@ -4,7 +4,7 @@ using System.Text;
 
 namespace CK.MQTT.Proxy.FakeClient
 {
-    enum ClientHeader : byte
+    enum StubClientHeader : byte
     {
         Disconnect,
         Connect,
@@ -14,7 +14,7 @@ namespace CK.MQTT.Proxy.FakeClient
         IsConnected
     }
 
-    enum ServerHeader
+    enum RelayHeader
     {
         Disconnected,
         MessageEvent

@@ -1,9 +1,9 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using CK.MQTT.Sdk.Packets;
 
 namespace CK.MQTT.Sdk
 {
-    internal interface IConnectionProvider
+    public interface IConnectionProvider
 	{
 		int Connections { get; }
 

@@ -1,6 +1,6 @@
-﻿namespace CK.MQTT.Sdk.Packets
+namespace CK.MQTT.Sdk.Packets
 {
-	internal interface IPacket
+	public interface IPacket
     {
         MqttPacketType Type { get; }
     }
