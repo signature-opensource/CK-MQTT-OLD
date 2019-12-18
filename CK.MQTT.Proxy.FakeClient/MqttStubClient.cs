@@ -12,46 +12,44 @@ namespace CK.MQTT.Proxy.FakeClient
     public class MqttStubClient : IMqttClient
     {
         readonly IActivityMonitor _m;
-        readonly MqttConfiguration _config;
+        private readonly int _waitTimeoutSecs;
         readonly NamedPipeClientStream _pipe;
-        readonly PipeFormatter _pipeFormatter;
-        readonly CancellationTokenSource _listenerCancel;
-        readonly Task _listener;
+        CancellationTokenSource _listenerCancel;
+        Task _listener;
         readonly ReplaySubject<MqttApplicationMessage> _receiver;
-        MqttStubClient( IActivityMonitor m, MqttConfiguration config, NamedPipeClientStream namedPipeClientStream )
+        MqttStubClient( IActivityMonitor m, int waitTimeoutSecs, NamedPipeClientStream namedPipeClientStream )
         {
             _m = m;
-            _config = config;
+            _waitTimeoutSecs = waitTimeoutSecs;
             _pipe = namedPipeClientStream;
-            _pipeFormatter = new PipeFormatter( _pipe );
-            _listenerCancel = new CancellationTokenSource();
-            _listener = Listen( _listenerCancel.Token );
             _receiver = new ReplaySubject<MqttApplicationMessage>();
         }
 
-        public static MqttStubClient Create( IActivityMonitor m, MqttConfiguration config, string pipeName = "mqtt_pipe", string serverName = "." )
+        public static MqttStubClient Create( IActivityMonitor m, int waitTimeoutSecs, string pipeName = "ck_mqtt", string serverName = "." )
         {
             var pipe = new NamedPipeClientStream( serverName, pipeName, PipeDirection.InOut, PipeOptions.Asynchronous );
-            return new MqttStubClient( m, config, pipe );
+            return new MqttStubClient( m, waitTimeoutSecs, pipe );
         }
 
-        public async Task Listen(CancellationToken token)
+        public async Task BackgroundListening( CancellationToken token )
         {
-            while(!token.IsCancellationRequested)
+            while( !token.IsCancellationRequested )
             {
-                var payload = await _pipeFormatter.ReceivePayloadAsync( token );
-
-                if( !(payload.Dequeue() is RelayHeader serverHeader) ) throw new InvalidDataException("Header was not a RelayHeader.");
-                switch( serverHeader )
+                using( MemoryStream msg = await _pipe.ReadMessageAsync( token ) )
+                using( CKBinaryReader br = new CKBinaryReader( msg ) )
                 {
-                    case RelayHeader.Disconnected:
-                        Disconnected?.Invoke(this, (MqttEndpointDisconnected) payload.Dequeue());
-                        break;
-                    case RelayHeader.MessageEvent:
-                        _receiver.OnNext( (MqttApplicationMessage)payload.Dequeue() );
-                        break;
-                    default:
-                        throw new InvalidDataException( "Unknown Relay Header." );
+                    switch( br.ReadEnum<RelayHeader>() )
+                    {
+                        case RelayHeader.Disconnected:
+                            Disconnected?.Invoke( this, br.ReadDisconnectEvent() );
+                            break;
+                        case RelayHeader.MessageEvent:
+                            _receiver.OnNext( br.ReadApplicationMessage() );
+                            break;
+                        default:
+                            throw new InvalidDataException( "Unknown Relay Header." );
+                    }
+                    if( msg.Length != msg.Position ) throw new DataMisalignedException( "Expected to read the entierty of the stream." );
                 }
             }
         }
@@ -64,49 +62,100 @@ namespace CK.MQTT.Proxy.FakeClient
 
         public event EventHandler<MqttEndpointDisconnected> Disconnected;
 
-        public async Task<SessionState> ConnectAsync( MqttClientCredentials credentials, MqttLastWill will = null, bool cleanSession = false )
+        async Task<SessionState> ConnectAsyncInternal( MqttClientCredentials credentials = null, MqttLastWill will = null, bool cleanSession = false )
         {
-            await _pipe.ConnectAsync( _config.WaitTimeoutSecs * 1000 );
-            if( _pipe.TransmissionMode != PipeTransmissionMode.Message )
+            _listenerCancel = new CancellationTokenSource();
+            await _pipe.ConnectAsync( _waitTimeoutSecs * 1000 );
+            _pipe.ReadMode = PipeTransmissionMode.Message;
+            if( credentials == null )
             {
-                throw new NotSupportedException( "The transmission is only supported in message mode." );
+                using( MessageFormatter mf = new MessageFormatter() )//anonymous
+                {
+                    mf.Bw.WriteEnum( StubClientHeader.ConnectAnonymous );
+                    mf.Bw.Write( will );
+                    await mf.SendMessageAsync( _pipe ); //I would like async disposable :'(
+                }
             }
-            await _pipeFormatter.SendPayloadAsync( StubClientHeader.Connect, credentials, will, cleanSession );
-            Stack result = _pipeFormatter.ReceivePayload();
-            if( !(result.Pop() is SessionState state) ) throw new InvalidOperationException( "Unexpected payload return type." );
-            return state;
+            else
+            {
+                using( MessageFormatter mf = new MessageFormatter() )
+                {
+                    mf.Bw.WriteEnum( StubClientHeader.Connect );
+                    mf.Bw.Write( credentials );
+                    mf.Bw.Write( will );
+                    mf.Bw.Write( cleanSession );
+                    await mf.SendMessageAsync( _pipe );
+                }
+            }
+            using( var msgStream = await _pipe.ReadMessageAsync( CancellationToken.None ) )
+            using( var br = new CKBinaryReader( msgStream ) )
+            {
+                SessionState state = br.ReadEnum<SessionState>();
+                if( msgStream.Position != msgStream.Length ) throw new DataMisalignedException( "More data to read than expected." );
+                _listener = BackgroundListening( _listenerCancel.Token );
+                return state;
+            }
         }
 
-        public async Task<SessionState> ConnectAsync( MqttLastWill will = null )
+        public Task<SessionState> ConnectAsync( MqttClientCredentials credentials, MqttLastWill will = null, bool cleanSession = false )
         {
-            await _pipe.ConnectAsync( _config.WaitTimeoutSecs * 1000 );
-            if( _pipe.TransmissionMode != PipeTransmissionMode.Message )
-            {
-                throw new NotSupportedException( "The transmission is only supported in message mode." );
-            }
-            await _pipeFormatter.SendPayloadAsync( StubClientHeader.Connect, will );
-            Stack result = _pipeFormatter.ReceivePayload();
-            if( !(result.Pop() is SessionState state) ) throw new InvalidOperationException( "Unexpected payload return type." );
-            if(result.Count != 0)
-            {
-                _m.Warn( "Connect payload returned more than one object." );
-            }
-            return state;
+            if( credentials == null ) throw new ArgumentNullException( "credentials are null, use the method with MqttClientCredentials if you want to do anonymous connection." );
+            return ConnectAsyncInternal( credentials, will, cleanSession );
         }
 
-        public Task DisconnectAsync() => _pipeFormatter.SendPayloadAsync( StubClientHeader.Disconnect );
+        public Task<SessionState> ConnectAsync( MqttLastWill will = null )
+        {
+            return ConnectAsyncInternal( will: will );
+        }
+
+        public async Task DisconnectAsync()
+        {
+            //TODO: what should i do there ?
+            //return _pipeFormatter.SendPayloadAsync( StubClientHeader.Disconnect );
+        }
 
         public void Dispose()
         {
-            _listenerCancel.Cancel();
-            _listener.Wait();
+            _listenerCancel?.Cancel();
+            _listener?.Wait();
             _pipe.Dispose();
         }
 
-        public Task PublishAsync( MqttApplicationMessage message, MqttQualityOfService qos, bool retain = false ) => _pipeFormatter.SendPayloadAsync( StubClientHeader.Publish, message, qos, retain );
+        public Task PublishAsync( MqttApplicationMessage message, MqttQualityOfService qos, bool retain = false )
+        {
+            using(var msg = new MessageFormatter())
+            {
+                msg.Bw.WriteEnum( StubClientHeader.Publish );
+                msg.Bw.Write( message );
+                msg.Bw.WriteEnum( qos );
+                msg.Bw.Write( retain );
+                return msg.SendMessageAsync( _pipe );
+            }
+        }
 
-        public Task SubscribeAsync( string topicFilter, MqttQualityOfService qos ) => _pipeFormatter.SendPayloadAsync( StubClientHeader.Subscribe, topicFilter, qos );
+        public Task SubscribeAsync( string topicFilter, MqttQualityOfService qos )
+        {
+            using(var msg = new MessageFormatter())
+            {
+                msg.Bw.WriteEnum( StubClientHeader.Subscribe );
+                msg.Bw.Write( topicFilter);
+                msg.Bw.WriteEnum(qos);
+                return msg.SendMessageAsync( _pipe );
+            }
+        }
 
-        public Task UnsubscribeAsync( params string[] topics ) => _pipeFormatter.SendPayloadAsync( StubClientHeader.Unsubscribe, topics );
+        public Task UnsubscribeAsync( params string[] topics )
+        {
+            using(var msg = new MessageFormatter())
+            {
+                msg.Bw.WriteEnum( StubClientHeader.Unsubscribe );
+                msg.Bw.Write( topics.Length );
+                for( int i = 0; i < topics.Length; i++ )
+                {
+                    msg.Bw.Write( topics[i] );
+                }
+                return msg.SendMessageAsync( _pipe );
+            }
+        }
     }
 }

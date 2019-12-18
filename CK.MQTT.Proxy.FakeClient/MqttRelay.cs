@@ -2,6 +2,7 @@ using CK.Core;
 using Microsoft.Extensions.Hosting;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.IO.Pipes;
 using System.Text;
 using System.Threading;
@@ -9,89 +10,144 @@ using System.Threading.Tasks;
 
 namespace CK.MQTT.Proxy.FakeClient
 {
-    public class MqttRelay : IHostedService
+    public class MqttRelay : IHostedService, IDisposable
     {
-        readonly PipeFormatter _pf;
         private readonly IActivityMonitor _m;
         readonly MqttClientCredentials _credentials;
         readonly MqttLastWill _lastWill;
         readonly bool _cleanSession;
         readonly IMqttClient _client;
+        readonly NamedPipeServerStream _pipe;
         Task _task;
-        IDisposable _observing;
-        readonly CancellationTokenSource _tokenSource;
-        public MqttRelay( IActivityMonitor m, NamedPipeServerStream pipe, MqttClientCredentials credentials, MqttLastWill lastWill, bool cleanSession, IMqttClient client )
+        readonly IDisposable _observing;
+        CancellationTokenSource _tokenSource;
+        readonly bool _anonymous;
+        public MqttRelay(
+            IActivityMonitor m,
+            IMqttClient client,
+            MqttClientCredentials credentials,
+            bool cleanSession,
+            string pipeName = "ck_mqtt",
+            MqttLastWill lastWill = null ) : this( m, client, pipeName, lastWill )
         {
-            _m = m;
             _credentials = credentials;
-            _lastWill = lastWill;
             _cleanSession = cleanSession;
-            _client = client;
-            _tokenSource = new CancellationTokenSource();
-            _pf = new PipeFormatter( pipe );
-            _observing = _client.MessageStream.Subscribe(MessageReceived);
-            client.Disconnected += Client_Disconnected;
+            _anonymous = false;
         }
 
-        private void Client_Disconnected( object sender, MqttEndpointDisconnected e )
+        public MqttRelay( IActivityMonitor m, IMqttClient client, string pipeName = "ck_mqtt", MqttLastWill lastWill = null )
         {
-            _pf.SendPayload( RelayHeader.Disconnected, e );
+            _m = m;
+            _lastWill = lastWill;
+            _client = client;
+            _pipe = new NamedPipeServerStream(
+                pipeName,
+                PipeDirection.InOut,
+                NamedPipeServerStream.MaxAllowedServerInstances,
+                PipeTransmissionMode.Message,
+                PipeOptions.Asynchronous );
+            _observing = _client.MessageStream.Subscribe( MessageReceived );
+            client.Disconnected += Client_Disconnected;
+            _anonymous = true;
+        }
+
+        void Client_Disconnected( object sender, MqttEndpointDisconnected e )
+        {
+            using( var msg = new MessageFormatter() )
+            {
+                msg.Bw.WriteEnum( RelayHeader.Disconnected );
+                msg.Bw.Write( e );
+                msg.SendMessageAsync( _pipe ).Wait();
+            }
         }
 
         void MessageReceived( MqttApplicationMessage msg )
         {
-             _pf.SendPayload( RelayHeader.MessageEvent, msg );
+            using( var output = new MessageFormatter() )
+            {
+                output.Bw.WriteEnum( RelayHeader.MessageEvent );
+                output.Bw.Write( msg );
+                output.SendMessageAsync( _pipe ).Wait();
+            }
         }
 
         async Task Run( CancellationToken cancellationToken )
         {
             while( !cancellationToken.IsCancellationRequested )
             {
-                Queue<object> payload = await _pf.ReceivePayloadAsync( cancellationToken );
-                if( !(payload.Dequeue() is StubClientHeader clientHeader) ) throw new InvalidOperationException( "Payload did not start with a ClientHeader." );
-                switch( clientHeader )
+                if( !_pipe.IsConnected ) await _pipe.WaitForConnectionAsync( cancellationToken );
+                if( cancellationToken.IsCancellationRequested ) return;
+                using( MemoryStream streamOut = await _pipe.ReadMessageAsync( cancellationToken ) )
+                using( CKBinaryReader br = new CKBinaryReader( streamOut ) )
                 {
-                    case StubClientHeader.Disconnect:
-                        await _client.DisconnectAsync();
-                        _m.Warn( $"Disconnect should have empty payload, but the payload contain ${payload.Count} objects." );
-                        break;
-                    case StubClientHeader.Connect:
-                        SessionState state;
-                        if( payload.Count == 1 )
-                        {
-                            state = await _client.ConnectAsync( (MqttLastWill)payload.Dequeue() );
-                        }
-                        else if( payload.Count == 3 )
-                        {
-                            state = await _client.ConnectAsync( (MqttClientCredentials)payload.Dequeue(), (MqttLastWill)payload.Dequeue(), (bool)payload.Dequeue() );
-                        }
-                        else
-                        {
-                            throw new InvalidOperationException( "Payload count is incorrect." );
-                        }
-                        await _pf.SendPayloadAsync( state );
-                        break;
-                    case StubClientHeader.Publish:
-                        await _client.PublishAsync( (MqttApplicationMessage)payload.Dequeue(), (MqttQualityOfService)payload.Dequeue(), (bool)payload.Dequeue() );
-                        break;
-                    case StubClientHeader.Subscribe:
-                        await _client.SubscribeAsync( (string)payload.Dequeue(), (MqttQualityOfService)payload.Dequeue() );
-                        break;
-                    case StubClientHeader.Unsubscribe:
-                        await _client.UnsubscribeAsync( (string[])payload.Dequeue() );
-                        break;
-                    case StubClientHeader.IsConnected:
-                        await _pf.SendPayloadAsync( _client.IsConnected );
-                        break;
-                    default:
-                        throw new InvalidOperationException( "Unknown ClientHeader." );
+                    if( cancellationToken.IsCancellationRequested ) return;
+                    var header = br.ReadEnum<StubClientHeader>();
+                    switch( header )
+                    {
+                        case StubClientHeader.Disconnect:
+                            await _client.DisconnectAsync();
+                            break;
+                        case StubClientHeader.ConnectAnonymous:
+                            using( var msg = new MessageFormatter() )
+                            {
+                                //br.ReadLastWill()
+                                //await _client.ConnectAsync( )//TODO
+                                msg.Bw.WriteEnum( SessionState.CleanSession );
+                                await msg.SendMessageAsync( _pipe );
+                            }
+                            break;
+                        case StubClientHeader.Connect:
+                            using( var msg = new MessageFormatter() )
+                            {
+                                br.ReadClientCredentials();
+                                br.ReadLastWill();
+                                bool clean = br.ReadBoolean();
+                                //await _client.ConnectAsync( br.ReadClientCredentials(), br.ReadLastWill(), br.ReadBoolean() )
+                                msg.Bw.WriteEnum( clean ?  SessionState.CleanSession : SessionState.SessionPresent);//TODO
+                                await msg.SendMessageAsync( _pipe );
+                            }
+                            break;
+                        case StubClientHeader.Publish:
+                            await _client.PublishAsync( br.ReadApplicationMessage(), br.ReadEnum<MqttQualityOfService>(), br.ReadBoolean() );
+                            break;
+                        case StubClientHeader.Subscribe:
+
+                            await _client.SubscribeAsync( br.ReadString(), br.ReadEnum<MqttQualityOfService>() );
+                            break;
+                        case StubClientHeader.Unsubscribe:
+                            string[] topics = new string[br.Read()];
+                            for( int i = 0; i < topics.Length; i++ )
+                            {
+                                topics[i] = br.ReadString();
+                            }
+                            await _client.UnsubscribeAsync( topics );
+                            break;
+                        case StubClientHeader.IsConnected:
+                            using( var msg = new MessageFormatter() )
+                            {
+                                msg.Bw.Write( _client.IsConnected );
+                                await msg.SendMessageAsync( _pipe );
+                            }
+                            break;
+                        default:
+                            throw new InvalidOperationException( $"Unknown ClientHeader: {header.ToString()}." );
+                    }
                 }
+
             }
         }
 
         public async Task StartAsync( CancellationToken cancellationToken )
         {
-            await _client.ConnectAsync( _credentials, _lastWill, _cleanSession );
+            _tokenSource = new CancellationTokenSource();
+            if( _anonymous )
+            {
+                await _client.ConnectAsync( _lastWill );
+            }
+            else
+            {
+                await _client.ConnectAsync( _credentials, _lastWill, _cleanSession );
+            }
             _task = Run( _tokenSource.Token );
         }
 
@@ -99,8 +155,13 @@ namespace CK.MQTT.Proxy.FakeClient
         {
             _tokenSource.Cancel();
             await _task;
-            _observing.Dispose();
+        }
+
+        public void Dispose()
+        {
             _client.Disconnected -= Client_Disconnected;
+            _observing.Dispose();
+            _pipe.Dispose();
         }
     }
 }

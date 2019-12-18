@@ -11,9 +11,9 @@ namespace IntegrationTests.Context
 		}
 		public bool CleanSession { get; set; }
 
-		protected override async Task<IMqttClient> GetClientAsync ()
+		protected virtual async Task<IMqttClient> GetConnectedClientAsync ()
 		{
-			var client = await base.GetClientAsync ();
+			var client = await GetClientAsync ();
 			await client.ConnectAsync (new MqttClientCredentials ( MqttTestHelper.GetClientId ()), cleanSession: CleanSession);
 			return client;
 		}

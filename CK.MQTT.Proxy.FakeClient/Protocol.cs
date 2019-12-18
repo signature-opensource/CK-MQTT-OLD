@@ -8,6 +8,7 @@ namespace CK.MQTT.Proxy.FakeClient
     {
         Disconnect,
         Connect,
+        ConnectAnonymous,
         Publish,
         Subscribe,
         Unsubscribe,

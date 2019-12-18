@@ -21,7 +21,7 @@ namespace IntegrationTests
         [TestCase( 1000 )]
         public async Task when_publish_messages_with_qos0_then_succeeds( int count )
         {
-            var client = await GetClientAsync();
+            var client = await GetConnectedClientAsync();
             var topic = Guid.NewGuid().ToString();
             var tasks = new List<Task>();
 
@@ -45,7 +45,7 @@ namespace IntegrationTests
         [TestCase( 1000 )]
         public async Task when_publish_messages_with_qos1_then_succeeds( int count )
         {
-            var client = await GetClientAsync();
+            var client = await GetConnectedClientAsync();
             var topic = Guid.NewGuid().ToString();
             var tasks = new List<Task>();
 
@@ -82,7 +82,7 @@ namespace IntegrationTests
         [TestCase( 200 )]
         public async Task when_publish_messages_with_qos2_then_succeeds( int count )
         {
-            var client = await GetClientAsync();
+            var client = await GetConnectedClientAsync();
             var topic = Guid.NewGuid().ToString();
             var tasks = new List<Task>();
 
@@ -130,9 +130,9 @@ namespace IntegrationTests
             var topicFilter = guid + "/#";
             var topic = guid;
 
-            var publisher = await GetClientAsync();
-            var subscriber1 = await GetClientAsync();
-            var subscriber2 = await GetClientAsync();
+            var publisher = await GetConnectedClientAsync();
+            var subscriber1 = await GetConnectedClientAsync();
+            var subscriber2 = await GetConnectedClientAsync();
 
             var subscriber1Done = new ManualResetEventSlim();
             var subscriber2Done = new ManualResetEventSlim();
@@ -201,7 +201,7 @@ namespace IntegrationTests
         public async Task when_publish_message_to_topic_and_there_is_no_subscribers_then_server_notifies( int count )
         {
             var topic = Guid.NewGuid().ToString();
-            var publisher = await GetClientAsync();
+            var publisher = await GetConnectedClientAsync();
             var topicsNotSubscribedCount = 0;
             var topicsNotSubscribedDone = new ManualResetEventSlim();
 
@@ -243,8 +243,8 @@ namespace IntegrationTests
             var requestTopic = guid;
             var responseTopic = guid + "/response";
 
-            var publisher = await GetClientAsync();
-            var subscriber = await GetClientAsync();
+            var publisher = await GetConnectedClientAsync();
+            var subscriber = await GetConnectedClientAsync();
 
             var subscriberDone = new ManualResetEventSlim();
             var subscriberReceived = 0;
@@ -310,7 +310,7 @@ namespace IntegrationTests
         [TestCase( 200 )]
         public async Task when_publish_with_qos0_and_subscribe_with_same_client_intensively_then_succeeds( int count )
         {
-            var client = await GetClientAsync();
+            var client = await GetConnectedClientAsync();
             var tasks = new List<Task>();
             for( var i = 1; i <= count; i++ )
             {
@@ -330,7 +330,7 @@ namespace IntegrationTests
         [TestCase( 200 )]
         public async Task when_publish_with_qos1_and_subscribe_with_same_client_intensively_then_succeeds( int count )
         {
-            var client = await GetClientAsync();
+            var client = await GetConnectedClientAsync();
             var tasks = new List<Task>();
 
             for( var i = 1; i <= count; i++ )
@@ -351,7 +351,7 @@ namespace IntegrationTests
         [TestCase( 200 )]
         public async Task when_publish_with_qos2_and_subscribe_with_same_client_intensively_then_succeeds( int count )
         {
-            var client = await GetClientAsync();
+            var client = await GetConnectedClientAsync();
             var tasks = new List<Task>();
 
             for( var i = 1; i <= count; i++ )
@@ -371,7 +371,7 @@ namespace IntegrationTests
         [Test]
         public async Task when_publish_system_messages_then_fails_and_server_disconnects_client()
         {
-            var client = await GetClientAsync();
+            var client = await GetConnectedClientAsync();
             var topic = "$SYS/" + Guid.NewGuid().ToString();
             var message = new MqttApplicationMessage( topic, Encoding.UTF8.GetBytes( "Foo Message" ) );
 
@@ -398,11 +398,11 @@ namespace IntegrationTests
         public async Task when_publish_without_clean_session_then_pending_messages_are_sent_when_reconnect()
         {
             Assume.That(false, "To investigate.");
-            var client1 = await GetClientAsync();
+            var client1 = await GetConnectedClientAsync();
             var client1Done = new ManualResetEventSlim();
             var client1Received = 0;
 
-            var client2 = await GetClientAsync();
+            var client2 = await GetConnectedClientAsync();
             var client2Id = client2.Id;
             var client2Done = new ManualResetEventSlim();
             var client2Received = 0;
@@ -527,8 +527,8 @@ namespace IntegrationTests
             Assume.That(false, "To investigate.");
             var topic = "topic/foo/bar";
 
-            var publisher = await GetClientAsync();
-            var subscriber = await GetClientAsync();
+            var publisher = await GetConnectedClientAsync();
+            var subscriber = await GetConnectedClientAsync();
             var subscriberId = subscriber.Id;
 
             var subscriberDone = new ManualResetEventSlim();
@@ -601,8 +601,8 @@ namespace IntegrationTests
 
             var topic = "topic/foo/bar";
 
-            var publisher = await GetClientAsync();
-            var subscriber = await GetClientAsync();
+            var publisher = await GetConnectedClientAsync();
+            var subscriber = await GetConnectedClientAsync();
             var subscriberId = subscriber.Id;
 
             var subscriberDone = new ManualResetEventSlim();
@@ -656,8 +656,8 @@ namespace IntegrationTests
         {
             var topic = Guid.NewGuid().ToString();
 
-            var publisher = await GetClientAsync();
-            var subscriber = await GetClientAsync();
+            var publisher = await GetConnectedClientAsync();
+            var subscriber = await GetConnectedClientAsync();
             var subscriberId = subscriber.Id;
 
             var goal = default( int );
