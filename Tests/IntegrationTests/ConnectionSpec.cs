@@ -509,6 +509,8 @@ namespace IntegrationTests
         [Test]
         public async Task when_client_disconnects_unexpectedly_then_will_message_is_sent()
         {
+            Assume.That( false, "Must be rewritten in black box fashion." );
+            //Assume a MqttImpl. Could be rewritten...
             var client1 = await GetClientAsync();
             var client2 = await GetClientAsync();
             var client3 = await GetClientAsync();

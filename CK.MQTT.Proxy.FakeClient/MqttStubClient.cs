@@ -35,21 +35,23 @@ namespace CK.MQTT.Proxy.FakeClient
         {
             while( !token.IsCancellationRequested )
             {
-                using( MemoryStream msg = await _pipe.ReadMessageAsync( token ) )
-                using( CKBinaryReader br = new CKBinaryReader( msg ) )
+                (RelayHeader header, CKBinaryReader reader) = await _pipe.ReadRelayMessage( token );
+                using( reader )
                 {
-                    switch( br.ReadEnum<RelayHeader>() )
+                    switch( reader.ReadEnum<RelayHeader>() )
                     {
                         case RelayHeader.Disconnected:
-                            Disconnected?.Invoke( this, br.ReadDisconnectEvent() );
+                            Disconnected?.Invoke( this, reader.ReadDisconnectEvent() );
                             break;
                         case RelayHeader.MessageEvent:
-                            _receiver.OnNext( br.ReadApplicationMessage() );
+                            _receiver.OnNext( reader.ReadApplicationMessage() );
                             break;
+                        case RelayHeader.EndOfStream:
+                            return;
                         default:
                             throw new InvalidDataException( "Unknown Relay Header." );
                     }
-                    if( msg.Length != msg.Position ) throw new DataMisalignedException( "Expected to read the entierty of the stream." );
+                    if( reader.BaseStream.Length != reader.BaseStream.Position ) throw new DataMisalignedException( "Expected to read the entierty of the stream." );
                 }
             }
         }
@@ -65,33 +67,32 @@ namespace CK.MQTT.Proxy.FakeClient
         async Task<SessionState> ConnectAsyncInternal( MqttClientCredentials credentials = null, MqttLastWill will = null, bool cleanSession = false )
         {
             _listenerCancel = new CancellationTokenSource();
-            await _pipe.ConnectAsync( _waitTimeoutSecs * 1000 );
+            await _pipe.ConnectAsync( _waitTimeoutSecs * 100000 );
             _pipe.ReadMode = PipeTransmissionMode.Message;
             if( credentials == null )
             {
-                using( MessageFormatter mf = new MessageFormatter() )//anonymous
+                using( MessageFormatter mf = new MessageFormatter( StubClientHeader.ConnectAnonymous ) )//anonymous
                 {
-                    mf.Bw.WriteEnum( StubClientHeader.ConnectAnonymous );
                     mf.Bw.Write( will );
                     await mf.SendMessageAsync( _pipe ); //I would like async disposable :'(
                 }
             }
             else
             {
-                using( MessageFormatter mf = new MessageFormatter() )
+                using( MessageFormatter mf = new MessageFormatter( StubClientHeader.Connect ) )
                 {
-                    mf.Bw.WriteEnum( StubClientHeader.Connect );
                     mf.Bw.Write( credentials );
                     mf.Bw.Write( will );
                     mf.Bw.Write( cleanSession );
                     await mf.SendMessageAsync( _pipe );
                 }
             }
-            using( var msgStream = await _pipe.ReadMessageAsync( CancellationToken.None ) )
-            using( var br = new CKBinaryReader( msgStream ) )
+            (RelayHeader header, CKBinaryReader reader) = await _pipe.ReadRelayMessage( CancellationToken.None );
+            if( header != RelayHeader.ConnectResponse ) throw new InvalidOperationException( "Excpected connect response header." );
+            using( reader )
             {
-                SessionState state = br.ReadEnum<SessionState>();
-                if( msgStream.Position != msgStream.Length ) throw new DataMisalignedException( "More data to read than expected." );
+                SessionState state = reader.ReadEnum<SessionState>();
+                if( reader.BaseStream.Position != reader.BaseStream.Length ) throw new DataMisalignedException( "More data to read than expected." );
                 _listener = BackgroundListening( _listenerCancel.Token );
                 return state;
             }
@@ -110,22 +111,28 @@ namespace CK.MQTT.Proxy.FakeClient
 
         public async Task DisconnectAsync()
         {
-            //TODO: what should i do there ?
-            //return _pipeFormatter.SendPayloadAsync( StubClientHeader.Disconnect );
+            _receiver.OnCompleted();
         }
 
         public void Dispose()
         {
             _listenerCancel?.Cancel();
-            _listener?.Wait();
+            try
+            {
+                _listener?.Wait();
+            }
+            catch( AggregateException e )
+            {
+                if( e.InnerException.GetType() != typeof( TaskCanceledException ) ) throw;
+            }
             _pipe.Dispose();
+            _receiver.Dispose();
         }
 
         public Task PublishAsync( MqttApplicationMessage message, MqttQualityOfService qos, bool retain = false )
         {
-            using(var msg = new MessageFormatter())
+            using( var msg = new MessageFormatter( StubClientHeader.Publish ) )
             {
-                msg.Bw.WriteEnum( StubClientHeader.Publish );
                 msg.Bw.Write( message );
                 msg.Bw.WriteEnum( qos );
                 msg.Bw.Write( retain );
@@ -135,20 +142,18 @@ namespace CK.MQTT.Proxy.FakeClient
 
         public Task SubscribeAsync( string topicFilter, MqttQualityOfService qos )
         {
-            using(var msg = new MessageFormatter())
+            using( var msg = new MessageFormatter( StubClientHeader.Subscribe ) )
             {
-                msg.Bw.WriteEnum( StubClientHeader.Subscribe );
-                msg.Bw.Write( topicFilter);
-                msg.Bw.WriteEnum(qos);
+                msg.Bw.Write( topicFilter );
+                msg.Bw.WriteEnum( qos );
                 return msg.SendMessageAsync( _pipe );
             }
         }
 
         public Task UnsubscribeAsync( params string[] topics )
         {
-            using(var msg = new MessageFormatter())
+            using( var msg = new MessageFormatter( StubClientHeader.Unsubscribe ) )
             {
-                msg.Bw.WriteEnum( StubClientHeader.Unsubscribe );
                 msg.Bw.Write( topics.Length );
                 for( int i = 0; i < topics.Length; i++ )
                 {

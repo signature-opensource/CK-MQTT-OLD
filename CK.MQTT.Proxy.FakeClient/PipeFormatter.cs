@@ -2,6 +2,7 @@ using CK.Core;
 using Microsoft.IO;
 using System;
 using System.Buffers;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Pipes;
 using System.Threading;
@@ -17,13 +18,22 @@ namespace CK.MQTT.Proxy.FakeClient
 
         public CKBinaryWriter Bw { get; }
 
-        public MessageFormatter()
+        public MessageFormatter( StubClientHeader stubClientHeader ) : this()
+        {
+            Bw.WriteEnum( stubClientHeader );
+        }
+        public MessageFormatter( RelayHeader relayHeader ) : this()
+        {
+            Bw.WriteEnum( relayHeader );
+        }
+
+        MessageFormatter()
         {
             _stream = _bufferManager.GetStream();
             Bw = new CKBinaryWriter( _stream );
         }
 
-        public async Task SendMessageAsync( PipeStream outStream )
+        public async Task FormatMessageAsync( PipeStream outStream )
         {
             _stream.Position = 0;
             using( var buffer = MemoryPool<byte>.Shared.Rent( (int)_stream.Length ) )
@@ -31,6 +41,37 @@ namespace CK.MQTT.Proxy.FakeClient
                 var mem = buffer.Memory.Slice( 0, (int)_stream.Length );
                 if( _stream.Read( mem.Span ) != _stream.Length ) throw new InvalidOperationException( "Didn't read the whole buffer." );//The spec say that a read may read less than asked.
                 await outStream.WriteAsync( mem );
+            }
+        }
+
+        public async Task<List<PipeStream>> SendMessageAsync( IActivityMonitor m, IEnumerable<PipeStream> streams )
+        {
+            _stream.Position = 0;
+            using( var buffer = MemoryPool<byte>.Shared.Rent( (int)_stream.Length ) )
+            {
+                var mem = buffer.Memory.Slice( 0, (int)_stream.Length );
+                if( _stream.Read( mem.Span ) != _stream.Length ) throw new InvalidOperationException( "Didn't read the whole buffer." );//The spec say that a read may read less than asked.
+                List<PipeStream> _brokenPipes = new List<PipeStream>();
+                foreach( PipeStream outStream in streams )
+                {
+                    try
+                    {
+                        if( outStream.IsConnected ) await outStream.WriteAsync( mem );
+                    }
+                    catch( Exception writeException )
+                    {
+                        m.Error( "Exception while writing to pipe. Removing the pipe.", writeException );
+                        try
+                        {
+                            outStream.Dispose();
+                        }
+                        catch( Exception disposeException )
+                        {
+                            m.Error( "Exception while Disposing the pipe.", disposeException );
+                        }
+                    }
+                }
+                return _brokenPipes;
             }
         }
 
@@ -48,7 +89,7 @@ namespace CK.MQTT.Proxy.FakeClient
             bw.Write( arr );
         }
 
-        public static byte[] ReadByteArray( this CKBinaryReader br ) => br.ReadBytes( br.Read() );
+        public static byte[] ReadByteArray( this CKBinaryReader br ) => br.ReadBytes( br.ReadInt32() );
 
         public static void Write( this CKBinaryWriter bw, MqttLastWill will )
         {
@@ -62,12 +103,13 @@ namespace CK.MQTT.Proxy.FakeClient
         }
 
         public static MqttLastWill ReadLastWill( this CKBinaryReader br ) =>
-            !br.ReadBoolean() ? null :
-            new MqttLastWill(
-                br.ReadBoolean() ? br.ReadString() : null,
-                br.ReadEnum<MqttQualityOfService>(),
-                br.ReadBoolean(),
-                br.ReadByteArray() );
+            !br.ReadBoolean() ?
+                  null
+                : new MqttLastWill(
+                    br.ReadBoolean() ? br.ReadString() : null,
+                    br.ReadEnum<MqttQualityOfService>(),
+                    br.ReadBoolean(),
+                    br.ReadByteArray() );
 
         public static void Write( this CKBinaryWriter bw, MqttClientCredentials creds )
         {
@@ -78,7 +120,10 @@ namespace CK.MQTT.Proxy.FakeClient
 
         public static MqttClientCredentials ReadClientCredentials( this CKBinaryReader br )
         {
-            return new MqttClientCredentials( br.ReadString(), br.ReadNullableString(), br.ReadNullableString() );
+            var clientId = br.ReadString();
+            var userName = br.ReadNullableString();
+            var password = br.ReadNullableString();
+            return new MqttClientCredentials( clientId, userName, password );
         }
 
         public static void Write( this CKBinaryWriter bw, MqttEndpointDisconnected disconnected )
@@ -101,7 +146,7 @@ namespace CK.MQTT.Proxy.FakeClient
 
         public static MqttApplicationMessage ReadApplicationMessage( this CKBinaryReader br )
         {
-            return new MqttApplicationMessage( br.ReadString(), br.ReadBytes( br.Read() ) );
+            return new MqttApplicationMessage( br.ReadString(), br.ReadByteArray() );
         }
 
     }
@@ -113,7 +158,7 @@ namespace CK.MQTT.Proxy.FakeClient
         /// Copy asynchronously the next message in a Memory Stream.
         /// </summary>
         /// <returns>A memory stream containing the message.</returns>
-        public static async Task<MemoryStream> ReadMessageAsync( this PipeStream input, CancellationToken token )
+        static async Task<CKBinaryReader> ReadMessageAsync( this PipeStream input, CancellationToken token )
         {
             MemoryStream stream = _bufferManager.GetStream();
             byte[] bufferArr = new byte[512];
@@ -121,11 +166,24 @@ namespace CK.MQTT.Proxy.FakeClient
             do
             {
                 var readAmount = await input.ReadAsync( buffer, token );
-                await stream.WriteAsync( buffer.Slice( 0, readAmount ) );
                 if( token.IsCancellationRequested ) return null;
+                await stream.WriteAsync( buffer.Slice( 0, readAmount ) );
             } while( !input.IsMessageComplete );
             stream.Position = 0;
-            return stream;
+            return new CKBinaryReader( stream );
+        }
+        public static async Task<(RelayHeader header, CKBinaryReader reader)> ReadRelayMessage( this PipeStream input, CancellationToken token )
+        {
+            var reader = await ReadMessageAsync( input, token );
+            if( reader.BaseStream.Length == 0 ) return (RelayHeader.EndOfStream, null);
+            return (reader.ReadEnum<RelayHeader>(), reader);
+        }
+
+        public static async Task<(StubClientHeader header, CKBinaryReader reader)> ReadStubMessage( this PipeStream input, CancellationToken token )
+        {
+            var reader = await ReadMessageAsync( input, token );
+            if( reader.BaseStream.Length == 0 ) return (StubClientHeader.EndOfStream, null);
+            return (reader.ReadEnum<StubClientHeader>(), reader);
         }
     }
 }

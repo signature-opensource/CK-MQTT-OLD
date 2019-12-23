@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -19,7 +19,7 @@ namespace CK.MQTT.Sdk
 
 		public static TaskRunner Get ()
 		{
-			return new TaskRunner ();
+			return new TaskRunner();
 		}
 
 		public Task Run (Func<Task> func)

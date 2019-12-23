@@ -12,12 +12,16 @@ namespace CK.MQTT.Proxy.FakeClient
         Publish,
         Subscribe,
         Unsubscribe,
-        IsConnected
+        IsConnected,
+        EndOfStream = byte.MaxValue
     }
 
-    enum RelayHeader
+    enum RelayHeader : byte
     {
+        ConnectResponse,
+        IsConnectedResponse,
         Disconnected,
-        MessageEvent
+        MessageEvent,
+        EndOfStream = byte.MaxValue
     }
 }
