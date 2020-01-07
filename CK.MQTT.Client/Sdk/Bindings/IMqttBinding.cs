@@ -1,4 +1,4 @@
-﻿namespace CK.MQTT.Sdk.Bindings
+namespace CK.MQTT.Sdk.Bindings
 {
 	/// <summary>
 	/// Represents a binding for a supported MQTT underlying transport protocol
@@ -13,12 +13,12 @@
         /// Provides a factory for MQTT channels on top of an underlying transport protocol
         /// See <see cref="IMqttChannelFactory" /> for more details about the factory 
         /// </summary>
-        /// <param name="hostAddress">Host name or IP address to connect the channels</param>
+        /// <param name="connectionString">The connection string to connect to the host.</param>
         /// <param name="configuration">
         /// The configuration used for creating the factory and channels
         /// See <see cref="MqttConfiguration" /> for more details about the supported values
         /// </param>
         /// <returns>A factory for creating MQTT channels on top of an underlying transport protocol</returns>
-		IMqttChannelFactory GetChannelFactory (string hostAddress, MqttConfiguration configuration);
+		IMqttChannelFactory GetChannelFactory (string connectionString, MqttConfiguration configuration);
 	}
 }

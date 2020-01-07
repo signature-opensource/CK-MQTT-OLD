@@ -13,9 +13,9 @@ namespace CK.MQTT.Sdk.Formatters
 
 			var remainingLengthBytesLength = 0;
 
-			MqttProtocol.Encoding.DecodeRemainingLength (bytes, out remainingLengthBytesLength);
+            MqttImplementation.Encoding.DecodeRemainingLength (bytes, out remainingLengthBytesLength);
 
-			var connectAckFlagsIndex = MqttProtocol.PacketTypeLength + remainingLengthBytesLength;
+			var connectAckFlagsIndex = MqttImplementation.PacketTypeLength + remainingLengthBytesLength;
 
 			if (bytes.Byte (connectAckFlagsIndex).Bits (7) != 0x00)
 				throw new MqttException (Properties.Resources.GetString("ConnectAckFormatter_InvalidAckFlags"));
@@ -34,7 +34,7 @@ namespace CK.MQTT.Sdk.Formatters
 		protected override byte[] Write (ConnectAck packet)
 		{
 			var variableHeader = GetVariableHeader (packet);
-			var remainingLength = MqttProtocol.Encoding.EncodeRemainingLength (variableHeader.Length);
+			var remainingLength = MqttImplementation.Encoding.EncodeRemainingLength (variableHeader.Length);
 			var fixedHeader = GetFixedHeader (remainingLength);
 			var bytes = new byte[fixedHeader.Length + variableHeader.Length];
 

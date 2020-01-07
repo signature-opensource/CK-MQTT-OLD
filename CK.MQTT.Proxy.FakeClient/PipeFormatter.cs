@@ -33,46 +33,29 @@ namespace CK.MQTT.Proxy.FakeClient
             Bw = new CKBinaryWriter( _stream );
         }
 
-        public async Task FormatMessageAsync( PipeStream outStream )
+        public IMemoryOwner<byte> FormatMessage()
         {
+            long previousPosition = _stream.Position;
             _stream.Position = 0;
-            using( var buffer = MemoryPool<byte>.Shared.Rent( (int)_stream.Length ) )
-            {
-                var mem = buffer.Memory.Slice( 0, (int)_stream.Length );
-                if( _stream.Read( mem.Span ) != _stream.Length ) throw new InvalidOperationException( "Didn't read the whole buffer." );//The spec say that a read may read less than asked.
-                await outStream.WriteAsync( mem );
-            }
+            IMemoryOwner<byte> baseBuffer = MemoryPool<byte>.Shared.Rent( (int)_stream.Length );
+            IMemoryOwner<byte> buffer = new CustomMemoryOwner<byte>( baseBuffer, (int)_stream.Length );
+            Memory<byte> mem = buffer.Memory.Slice( 0, (int)_stream.Length );
+            if( _stream.Read( mem.Span ) != _stream.Length ) throw new InvalidOperationException( "Didn't read the whole buffer." );//The spec say that a read may read less than asked.
+            _stream.Position = previousPosition;
+            return buffer;
         }
 
-        public async Task<List<PipeStream>> SendMessageAsync( IActivityMonitor m, IEnumerable<PipeStream> streams )
+        class CustomMemoryOwner<T> : IMemoryOwner<T>
         {
-            _stream.Position = 0;
-            using( var buffer = MemoryPool<byte>.Shared.Rent( (int)_stream.Length ) )
+            readonly IMemoryOwner<T> _memoryOwner;
+            readonly int _newMemorySize;
+            public CustomMemoryOwner( IMemoryOwner<T> memoryOwner, int newMemorySize )
             {
-                var mem = buffer.Memory.Slice( 0, (int)_stream.Length );
-                if( _stream.Read( mem.Span ) != _stream.Length ) throw new InvalidOperationException( "Didn't read the whole buffer." );//The spec say that a read may read less than asked.
-                List<PipeStream> _brokenPipes = new List<PipeStream>();
-                foreach( PipeStream outStream in streams )
-                {
-                    try
-                    {
-                        if( outStream.IsConnected ) await outStream.WriteAsync( mem );
-                    }
-                    catch( Exception writeException )
-                    {
-                        m.Error( "Exception while writing to pipe. Removing the pipe.", writeException );
-                        try
-                        {
-                            outStream.Dispose();
-                        }
-                        catch( Exception disposeException )
-                        {
-                            m.Error( "Exception while Disposing the pipe.", disposeException );
-                        }
-                    }
-                }
-                return _brokenPipes;
+                _memoryOwner = memoryOwner;
+                _newMemorySize = newMemorySize;
             }
+            public Memory<T> Memory => _memoryOwner.Memory.Slice( 0, _newMemorySize );
+            public void Dispose() => _memoryOwner.Dispose();
         }
 
         public void Dispose()

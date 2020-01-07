@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
@@ -8,22 +8,23 @@ namespace CK.MQTT.Sdk.Bindings
 {
 	internal class TcpChannelListener : IMqttChannelListener
 	{
-		static readonly ITracer tracer = Tracer.Get<TcpChannelListener> ();
+		static readonly ITracer _tracer = Tracer.Get<TcpChannelListener> ();
 
-		readonly MqttConfiguration configuration;
-		readonly Lazy<TcpListener> listener;
+		readonly MqttConfiguration _configuration;
+		readonly Lazy<TcpListener> _listener;
 		bool disposed;
 
-		public TcpChannelListener (MqttConfiguration configuration)
+		public TcpChannelListener (int port, MqttConfiguration configuration)
 		{
-			this.configuration = configuration;
-			listener = new Lazy<TcpListener> (() => {
-				var tcpListener = new TcpListener (IPAddress.Any, this.configuration.Port);
+			_configuration = configuration;
+			_listener = new Lazy<TcpListener> (() => {
+                
+				var tcpListener = new TcpListener (IPAddress.Any, port);
 
 				try {
 					tcpListener.Start ();
 				} catch (SocketException socketEx) {
-					tracer.Error (socketEx, ServerProperties.Resources.GetString("TcpChannelProvider_TcpListener_Failed"));
+					_tracer.Error (socketEx, ServerProperties.Resources.GetString("TcpChannelProvider_TcpListener_Failed"));
 
 					throw new MqttException (ServerProperties.Resources.GetString("TcpChannelProvider_TcpListener_Failed"), socketEx);
 				}
@@ -39,9 +40,9 @@ namespace CK.MQTT.Sdk.Bindings
 			}
 
 			return Observable
-				.FromAsync (listener.Value.AcceptTcpClientAsync)
+				.FromAsync (_listener.Value.AcceptTcpClientAsync)
 				.Repeat ()
-				.Select (client => new TcpChannel (client, new PacketBuffer (), configuration));
+				.Select (client => new TcpChannel (client, new PacketBuffer (), _configuration));
 		}
 
 		public void Dispose ()
@@ -55,7 +56,7 @@ namespace CK.MQTT.Sdk.Bindings
 			if (disposed) return;
 
 			if (disposing) {
-				listener.Value.Stop ();
+				_listener.Value.Stop ();
 				disposed = true;
 			}
 		}

@@ -32,18 +32,7 @@ namespace CK.MQTT
 		/// <returns>A new MQTT Server</returns>
 		/// <exception cref="MqttServerException">MqttServerException</exception>
 		public static IMqttServer Create (MqttConfiguration configuration, IMqttServerBinding binding = null, IMqttAuthenticationProvider authenticationProvider = null)
-			=> new MqttServerFactory (binding ?? new ServerTcpBinding (), authenticationProvider).CreateServer (configuration);
-
-		/// <summary>
-		/// Creates an <see cref="IMqttServer"/> over the TCP protocol, using the 
-		/// specified port.
-		/// </summary>
-		/// <param name="port">
-		/// The port to listen for incoming connections.
-		/// </param>
-		/// <returns>A new MQTT Server</returns>
-		/// <exception cref="MqttServerException">MqttServerException</exception>
-		public static IMqttServer Create (int port) => new MqttServerFactory ().CreateServer (new MqttConfiguration { Port = port });
+			=> new MqttServerFactory (binding ?? new ServerTcpBinding(MqttProtocol.DefaultNonSecurePort), authenticationProvider).CreateServer (configuration);
 
 		/// <summary>
 		/// Creates an <see cref="IMqttServer"/> over the TCP protocol, using the 

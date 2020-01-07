@@ -13,4 +13,10 @@
   <ItemGroup>
     <ProjectReference Include="..\CK.MQTT.Client.Abstractions\CK.MQTT.Client.Abstractions.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+  </ItemGroup>
 </Project>

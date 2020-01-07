@@ -74,16 +74,16 @@ namespace CK.MQTT.Sdk
 		{
 			var length = bytes.GetStringLenght (index);
 
-			return length == 0 ? string.Empty : Encoding.UTF8.GetString (bytes, index + MqttProtocol.StringPrefixLength, length);
+			return length == 0 ? string.Empty : Encoding.UTF8.GetString (bytes, index + MqttImplementation.StringPrefixLength, length);
 		}
 
         internal static string GetString (this byte[] bytes, int index, out int nextIndex)
 		{
 			var length = bytes.GetStringLenght (index);
 
-			nextIndex = index + MqttProtocol.StringPrefixLength + length;
+			nextIndex = index + MqttImplementation.StringPrefixLength + length;
 
-			return length == 0 ? string.Empty : Encoding.UTF8.GetString (bytes, index + MqttProtocol.StringPrefixLength, length);
+			return length == 0 ? string.Empty : Encoding.UTF8.GetString (bytes, index + MqttImplementation.StringPrefixLength, length);
 		}
 
 		internal static ushort ToUInt16 (this byte[] bytes)

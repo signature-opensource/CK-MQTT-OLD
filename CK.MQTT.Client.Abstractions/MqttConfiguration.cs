@@ -10,11 +10,11 @@ namespace CK.MQTT
         /// </summary>
 		public MqttConfiguration ()
 		{
-			Port = MqttProtocol.DefaultNonSecurePort;
+			//Port = MqttProtocol.DefaultNonSecurePort;
 			// The default receive buffer size of TcpClient according to
 			// http://msdn.microsoft.com/en-us/library/system.net.sockets.tcpclient.receivebuffersize.aspx
 			// is 8192 bytes
-			BufferSize = 8192;
+			//BufferSize = 8192;
 			MaximumQualityOfService = MqttQualityOfService.AtMostOnce;
 			KeepAliveSecs = 0;
 			WaitTimeoutSecs = 5;
@@ -25,13 +25,13 @@ namespace CK.MQTT
         /// <summary>
         /// Port to connect a Client to a Server
         /// </summary>
-		public int Port { get; set; }
+		//public int Port { get; set; }
 
         /// <summary>
         /// Size in bytes of the receive buffer of the underlying transport protocol
         /// Only use it when the property applies to the undelrying protocol used
         /// </summary>
-		public int BufferSize { get; set; }
+		//public int BufferSize { get; set; }
 
         /// <summary>
         /// Maximum Quality of Service (QoS) to support

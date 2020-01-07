@@ -1,4 +1,4 @@
-﻿using CK.MQTT.Sdk.Packets;
+using CK.MQTT.Sdk.Packets;
 using System;
 
 namespace CK.MQTT.Sdk.Formatters
@@ -24,9 +24,9 @@ namespace CK.MQTT.Sdk.Formatters
 
 			var remainingLengthBytesLength = 0;
 
-			MqttProtocol.Encoding.DecodeRemainingLength (bytes, out remainingLengthBytesLength);
+            MqttImplementation.Encoding.DecodeRemainingLength (bytes, out remainingLengthBytesLength);
 
-			var packetIdIndex = MqttProtocol.PacketTypeLength + remainingLengthBytesLength;
+			var packetIdIndex = MqttImplementation.PacketTypeLength + remainingLengthBytesLength;
 			var packetIdBytes = bytes.Bytes (packetIdIndex, 2);
 
 			return packetFactory (packetIdBytes.ToUInt16 ());
@@ -34,8 +34,8 @@ namespace CK.MQTT.Sdk.Formatters
 
 		protected override byte[] Write (T packet)
 		{
-			var variableHeader = MqttProtocol.Encoding.EncodeInteger(packet.PacketId);
-			var remainingLength = MqttProtocol.Encoding.EncodeRemainingLength (variableHeader.Length);
+			var variableHeader = MqttImplementation.Encoding.EncodeInteger(packet.PacketId);
+			var remainingLength = MqttImplementation.Encoding.EncodeRemainingLength (variableHeader.Length);
 			var fixedHeader = GetFixedHeader (packet.Type, remainingLength);
 			var bytes = new byte[fixedHeader.Length + variableHeader.Length];
 

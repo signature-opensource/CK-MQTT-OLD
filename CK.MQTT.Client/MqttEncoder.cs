@@ -13,11 +13,11 @@ namespace CK.MQTT.Sdk
 			var bytes = new List<byte> ();
 			var textBytes = Encoding.UTF8.GetBytes (text ?? string.Empty);
 
-			if (textBytes.Length > MqttProtocol.MaxIntegerLength) {
+			if (textBytes.Length > MqttProtocolAdvanced.MaxIntegerLength) {
 				throw new MqttException  (Properties.Resources.GetString("ProtocolEncoding_StringMaxLengthExceeded"));
 			}
 
-			var numberBytes = MqttProtocol.Encoding.EncodeInteger (textBytes.Length);
+			var numberBytes = MqttProtocolAdvanced.Encoding.EncodeInteger (textBytes.Length);
 
 			bytes.Add (numberBytes[numberBytes.Length - 2]);
 			bytes.Add (numberBytes[numberBytes.Length - 1]);
@@ -28,7 +28,7 @@ namespace CK.MQTT.Sdk
 
         public byte[] EncodeInteger (int number)
 		{
-			if (number > MqttProtocol.MaxIntegerLength) {
+			if (number > MqttProtocolAdvanced.MaxIntegerLength) {
 				throw new MqttException  (Properties.Resources.GetString("ProtocolEncoding_IntegerMaxValueExceeded"));
 			}
 

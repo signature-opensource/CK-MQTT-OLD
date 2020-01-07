@@ -35,19 +35,11 @@ namespace CK.MQTT
 
 		/// <summary>
 		/// Creates an <see cref="IMqttClient"/> and connects it to the destination 
-		/// <paramref name="hostAddress"/> server via TCP using the specified port.
+		/// <paramref name="connectionString"/> server via TCP using the protocol defaults.
 		/// </summary>
 		/// <returns>A new MQTT Client</returns>
-		public static Task<IMqttClient> CreateAsync (string hostAddress, int port) => 
-			new MqttClientFactory (hostAddress).CreateClientAsync (new MqttConfiguration { Port = port });
-
-		/// <summary>
-		/// Creates an <see cref="IMqttClient"/> and connects it to the destination 
-		/// <paramref name="hostAddress"/> server via TCP using the protocol defaults.
-		/// </summary>
-		/// <returns>A new MQTT Client</returns>
-		public static Task<IMqttClient> CreateAsync (string hostAddress) =>
-			new MqttClientFactory (hostAddress).CreateClientAsync (new MqttConfiguration ());
+		public static Task<IMqttClient> CreateAsync (string connectionString) =>
+			new MqttClientFactory (connectionString).CreateClientAsync (new MqttConfiguration ());
 
 		internal static string GetPrivateClientId () =>
 			string.Format (

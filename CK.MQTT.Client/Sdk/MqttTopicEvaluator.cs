@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 
 namespace CK.MQTT.Sdk
 {
@@ -33,8 +33,8 @@ namespace CK.MQTT.Sdk
 		public bool IsValidTopicFilter (string topicFilter)
 		{
 			if (!configuration.AllowWildcardsInTopicFilters) {
-				if (topicFilter.Contains (MqttProtocol.SingleLevelTopicWildcard) ||
-					topicFilter.Contains (MqttProtocol.MultiLevelTopicWildcard))
+				if (topicFilter.Contains ( MqttImplementation.SingleLevelTopicWildcard) ||
+					topicFilter.Contains ( MqttImplementation.MultiLevelTopicWildcard))
 					return false;
 
 			}

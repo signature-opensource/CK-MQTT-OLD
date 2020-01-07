@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using CK.MQTT.Sdk.Packets;
 
@@ -18,7 +18,7 @@ namespace CK.MQTT.Sdk.Formatters
 		protected override Publish Read (byte[] bytes)
 		{
 			var remainingLengthBytesLength = 0;
-			var remainingLength = MqttProtocol.Encoding.DecodeRemainingLength (bytes, out remainingLengthBytesLength);
+			var remainingLength = MqttImplementation.Encoding.DecodeRemainingLength (bytes, out remainingLengthBytesLength);
 
 			var packetFlags = bytes.Byte (0).Bits(5, 4);
 
@@ -68,7 +68,7 @@ namespace CK.MQTT.Sdk.Formatters
 
 			var variableHeader = GetVariableHeader (packet);
 			var payloadLength = packet.Payload == null ? 0 : packet.Payload.Length;
-			var remainingLength = MqttProtocol.Encoding.EncodeRemainingLength (variableHeader.Length + payloadLength);
+			var remainingLength = MqttImplementation.Encoding.EncodeRemainingLength (variableHeader.Length + payloadLength);
 			var fixedHeader = GetFixedHeader (packet, remainingLength);
 
 			bytes.AddRange (fixedHeader);
@@ -119,12 +119,12 @@ namespace CK.MQTT.Sdk.Formatters
 
 			var variableHeader = new List<byte> ();
 
-			var topicBytes = MqttProtocol.Encoding.EncodeString(packet.Topic);
+			var topicBytes = MqttImplementation.Encoding.EncodeString(packet.Topic);
 
 			variableHeader.AddRange (topicBytes);
 
 			if (packet.PacketId.HasValue) {
-				var packetIdBytes = MqttProtocol.Encoding.EncodeInteger(packet.PacketId.Value);
+				var packetIdBytes = MqttImplementation.Encoding.EncodeInteger(packet.PacketId.Value);
 
 				variableHeader.AddRange (packetIdBytes);
 			}

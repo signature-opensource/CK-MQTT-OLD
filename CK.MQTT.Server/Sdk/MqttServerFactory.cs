@@ -30,7 +30,7 @@ namespace CK.MQTT.Sdk
         /// an authentication provider
         /// </param>
         public MqttServerFactory (IMqttAuthenticationProvider authenticationProvider = null)
-            : this (new ServerTcpBinding (), authenticationProvider)
+            : this (new ServerTcpBinding ( MqttProtocol.DefaultNonSecurePort), authenticationProvider)
         {
         }
 

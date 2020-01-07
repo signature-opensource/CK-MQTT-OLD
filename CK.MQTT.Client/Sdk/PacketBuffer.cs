@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace CK.MQTT.Sdk
@@ -65,7 +65,7 @@ namespace CK.MQTT.Sdk
 				if ((@byte & 128) == 0) {
 					var bytesLenght = default (int);
 
-					packetRemainingLength = MqttProtocol.Encoding.DecodeRemainingLength (mainBuffer.ToArray (), out bytesLenght);
+					packetRemainingLength = MqttImplementation.Encoding.DecodeRemainingLength (mainBuffer.ToArray (), out bytesLenght);
 					packetRemainingLengthReadCompleted = true;
 
 					if (packetRemainingLength == 0)

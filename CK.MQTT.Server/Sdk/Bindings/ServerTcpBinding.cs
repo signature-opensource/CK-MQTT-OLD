@@ -1,4 +1,4 @@
-﻿namespace CK.MQTT.Sdk.Bindings
+namespace CK.MQTT.Sdk.Bindings
 {
 	/// <summary>
 	/// Server binding to use TCP as the underlying MQTT transport protocol
@@ -6,6 +6,17 @@
 	/// </summary>
 	public class ServerTcpBinding : TcpBinding, IMqttServerBinding
 	{
+        readonly int _port;
+        public ServerTcpBinding(int port)
+        {
+            _port = port;
+        }
+
+        public ServerTcpBinding()
+        {
+            _port = MqttProtocol.DefaultNonSecurePort;
+        }
+
 		/// <summary>
 		/// Provides a listener for incoming MQTT channels on top of TCP
 		/// </summary>
@@ -15,6 +26,6 @@
 		/// </param>
 		/// <returns>A listener to accept and provide incoming MQTT channels on top of TCP</returns>
 		public IMqttChannelListener GetChannelListener (MqttConfiguration configuration)
-			=> new TcpChannelListener (configuration);
+			=> new TcpChannelListener (_port, configuration);
 	}
 }

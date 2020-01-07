@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using CK.MQTT.Sdk.Packets;
@@ -21,7 +21,7 @@ namespace CK.MQTT.Sdk.Formatters
 			ValidateHeaderFlag (bytes, t => t == MqttPacketType.Subscribe, 0x02);
 
 			var remainingLengthBytesLength = 0;
-			var remainingLength = MqttProtocol.Encoding.DecodeRemainingLength (bytes, out remainingLengthBytesLength);
+			var remainingLength = MqttImplementation.Encoding.DecodeRemainingLength (bytes, out remainingLengthBytesLength);
 
 			var packetIdentifierStartIndex = remainingLengthBytesLength + 1;
 			var packetIdentifier = bytes.Bytes (packetIdentifierStartIndex, 2).ToUInt16();
@@ -38,7 +38,7 @@ namespace CK.MQTT.Sdk.Formatters
 
 			var variableHeader = GetVariableHeader (packet);
 			var payload = GetPayload (packet);
-			var remainingLength = MqttProtocol.Encoding.EncodeRemainingLength (variableHeader.Length + payload.Length);
+			var remainingLength = MqttImplementation.Encoding.EncodeRemainingLength (variableHeader.Length + payload.Length);
 			var fixedHeader = GetFixedHeader (remainingLength);
 
 			bytes.AddRange (fixedHeader);
@@ -67,7 +67,7 @@ namespace CK.MQTT.Sdk.Formatters
 		{
 			var variableHeader = new List<byte> ();
 
-			var packetIdBytes = MqttProtocol.Encoding.EncodeInteger(packet.PacketId);
+			var packetIdBytes = MqttImplementation.Encoding.EncodeInteger(packet.PacketId);
 
 			variableHeader.AddRange (packetIdBytes);
 
@@ -92,7 +92,7 @@ namespace CK.MQTT.Sdk.Formatters
 					throw new MqttException (error);
 				}
 
-				var topicBytes = MqttProtocol.Encoding.EncodeString (subscription.TopicFilter);
+				var topicBytes = MqttImplementation.Encoding.EncodeString (subscription.TopicFilter);
 				var requestedQosByte = Convert.ToByte (subscription.MaximumQualityOfService);
 
 				payload.AddRange (topicBytes);

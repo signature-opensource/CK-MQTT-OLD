@@ -28,8 +28,6 @@ namespace IntegrationTests.Context
             _authenticationProvider = authenticationProvider;
             Configuration = new MqttConfiguration
             {
-                BufferSize = 128 * 1024,
-                Port = 25565,
                 KeepAliveSecs = KeepAliveSecs,
                 WaitTimeoutSecs = 5,
                 MaximumQualityOfService = MqttQualityOfService.ExactlyOnce,
