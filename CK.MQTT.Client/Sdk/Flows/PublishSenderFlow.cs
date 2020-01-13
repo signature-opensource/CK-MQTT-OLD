@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using CK.MQTT.Sdk.Packets;
@@ -12,9 +12,9 @@ namespace CK.MQTT.Sdk.Flows
 {
 	internal class PublishSenderFlow : PublishFlow, IPublishSenderFlow
 	{
-		static readonly ITracer tracer = Tracer.Get<PublishSenderFlow> ();
+		static readonly ITracer _tracer = Tracer.Get<PublishSenderFlow> ();
 
-		IDictionary<MqttPacketType, Func<string, ushort, IFlowPacket>> senderRules;
+		IDictionary<MqttPacketType, Func<string, ushort, IFlowPacket>> _senderRules;
 
 		public PublishSenderFlow (IRepository<ClientSession> sessionRepository,
 			MqttConfiguration configuration)
@@ -25,15 +25,11 @@ namespace CK.MQTT.Sdk.Flows
 
 		public override async Task ExecuteAsync (string clientId, IPacket input, IMqttChannel<IPacket> channel)
 		{
-			var senderRule = default (Func<string, ushort, IFlowPacket>);
-
-			if (!senderRules.TryGetValue (input.Type, out senderRule)) {
+            if (!_senderRules.TryGetValue (input.Type, out Func<string, ushort, IFlowPacket> senderRule)) {
 				return;
 			}
 
-			var flowPacket = input as IFlowPacket;
-
-			if (flowPacket == null) {
+            if (!(input is IFlowPacket flowPacket)) {
 				return;
 			}
 
@@ -98,7 +94,7 @@ namespace CK.MQTT.Sdk.Flows
 				.Interval (TimeSpan.FromSeconds (configuration.WaitTimeoutSecs), NewThreadScheduler.Default)
 				.Subscribe (async _ => {
 					if (channel.IsConnected) {
-						tracer.Warn (Properties.Resources.GetString("PublishFlow_RetryingQoSFlow"), sentMessage.Type, clientId);
+						_tracer.Warn (Properties.Resources.GetString("PublishFlow_RetryingQoSFlow"), sentMessage.Type, clientId);
 
 						var duplicated = new Publish (sentMessage.Topic, sentMessage.QualityOfService,
 							sentMessage.Retain, duplicated: true, packetId: sentMessage.PacketId) {
@@ -120,21 +116,21 @@ namespace CK.MQTT.Sdk.Flows
 
 		void DefineSenderRules ()
 		{
-			senderRules = new Dictionary<MqttPacketType, Func<string, ushort, IFlowPacket>> ();
+			_senderRules = new Dictionary<MqttPacketType, Func<string, ushort, IFlowPacket>> ();
 
-			senderRules.Add (MqttPacketType.PublishAck, (clientId, packetId) => {
+			_senderRules.Add (MqttPacketType.PublishAck, (clientId, packetId) => {
 				RemovePendingMessage (clientId, packetId);
 
 				return default (IFlowPacket);
 			});
 
-			senderRules.Add (MqttPacketType.PublishReceived, (clientId, packetId) => {
+			_senderRules.Add (MqttPacketType.PublishReceived, (clientId, packetId) => {
 				RemovePendingMessage (clientId, packetId);
 
 				return new PublishRelease (packetId);
 			});
 
-			senderRules.Add (MqttPacketType.PublishComplete, (clientId, packetId) => {
+			_senderRules.Add (MqttPacketType.PublishComplete, (clientId, packetId) => {
 				RemovePendingAcknowledgement (clientId, packetId, MqttPacketType.PublishRelease);
 
 				return default (IFlowPacket);

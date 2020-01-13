@@ -75,7 +75,7 @@ namespace IntegrationTests
             var client = await GetConnectedClientAsync();
             await Task.Delay( KeepAliveSecs * 500 );
             await client.PublishAsync( new MqttApplicationMessage( "test", Array.Empty<byte>() ), MqttQualityOfService.ExactlyOnce );
-            await Task.Delay( KeepAliveSecs * 500 );
+            await Task.Delay( KeepAliveSecs * 700 );
             serverReceivedPing.Should().BeFalse();
             await Task.Delay( KeepAliveSecs * 550 );
             serverReceivedPing.Should().BeTrue();

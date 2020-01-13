@@ -1,4 +1,4 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using CK.MQTT.Sdk.Packets;
 
 namespace CK.MQTT.Sdk.Flows
