@@ -12,28 +12,31 @@ namespace CK.MQTT.Sdk.Bindings
     {
         static readonly ITracer _tracer = Tracer.Get<TcpChannelFactory>();
 
-        internal static readonly Regex ConnectionStringRegex = new Regex( @"(\[.*\]|[^:]*)(:[0-9]*)?(\(([0-9]*)\))?" );
         readonly string _connectionString;
         readonly MqttConfiguration _configuration;
 
         readonly string _hostAddress;
         readonly int _port;
-        readonly int _bufferSize;
+        readonly int? _bufferSize;
         public TcpChannelFactory( string connectionString, MqttConfiguration configuration )
         {
 
             _connectionString = connectionString;
             _configuration = configuration;
-            var match = ConnectionStringRegex.Match( connectionString );
-            _hostAddress =  match.Groups[match.Groups[1].Value != null ? 1 : 3].Value;
-            _port = int.Parse( match.Groups[2].Value );
-
+            var match = MqttImplementation.ConnectionStringRegex.Match( connectionString );
+            _hostAddress = match.Groups[match.Groups[1].Value != null ? 1 : 3].Value;
+            _port = match.Groups[2].Value.Length == 0 ? MqttProtocol.DefaultNonSecurePort : int.Parse( match.Groups[2].Value );
+            _bufferSize = match.Groups[4]?.Value.Length == 0 ? (int?)null : int.Parse( match.Groups[4]?.Value );
         }
 
         public async Task<IMqttChannel<byte[]>> CreateAsync()
         {
             var tcpClient = new TcpClient();
-
+            if( _bufferSize.HasValue )
+            {
+                tcpClient.ReceiveBufferSize = _bufferSize.Value;
+                tcpClient.SendBufferSize = _bufferSize.Value;
+            }
             try
             {
                 var connectTask = tcpClient.ConnectAsync( _hostAddress, _port );

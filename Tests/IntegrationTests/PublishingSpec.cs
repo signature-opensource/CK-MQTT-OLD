@@ -11,6 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using NUnit.Framework;
+using System.Net;
 
 namespace IntegrationTests
 {
@@ -198,10 +199,11 @@ namespace IntegrationTests
 
         [TestCase( 100 )]
         [TestCase( 500 )]
+        [TestCase( 1000 )]
         public async Task when_publish_message_to_topic_and_there_is_no_subscribers_then_server_notifies( int count )
         {
             var topic = Guid.NewGuid().ToString();
-            var publisher = await GetConnectedClientAsync();
+            var publisher = await GetConnectedClientAsync( IPAddress.Loopback.ToString() + ":25565(10)" );
             var topicsNotSubscribedCount = 0;
             var topicsNotSubscribedDone = new ManualResetEventSlim();
 
@@ -217,17 +219,18 @@ namespace IntegrationTests
 
             var tasks = new List<Task>();
 
+            var testMessage = GetTestMessage( 1, 40000000 );
+            var payload = Serializer.Serialize( testMessage );
             for( var i = 1; i <= count; i++ )
             {
-                var testMessage = GetTestMessage( i );
-                var message = new MqttApplicationMessage( topic, Serializer.Serialize( testMessage ) );
+                var message = new MqttApplicationMessage( topic, payload );
 
                 tasks.Add( publisher.PublishAsync( message, MqttQualityOfService.AtMostOnce ) );
             }
 
             await Task.WhenAll( tasks );
 
-            var success = topicsNotSubscribedDone.Wait( TimeSpan.FromSeconds( KeepAliveSecs * 2 ) );
+            var success = topicsNotSubscribedDone.Wait( TimeSpan.FromSeconds( KeepAliveSecs ) );
 
             topicsNotSubscribedCount.Should().Be( count );
             Assert.True( success );
@@ -273,7 +276,7 @@ namespace IntegrationTests
                 {
                     if( m.Topic == responseTopic )
                     {
-                        Interlocked.Increment( ref subscriberReceived);
+                        Interlocked.Increment( ref subscriberReceived );
 
                         if( subscriberReceived == count )
                             subscriberDone.Set();
@@ -397,7 +400,7 @@ namespace IntegrationTests
         [Test]
         public async Task when_publish_without_clean_session_then_pending_messages_are_sent_when_reconnect()
         {
-            Assume.That(false, "To investigate.");
+            Assume.That( false, "To investigate." );
             var client1 = await GetConnectedClientAsync();
             var client1Done = new ManualResetEventSlim();
             var client1Received = 0;
@@ -524,7 +527,7 @@ namespace IntegrationTests
         [TestCase( 200 )]
         public async Task when_publish_with_client_with_session_present_then_subscriptions_are_re_used( int count )
         {
-            Assume.That(false, "To investigate.");
+            Assume.That( false, "To investigate." );
             var topic = "topic/foo/bar";
 
             var publisher = await GetConnectedClientAsync();
@@ -579,7 +582,7 @@ namespace IntegrationTests
 
             await Task.WhenAll( tasks );
 
-            var completed = subscriberDone.Wait( TimeSpan.FromSeconds( Configuration.WaitTimeoutSecs *4 ) );
+            var completed = subscriberDone.Wait( TimeSpan.FromSeconds( Configuration.WaitTimeoutSecs * 4 ) );
 
             Assert.True( completed );
             SessionState.SessionPresent.Should().Be( sessionState );
@@ -726,13 +729,23 @@ namespace IntegrationTests
             publisher.Dispose();
         }
 
-        TestMessage GetTestMessage( int id )
+        Dictionary<int, byte[]> _payloads = new Dictionary<int, byte[]>();
+
+        TestMessage GetTestMessage( int id, int payloadSize = 10 )
         {
+            var rand = new Random();
+            if( !_payloads.ContainsKey( payloadSize ) )
+            {
+                var newPayload = new byte[payloadSize];
+                _payloads[payloadSize] = newPayload;
+                rand.NextBytes( newPayload );
+            }
             return new TestMessage
             {
                 Id = id,
                 Name = string.Concat( "Message ", Guid.NewGuid().ToString().Substring( 0, 4 ) ),
-                Value = new Random().Next()
+                Value = rand.Next(),
+                PayloadTest = _payloads[payloadSize]
             };
         }
 

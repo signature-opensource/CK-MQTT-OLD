@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using CK.MQTT.Sdk.Packets;
 using CK.MQTT.Sdk.Storage;
@@ -53,7 +53,7 @@ namespace CK.MQTT.Sdk.Flows
 			var pair = GetFlows().FirstOrDefault (f => f.Value is T);
 
 			if (pair.Equals (default (KeyValuePair<ProtocolFlowType, IProtocolFlow>))) {
-				return default (T);
+				return null;
 			}
 
 			return pair.Value as T;

@@ -1,4 +1,5 @@
 using CK.MQTT.Sdk;
+using System.Text.RegularExpressions;
 
 namespace CK.MQTT
 {
@@ -43,5 +44,8 @@ namespace CK.MQTT
         public const int PacketTypeLength = 1;
 
 		public static MqttEncoder Encoding => MqttEncoder.Default;
-	}
+
+        public static readonly Regex ConnectionStringRegex = new Regex( @"(\[.*\]|[^:]*)(?::([0-9]*))?(\(([0-9]*)\))?" );
+
+    }
 }

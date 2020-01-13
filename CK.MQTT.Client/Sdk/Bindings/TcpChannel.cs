@@ -22,19 +22,18 @@ namespace CK.MQTT.Sdk.Bindings
 		readonly ReplaySubject<byte[]> _sender;
 		readonly IDisposable _streamSubscription;
 
-		public TcpChannel (TcpClient client, 
-			IPacketBuffer buffer,
-			MqttConfiguration configuration,
-            int bufferSize)
-		{
-			_client = client;
-			_buffer = buffer;
-			_receiver = new ReplaySubject<byte[]> (window: TimeSpan.FromSeconds (configuration.WaitTimeoutSecs));
-			_sender = new ReplaySubject<byte[]> (window: TimeSpan.FromSeconds (configuration.WaitTimeoutSecs));
-			_streamSubscription = SubscribeStream ();
-		}
+        public TcpChannel( TcpClient client,
+            IPacketBuffer buffer,
+            MqttConfiguration configuration )
+        {
+            _client = client;
+            _buffer = buffer;
+            _receiver = new ReplaySubject<byte[]>( window: TimeSpan.FromSeconds( configuration.WaitTimeoutSecs ) );
+            _sender = new ReplaySubject<byte[]>( window: TimeSpan.FromSeconds( configuration.WaitTimeoutSecs ) );
+            _streamSubscription = SubscribeStream();
+        }
 
-		public bool IsConnected
+        public bool IsConnected
 		{
 			get
 			{

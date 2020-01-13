@@ -17,8 +17,6 @@ namespace Tests
 		{
 			var configuration = new MqttConfiguration ();
 
-			MqttProtocol.DefaultNonSecurePort.Should().Be(configuration.Port);
-			8192.Should().Be(configuration.BufferSize);
 			MqttQualityOfService.AtMostOnce.Should().Be(configuration.MaximumQualityOfService);
 			0.Should().Be(configuration.KeepAliveSecs);
 			5.Should().Be(configuration.WaitTimeoutSecs);
@@ -28,10 +26,7 @@ namespace Tests
 		[Test]
 		public void when_initializing_server_then_succeeds()
 		{
-			var configuration = new MqttConfiguration {
-				BufferSize = 131072,
-				Port = MqttProtocol.DefaultNonSecurePort
-			};
+			var configuration = new MqttConfiguration();
 			var binding = new ServerTcpBinding ();
 			var initializer = new MqttServerFactory (binding);
 			var server = initializer.CreateServer (configuration);
@@ -49,13 +44,9 @@ namespace Tests
 
 			listener.Start ();
 
-			var configuration = new MqttConfiguration {
-				BufferSize = 131072,
-				Port = port
-			};
-			var binding = new TcpBinding ();
-			var initializer = new MqttClientFactory (IPAddress.Loopback.ToString(), binding);
-			var client = await initializer.CreateClientAsync (configuration);
+			var binding = new TcpBinding();
+			var initializer = new MqttClientFactory ($"{IPAddress.Loopback.ToString()}:{port}({131072})", binding);
+			var client = await initializer.CreateClientAsync (new MqttConfiguration());
 
 			Assert.NotNull (client);
 

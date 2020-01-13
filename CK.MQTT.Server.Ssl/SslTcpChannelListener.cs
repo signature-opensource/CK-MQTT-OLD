@@ -17,7 +17,7 @@ namespace CK.MQTT.Ssl
 
         public SslTcpChannelListener( MqttConfiguration configuration, SslTcpConfig sslConfig, ServerSslConfig sslServerConfig )
         {
-            _listener = new TcpListener( IPAddress.Any, configuration.Port );
+            _listener = new TcpListener( IPAddress.Any, sslServerConfig.Port );
             _configuration = configuration;
             _sslConfig = sslConfig;
             _sslServerConfig = sslServerConfig;

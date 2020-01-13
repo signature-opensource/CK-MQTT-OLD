@@ -14,11 +14,11 @@ namespace Tests
 		public async Task when_creating_channel_then_succeeds()
 		{
 			var configuration = new MqttConfiguration { ConnectionTimeoutSecs = 2 };
-			var listener = new TcpListener (IPAddress.Loopback, configuration.Port);
+			var listener = new TcpListener (IPAddress.Loopback, 25565);
 
 			listener.Start ();
 
-			var factory = new TcpChannelFactory (IPAddress.Loopback.ToString (), configuration);
+			var factory = new TcpChannelFactory (IPAddress.Loopback.ToString ()+":25565", configuration);
 			var channel = await factory.CreateAsync ();
 
 			Assert.NotNull (channel);

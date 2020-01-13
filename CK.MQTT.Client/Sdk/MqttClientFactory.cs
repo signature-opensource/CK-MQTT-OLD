@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using CK.MQTT.Sdk.Bindings;
 using CK.MQTT.Sdk.Flows;
 using CK.MQTT.Sdk.Storage;
@@ -14,7 +14,7 @@ namespace CK.MQTT.Sdk
 	{
 		static readonly ITracer tracer = Tracer.Get<MqttClientFactory> ();
 
-		readonly string hostAddress;
+		readonly string connectionString;
 		readonly IMqttBinding binding;
 
         /// <summary>
@@ -32,14 +32,14 @@ namespace CK.MQTT.Sdk
         /// Initializes a new instance of the <see cref="MqttClientFactory" /> class,
         /// specifying the address to connect and the transport protocol binding to use
         /// </summary>
-        /// <param name="hostAddress">Address of the host to connect the client</param>
+        /// <param name="connectionString">Address of the host to connect the client</param>
         /// <param name="binding">
         /// Transport protocol binding to use as the MQTT underlying protocol
         /// See <see cref="IMqttBinding" /> for more details about how to implement it 
         /// </param>
-        public MqttClientFactory (string hostAddress, IMqttBinding binding)
+        public MqttClientFactory (string connectionString, IMqttBinding binding)
         {
-            this.hostAddress = hostAddress;
+            this.connectionString = connectionString;
             this.binding = binding;
         }
 
@@ -61,7 +61,7 @@ namespace CK.MQTT.Sdk
 				await Task.Yield ();
 				
 				var topicEvaluator = new MqttTopicEvaluator (configuration);
-				var innerChannelFactory = binding.GetChannelFactory (hostAddress, configuration);
+				var innerChannelFactory = binding.GetChannelFactory (connectionString, configuration);
 				var channelFactory = new PacketChannelFactory (innerChannelFactory, topicEvaluator, configuration);
 				var packetIdProvider = new PacketIdProvider ();
 				var repositoryProvider = new InMemoryRepositoryProvider ();

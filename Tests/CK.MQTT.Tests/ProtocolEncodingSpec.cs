@@ -12,9 +12,9 @@ namespace Tests
 		public void when_encoding_string_then_prefix_length_is_added()
 		{
 			var text = "Foo";
-			var encoded = MqttProtocolAdvanced.Encoding.EncodeString (text);
+			var encoded = MqttImplementation.Encoding.EncodeString (text);
 
-			(MqttProtocolAdvanced.StringPrefixLength + text.Length).Should().Be(encoded.Length);
+			(MqttImplementation.StringPrefixLength + text.Length).Should().Be(encoded.Length);
 			0x00.Should().Be(encoded[0]);
 			0x03.Should().Be(encoded[1]);
 		}
@@ -24,14 +24,14 @@ namespace Tests
 		{
 			var text = GetRandomString (size: 65537);
 
-			Assert.Throws<MqttException>(() => MqttProtocolAdvanced.Encoding.EncodeString (text));
+			Assert.Throws<MqttException>(() => MqttImplementation.Encoding.EncodeString (text));
 		}
 
 		[Test]
 		public void when_encoding_int32_minor_than_max_protocol_length_then_is_encoded_big_endian()
 		{
 			var number = 35000; //00000000 00000000 10001000 10111000
-			var encoded = MqttProtocolAdvanced.Encoding.EncodeInteger (number);
+			var encoded = MqttImplementation.Encoding.EncodeInteger (number);
 
 			2.Should().Be(encoded.Length);
 			Convert.ToByte ("10001000", fromBase: 2).Should().Be(encoded[0]);
@@ -42,7 +42,7 @@ namespace Tests
 		public void when_encoding_uint16_then_succeeds_is_encoded_big_endian()
 		{
 			ushort number = 35000; //10001000 10111000
-			var encoded = MqttProtocolAdvanced.Encoding.EncodeInteger (number);
+			var encoded = MqttImplementation.Encoding.EncodeInteger (number);
 
 			2.Should().Be(encoded.Length);
 			Convert.ToByte ("10001000", fromBase: 2).Should().Be(encoded[0]);
@@ -54,7 +54,7 @@ namespace Tests
 		{
 			var number = 310934; //00000000 00000100 10111110 10010110
 			
-			Assert.Throws<MqttException>(() => MqttProtocolAdvanced.Encoding.EncodeInteger (number));
+			Assert.Throws<MqttException>(() => MqttImplementation.Encoding.EncodeInteger (number));
 		}
 
 		[Test]
@@ -77,20 +77,20 @@ namespace Tests
 			var length5 = 64; //01000000
 			var length6 = 321; //00000001 01000001
 			
-			var encoded1From = MqttProtocolAdvanced.Encoding.EncodeRemainingLength (length1From);
-			var encoded1To = MqttProtocolAdvanced.Encoding.EncodeRemainingLength (length1To);
+			var encoded1From = MqttImplementation.Encoding.EncodeRemainingLength (length1From);
+			var encoded1To = MqttImplementation.Encoding.EncodeRemainingLength (length1To);
 
-			var encoded2From = MqttProtocolAdvanced.Encoding.EncodeRemainingLength (length2From);
-			var encoded2To = MqttProtocolAdvanced.Encoding.EncodeRemainingLength (length2To);
+			var encoded2From = MqttImplementation.Encoding.EncodeRemainingLength (length2From);
+			var encoded2To = MqttImplementation.Encoding.EncodeRemainingLength (length2To);
 
-			var encoded3From = MqttProtocolAdvanced.Encoding.EncodeRemainingLength (length3From);
-			var encoded3To = MqttProtocolAdvanced.Encoding.EncodeRemainingLength (length3To);
+			var encoded3From = MqttImplementation.Encoding.EncodeRemainingLength (length3From);
+			var encoded3To = MqttImplementation.Encoding.EncodeRemainingLength (length3To);
 
-			var encoded4From = MqttProtocolAdvanced.Encoding.EncodeRemainingLength (length4From);
-			var encoded4To = MqttProtocolAdvanced.Encoding.EncodeRemainingLength (length4To);
+			var encoded4From = MqttImplementation.Encoding.EncodeRemainingLength (length4From);
+			var encoded4To = MqttImplementation.Encoding.EncodeRemainingLength (length4To);
 
-			var encoded5 = MqttProtocolAdvanced.Encoding.EncodeRemainingLength (length5); //0x40
-			var encoded6 = MqttProtocolAdvanced.Encoding.EncodeRemainingLength (length6); //193 2
+			var encoded5 = MqttImplementation.Encoding.EncodeRemainingLength (length5); //0x40
+			var encoded6 = MqttImplementation.Encoding.EncodeRemainingLength (length6); //193 2
 
 			1.Should().Be(encoded1From.Length);
 			0x00.Should().Be(encoded1From[0]);
@@ -181,20 +181,20 @@ namespace Tests
             var bytes2 = new List<byte> {0x10, 193, 2};
 
 
-            var length1From = MqttProtocolAdvanced.Encoding.DecodeRemainingLength (encoded1From.ToArray(), out var arrayLength1From); //0
-            var length1To = MqttProtocolAdvanced.Encoding.DecodeRemainingLength (encoded1To.ToArray(), out var arrayLength1To); //127
+            var length1From = MqttImplementation.Encoding.DecodeRemainingLength (encoded1From.ToArray(), out var arrayLength1From); //0
+            var length1To = MqttImplementation.Encoding.DecodeRemainingLength (encoded1To.ToArray(), out var arrayLength1To); //127
 
-            var length2From = MqttProtocolAdvanced.Encoding.DecodeRemainingLength (encoded2From.ToArray(), out var arrayLength2From); //128
-            var length2To = MqttProtocolAdvanced.Encoding.DecodeRemainingLength (encoded2To.ToArray(), out var arrayLength2To); //16383
+            var length2From = MqttImplementation.Encoding.DecodeRemainingLength (encoded2From.ToArray(), out var arrayLength2From); //128
+            var length2To = MqttImplementation.Encoding.DecodeRemainingLength (encoded2To.ToArray(), out var arrayLength2To); //16383
 
-            var length3From = MqttProtocolAdvanced.Encoding.DecodeRemainingLength (encoded3From.ToArray(), out var arrayLength3From); //16384
-            var length3To = MqttProtocolAdvanced.Encoding.DecodeRemainingLength (encoded3To.ToArray(), out var arrayLength3To); //2097151
+            var length3From = MqttImplementation.Encoding.DecodeRemainingLength (encoded3From.ToArray(), out var arrayLength3From); //16384
+            var length3To = MqttImplementation.Encoding.DecodeRemainingLength (encoded3To.ToArray(), out var arrayLength3To); //2097151
 
-            var length4From = MqttProtocolAdvanced.Encoding.DecodeRemainingLength (encoded4From.ToArray(), out var arrayLength4From); //2097152
-            var length4To = MqttProtocolAdvanced.Encoding.DecodeRemainingLength (encoded4To.ToArray(), out var arrayLength4To); //268435455
+            var length4From = MqttImplementation.Encoding.DecodeRemainingLength (encoded4From.ToArray(), out var arrayLength4From); //2097152
+            var length4To = MqttImplementation.Encoding.DecodeRemainingLength (encoded4To.ToArray(), out var arrayLength4To); //268435455
 
-            var length1 = MqttProtocolAdvanced.Encoding.DecodeRemainingLength (bytes1.ToArray(), out var arrayLength1); //64
-            var length2 = MqttProtocolAdvanced.Encoding.DecodeRemainingLength (bytes2.ToArray(), out var arrayLength2); //321
+            var length1 = MqttImplementation.Encoding.DecodeRemainingLength (bytes1.ToArray(), out var arrayLength1); //64
+            var length2 = MqttImplementation.Encoding.DecodeRemainingLength (bytes2.ToArray(), out var arrayLength2); //321
 
 			1.Should().Be(arrayLength1From);
 			0.Should().Be(length1From);
@@ -236,7 +236,7 @@ namespace Tests
                 0x7F
             };
             //According to spec samples: http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc385349213
-            Assert.Throws<MqttException> (() => MqttProtocolAdvanced.Encoding.DecodeRemainingLength (bytes.ToArray (), out _));
+            Assert.Throws<MqttException> (() => MqttImplementation.Encoding.DecodeRemainingLength (bytes.ToArray (), out _));
 		}
 
         static string GetRandomString(int size)

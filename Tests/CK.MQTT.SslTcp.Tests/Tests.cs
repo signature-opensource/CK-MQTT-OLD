@@ -33,7 +33,8 @@ namespace CK.MQTT.SslTcp.Tests
                 var sslServerConfig = new ServerSslConfig
                 {
                     ServerCertificate = certificate,
-                    SslProtocols = SslProtocols.Tls12
+                    SslProtocols = SslProtocols.Tls12,
+                    Port = 25565
                 };
                 return new ServerTcpSslBinding( config, sslServerConfig );
             }
@@ -87,6 +88,14 @@ namespace CK.MQTT.SslTcp.Tests
 
     [TestFixture]
     public class SubscriptionSpecSslTcp : SubscriptionSpec
+    {
+        protected override IMqttServerBinding MqttServerBinding => SslTcpHelper.MqttServerBinding;
+
+        protected override IMqttBinding MqttBinding => SslTcpHelper.MqttBinding;
+    }
+
+    [TestFixture]
+    public class KeepAliveSpecTcpSsl : KeepAliveSpec
     {
         protected override IMqttServerBinding MqttServerBinding => SslTcpHelper.MqttServerBinding;
 

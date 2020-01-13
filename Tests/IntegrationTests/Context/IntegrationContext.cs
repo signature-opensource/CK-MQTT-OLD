@@ -13,7 +13,6 @@ namespace IntegrationTests.Context
     {
         protected readonly ushort KeepAliveSecs;
         protected readonly bool AllowWildcardsInTopicFilters;
-        private readonly IMqttAuthenticationProvider _authenticationProvider;
 
         static IntegrationContext()
         {
@@ -25,7 +24,7 @@ namespace IntegrationTests.Context
         {
             KeepAliveSecs = keepAliveSecs;
             AllowWildcardsInTopicFilters = allowWildcardsInTopicFilters;
-            _authenticationProvider = authenticationProvider;
+            AuthenticationProvider = authenticationProvider;
             Configuration = new MqttConfiguration
             {
                 KeepAliveSecs = KeepAliveSecs,
@@ -38,7 +37,7 @@ namespace IntegrationTests.Context
         [SetUp]
         public void Setup()
         {
-            Server = MqttServer.Create( Configuration, MqttServerBinding, _authenticationProvider );
+            Server = MqttServer.Create( Configuration, MqttServerBinding, AuthenticationProvider );
             Server.Start();
         }
 
@@ -48,11 +47,13 @@ namespace IntegrationTests.Context
 
         protected abstract IMqttBinding MqttBinding { get; }
 
-        protected IMqttServer Server { get; private set; }
+        protected virtual IMqttServer Server { get; private set; }
 
-        protected virtual async Task<IMqttClient> GetClientAsync()
+        protected IMqttAuthenticationProvider AuthenticationProvider { get; }
+
+        protected virtual async Task<IMqttClient> GetClientAsync(string connectionString = null)
         {
-            return await MqttClient.CreateAsync( IPAddress.Loopback.ToString(), Configuration, MqttBinding );
+            return await MqttClient.CreateAsync( connectionString ?? IPAddress.Loopback.ToString()+":25565", Configuration, MqttBinding );
         }
 
         [TearDown]

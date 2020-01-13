@@ -11,9 +11,9 @@ namespace CK.MQTT.Ssl
 		{
 			_sslConfig = sslConfig;
 		}
-		public IMqttChannelFactory GetChannelFactory(string hostAddress, MqttConfiguration configuration)
+		public IMqttChannelFactory GetChannelFactory(string connectionString, MqttConfiguration configuration)
 		{
-			return SslTcpChanneClientFactory.MqttChannelFactory(hostAddress, _sslConfig, configuration);
+			return SslTcpChanneClientFactory.MqttChannelFactory(connectionString, _sslConfig, configuration);
 		}
 	}
 }

@@ -1,4 +1,4 @@
-﻿using CK.MQTT.Sdk.Packets;
+using CK.MQTT.Sdk.Packets;
 
 namespace CK.MQTT.Sdk.Flows
 {

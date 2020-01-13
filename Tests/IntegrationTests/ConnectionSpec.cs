@@ -16,6 +16,11 @@ namespace IntegrationTests
 {
     public abstract class ConnectionSpec : IntegrationContext
     {
+        public ConnectionSpec() : base(25)
+        {
+
+        }
+
         [Test]
         public async Task when_connecting_client_to_non_existing_server_then_fails()
         {

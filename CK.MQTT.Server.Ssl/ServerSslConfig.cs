@@ -10,5 +10,7 @@ namespace CK.MQTT.Ssl
     {
         public SslProtocols SslProtocols { get; set; }
         public X509Certificate2 ServerCertificate { get; set; }
+
+        public int Port { get; set; } = MqttProtocol.DefaultSecurePort;
     }
 }

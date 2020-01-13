@@ -13,20 +13,20 @@ namespace CK.MQTT.Sdk
 {
 	internal class MqttClientImpl : IMqttClient
 	{
-		static readonly ITracer tracer = Tracer.Get<MqttClientImpl>();
+		static readonly ITracer _tracer = Tracer.Get<MqttClientImpl>();
 
-		bool disposed;
-		bool isProtocolConnected;
-		IPacketListener packetListener;
-		IDisposable packetsSubscription;
-		Subject<MqttApplicationMessage> receiver;
+		bool _disposed;
+		bool _isProtocolConnected;
+		IPacketListener _packetListener;
+		IDisposable _packetsSubscription;
+		Subject<MqttApplicationMessage> _receiver;
 
-		readonly IPacketChannelFactory channelFactory;
-		readonly IProtocolFlowProvider flowProvider;
-		readonly IRepository<ClientSession> sessionRepository;
-		readonly IPacketIdProvider packetIdProvider;
-		readonly MqttConfiguration configuration;
-		readonly TaskRunner clientSender;
+		readonly IPacketChannelFactory _channelFactory;
+		readonly IProtocolFlowProvider _flowProvider;
+		readonly IRepository<ClientSession> _sessionRepository;
+		readonly IPacketIdProvider _packetIdProvider;
+		readonly MqttConfiguration _configuration;
+		readonly TaskRunner _clientSender;
 
 		internal MqttClientImpl(IPacketChannelFactory channelFactory,
 			IProtocolFlowProvider flowProvider,
@@ -34,13 +34,13 @@ namespace CK.MQTT.Sdk
 			IPacketIdProvider packetIdProvider,
 			MqttConfiguration configuration)
 		{
-			receiver = new Subject<MqttApplicationMessage>();
-			this.channelFactory = channelFactory;
-			this.flowProvider = flowProvider;
-			sessionRepository = repositoryProvider.GetRepository<ClientSession>();
-			this.packetIdProvider = packetIdProvider;
-			this.configuration = configuration;
-			clientSender = TaskRunner.Get();
+			_receiver = new Subject<MqttApplicationMessage>();
+			_channelFactory = channelFactory;
+			_flowProvider = flowProvider;
+			_sessionRepository = repositoryProvider.GetRepository<ClientSession>();
+			_packetIdProvider = packetIdProvider;
+			_configuration = configuration;
+			_clientSender = TaskRunner.Get();
 		}
 
 		public event EventHandler<MqttEndpointDisconnected> Disconnected = (sender, args) => { };
@@ -52,22 +52,18 @@ namespace CK.MQTT.Sdk
 			get
 			{
 				CheckUnderlyingConnection();
-
-				return isProtocolConnected && Channel.IsConnected;
+				return _isProtocolConnected && Channel.IsConnected;
 			}
-			private set
-			{
-				isProtocolConnected = value;
-			}
-		}
+			private set => _isProtocolConnected = value;
+        }
 
-		public IObservable<MqttApplicationMessage> MessageStream { get { return receiver; } }
+		public IObservable<MqttApplicationMessage> MessageStream => _receiver;
 
-		internal IMqttChannel<IPacket> Channel { get; private set; }
+        internal IMqttChannel<IPacket> Channel { get; private set; }
 
 		public async Task<SessionState> ConnectAsync(MqttClientCredentials credentials, MqttLastWill will = null, bool cleanSession = false)
 		{
-			if (disposed)
+			if (_disposed)
 			{
 				throw new ObjectDisposedException(GetType().FullName);
 			}
@@ -97,14 +93,14 @@ namespace CK.MQTT.Sdk
 					UserName = credentials.UserName,
 					Password = credentials.Password,
 					Will = will,
-					KeepAlive = configuration.KeepAliveSecs
+					KeepAlive = _configuration.KeepAliveSecs
 				};
 
 				await SendPacketAsync(connect)
 					.ConfigureAwait(continueOnCapturedContext: false);
 
-				var connectTimeout = TimeSpan.FromSeconds(configuration.WaitTimeoutSecs);
-				var ack = await packetListener
+				var connectTimeout = TimeSpan.FromSeconds(_configuration.WaitTimeoutSecs);
+				var ack = await _packetListener
 					.PacketStream
 					.ObserveOn(NewThreadScheduler.Default)
 					.OfType<ConnectAck>()
@@ -157,34 +153,33 @@ namespace CK.MQTT.Sdk
 
 		public async Task SubscribeAsync(string topicFilter, MqttQualityOfService qos)
 		{
-			if (disposed)
+			if (_disposed)
 			{
 				throw new ObjectDisposedException(GetType().FullName);
 			}
 
 			try
 			{
-				var packetId = packetIdProvider.GetPacketId();
+				var packetId = _packetIdProvider.GetPacketId();
 				var subscribe = new Subscribe(packetId, new Subscription(topicFilter, qos));
 
-				var ack = default(SubscribeAck);
-				var subscribeTimeout = TimeSpan.FromSeconds(configuration.WaitTimeoutSecs);
+                var subscribeTimeout = TimeSpan.FromSeconds(_configuration.WaitTimeoutSecs);
 
 				await SendPacketAsync(subscribe)
 					.ConfigureAwait(continueOnCapturedContext: false);
 
-				ack = await packetListener
-					.PacketStream
-					.ObserveOn(NewThreadScheduler.Default)
-					.OfType<SubscribeAck>()
-					.FirstOrDefaultAsync(x => x.PacketId == packetId)
-					.Timeout(subscribeTimeout);
+				var ack = await _packetListener
+                    .PacketStream
+                    .ObserveOn(NewThreadScheduler.Default)
+                    .OfType<SubscribeAck>()
+                    .FirstOrDefaultAsync(x => x.PacketId == packetId)
+                    .Timeout(subscribeTimeout);
 
 				if (ack == null)
 				{
 					var message = string.Format(Properties.Resources.GetString("Client_SubscriptionDisconnected"), Id, topicFilter);
 
-					tracer.Error(message);
+					_tracer.Error(message);
 
 					throw new MqttClientException(message);
 				}
@@ -193,7 +188,7 @@ namespace CK.MQTT.Sdk
 				{
 					var message = string.Format(Properties.Resources.GetString("Client_SubscriptionRejected"), Id, topicFilter);
 
-					tracer.Error(message);
+					_tracer.Error(message);
 
 					throw new MqttClientException(message);
 				}
@@ -223,22 +218,22 @@ namespace CK.MQTT.Sdk
 
 		public async Task PublishAsync(MqttApplicationMessage message, MqttQualityOfService qos, bool retain = false)
 		{
-			if (disposed)
+			if (_disposed)
 			{
 				throw new ObjectDisposedException(GetType().FullName);
 			}
 
 			try
 			{
-				ushort? packetId = qos == MqttQualityOfService.AtMostOnce ? null : (ushort?)packetIdProvider.GetPacketId();
+				ushort? packetId = qos == MqttQualityOfService.AtMostOnce ? null : (ushort?)_packetIdProvider.GetPacketId();
 				var publish = new Publish(message.Topic, qos, retain, duplicated: false, packetId: packetId)
 				{
 					Payload = message.Payload
 				};
 
-				var senderFlow = flowProvider.GetFlow<PublishSenderFlow>();
+				var senderFlow = _flowProvider.GetFlow<PublishSenderFlow>();
 
-				await clientSender.Run(async () =>
+				await _clientSender.Run(async () =>
 				{
 					await senderFlow.SendPublishAsync(Id, publish, Channel)
 						.ConfigureAwait(continueOnCapturedContext: false);
@@ -253,36 +248,35 @@ namespace CK.MQTT.Sdk
 
 		public async Task UnsubscribeAsync(params string[] topics)
 		{
-			if (disposed)
+			if (_disposed)
 			{
 				throw new ObjectDisposedException(GetType().FullName);
 			}
 
 			try
 			{
-				topics = topics ?? new string[] { };
+				topics = topics ?? Array.Empty<string>();
 
-				var packetId = packetIdProvider.GetPacketId();
+				var packetId = _packetIdProvider.GetPacketId();
 				var unsubscribe = new Unsubscribe(packetId, topics);
 
-				var ack = default(UnsubscribeAck);
-				var unsubscribeTimeout = TimeSpan.FromSeconds(configuration.WaitTimeoutSecs);
+                var unsubscribeTimeout = TimeSpan.FromSeconds(_configuration.WaitTimeoutSecs);
 
 				await SendPacketAsync(unsubscribe)
 					.ConfigureAwait(continueOnCapturedContext: false);
 
-				ack = await packetListener
-					.PacketStream
-					.ObserveOn(NewThreadScheduler.Default)
-					.OfType<UnsubscribeAck>()
-					.FirstOrDefaultAsync(x => x.PacketId == packetId)
-					.Timeout(unsubscribeTimeout);
+				var ack = await _packetListener
+                    .PacketStream
+                    .ObserveOn(NewThreadScheduler.Default)
+                    .OfType<UnsubscribeAck>()
+                    .FirstOrDefaultAsync(x => x.PacketId == packetId)
+                    .Timeout(unsubscribeTimeout);
 
 				if (ack == null)
 				{
 					var message = string.Format(Properties.Resources.GetString("Client_UnsubscribeDisconnected"), Id, string.Join(", ", topics));
 
-					tracer.Error(message);
+					_tracer.Error(message);
 
 					throw new MqttClientException(message);
 				}
@@ -293,7 +287,7 @@ namespace CK.MQTT.Sdk
 
 				var message = string.Format(Properties.Resources.GetString("Client_UnsubscribeTimeout"), Id, string.Join(", ", topics));
 
-				tracer.Error(message);
+				_tracer.Error(message);
 
 				throw new MqttClientException(message, timeEx);
 			}
@@ -308,7 +302,7 @@ namespace CK.MQTT.Sdk
 
 				var message = string.Format(Properties.Resources.GetString("Client_UnsubscribeError"), Id, string.Join(", ", topics));
 
-				tracer.Error(message);
+				_tracer.Error(message);
 
 				throw new MqttClientException(message, ex);
 			}
@@ -323,12 +317,12 @@ namespace CK.MQTT.Sdk
 					throw new MqttClientException(Properties.Resources.GetString("Client_AlreadyDisconnected"));
 				}
 
-				packetsSubscription?.Dispose();
+				_packetsSubscription?.Dispose();
 
 				await SendPacketAsync(new Disconnect())
 					.ConfigureAwait(continueOnCapturedContext: false);
 
-				await packetListener
+				await _packetListener
 					.PacketStream
 					.LastOrDefaultAsync();
 
@@ -348,7 +342,7 @@ namespace CK.MQTT.Sdk
 
 		protected virtual async Task DisposeAsync(bool disposing)
 		{
-			if (disposed) return;
+			if (_disposed) return;
 
 			if (disposing)
 			{
@@ -357,24 +351,24 @@ namespace CK.MQTT.Sdk
 					await DisconnectAsync().ConfigureAwait(continueOnCapturedContext: false);
 				}
 
-				(clientSender as IDisposable)?.Dispose();
-				disposed = true;
+				(_clientSender as IDisposable)?.Dispose();
+				_disposed = true;
 			}
 		}
 
 		void Close(Exception ex)
 		{
-			tracer.Error(ex);
+			_tracer.Error(ex);
 			Close(DisconnectedReason.Error, ex.Message);
 		}
 
 		void Close(DisconnectedReason reason, string message = null)
 		{
-			tracer.Info(Properties.Resources.GetString("Client_Closing"), Id, reason);
+			_tracer.Info(Properties.Resources.GetString("Client_Closing"), Id, reason);
 
 			CloseClientSession();
-			packetsSubscription?.Dispose();
-			packetListener?.Dispose();
+			_packetsSubscription?.Dispose();
+			_packetListener?.Dispose();
 			ResetReceiver();
 			Channel?.Dispose();
 			IsConnected = false;
@@ -385,41 +379,38 @@ namespace CK.MQTT.Sdk
 
 		async Task InitializeChannelAsync()
 		{
-			Channel = await channelFactory
+			Channel = await _channelFactory
 				.CreateAsync()
 				.ConfigureAwait(continueOnCapturedContext: false);
 
-			packetListener = new ClientPacketListener(Channel, flowProvider, configuration);
-			packetListener.Listen();
+			_packetListener = new ClientPacketListener(Channel, _flowProvider, _configuration);
+			_packetListener.Listen();
 			ObservePackets();
 		}
 
 		void OpenClientSession(bool cleanSession)
 		{
-			var session = string.IsNullOrEmpty(Id) ? default(ClientSession) : sessionRepository.Read(Id);
-			var sessionPresent = cleanSession ? false : session != null;
+			ClientSession session = !string.IsNullOrEmpty(Id) ? _sessionRepository.Read(Id) : null;
+			bool sessionPresent = !cleanSession && session != null;
 
 			if (cleanSession && session != null)
 			{
-				sessionRepository.Delete(session.Id);
+				_sessionRepository.Delete(session.Id);
 				session = null;
 
-				tracer.Info(Properties.Resources.GetString("Client_CleanedOldSession"), Id);
+				_tracer.Info(Properties.Resources.GetString("Client_CleanedOldSession"), Id);
 			}
+            if( session != null ) return;
+            session = new ClientSession(Id, cleanSession);
 
-			if (session == null)
-			{
-				session = new ClientSession(Id, cleanSession);
+            _sessionRepository.Create(session);
 
-				sessionRepository.Create(session);
-
-				tracer.Info(Properties.Resources.GetString("Client_CreatedSession"), Id);
-			}
-		}
+            _tracer.Info(Properties.Resources.GetString("Client_CreatedSession"), Id);
+        }
 
 		void CloseClientSession()
 		{
-			var session = string.IsNullOrEmpty(Id) ? default(ClientSession) : sessionRepository.Read(Id);
+			var session = string.IsNullOrEmpty(Id) ? null : _sessionRepository.Read(Id);
 
 			if (session == null)
 			{
@@ -428,21 +419,21 @@ namespace CK.MQTT.Sdk
 
 			if (session.Clean)
 			{
-				sessionRepository.Delete(session.Id);
+				_sessionRepository.Delete(session.Id);
 
-				tracer.Info(Properties.Resources.GetString("Client_DeletedSessionOnDisconnect"), Id);
+				_tracer.Info(Properties.Resources.GetString("Client_DeletedSessionOnDisconnect"), Id);
 			}
 		}
 
 		async Task SendPacketAsync(IPacket packet)
 		{
-			await clientSender.Run(async () => await Channel.SendAsync(packet).ConfigureAwait(continueOnCapturedContext: false))
+			await _clientSender.Run(async () => await Channel.SendAsync(packet).ConfigureAwait(continueOnCapturedContext: false))
 				.ConfigureAwait(continueOnCapturedContext: false);
 		}
 
 		void CheckUnderlyingConnection()
 		{
-			if (isProtocolConnected && !Channel.IsConnected)
+			if (_isProtocolConnected && !Channel.IsConnected)
 			{
 				Close(DisconnectedReason.Error, Properties.Resources.GetString("Client_UnexpectedChannelDisconnection"));
 			}
@@ -450,33 +441,30 @@ namespace CK.MQTT.Sdk
 
 		void ObservePackets()
 		{
-			packetsSubscription = packetListener
+			_packetsSubscription = _packetListener
 				.PacketStream
 				.ObserveOn(NewThreadScheduler.Default)
 				.Subscribe(packet =>
 				{
-					if (packet.Type == MqttPacketType.Publish)
-					{
-						var publish = packet as Publish;
-						var message = new MqttApplicationMessage(publish.Topic, publish.Payload);
+                    if( packet.Type != MqttPacketType.Publish ) return;
+                    var publish = packet as Publish;
+                    var message = new MqttApplicationMessage(publish.Topic, publish.Payload);
 
-						receiver.OnNext(message);
-						tracer.Info(Properties.Resources.GetString("Client_NewApplicationMessageReceived"), Id, publish.Topic);
-					}
-				}, ex =>
+                    _receiver.OnNext(message);
+                    _tracer.Info(Properties.Resources.GetString("Client_NewApplicationMessageReceived"), Id, publish.Topic);
+                },
+                    Close,
+                    () =>
 				{
-					Close(ex);
-				}, () =>
-				{
-					tracer.Warn(Properties.Resources.GetString("Client_PacketsObservableCompleted"));
+					_tracer.Warn(Properties.Resources.GetString("Client_PacketsObservableCompleted"));
 					Close(DisconnectedReason.RemoteDisconnected);
 				});
 		}
 
 		void ResetReceiver()
 		{
-			receiver?.OnCompleted();
-			receiver = new Subject<MqttApplicationMessage>();
+			_receiver?.OnCompleted();
+			_receiver = new Subject<MqttApplicationMessage>();
 		}
 	}
 }

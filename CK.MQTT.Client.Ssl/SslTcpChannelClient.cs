@@ -19,12 +19,14 @@ namespace CK.MQTT.Ssl
 		public int PreferedSendBufferSize { get => _tcpClient.SendBufferSize; set => _tcpClient.SendBufferSize = value; }
 		public int PreferedReceiveBufferSize { get => _tcpClient.ReceiveBufferSize; set => _tcpClient.ReceiveBufferSize = value; }
 
+        public bool IsThreadSafe => false;
+
         public void Dispose()
 		{
 			_sslStream.Dispose();
 			_tcpClient.Dispose();
 		}
 
-		public Stream GetStream() => _sslStream;
+		public Stream Stream => _sslStream;
 	}
 }

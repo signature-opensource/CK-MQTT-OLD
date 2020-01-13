@@ -13,7 +13,7 @@ namespace IntegrationTests
         [Test]
         public async Task when_server_is_closed_then_error_occurs_when_client_send_message()
         {
-            var client = await GetClientAsync();
+            var client = await GetConnectedClientAsync();
 
             Server.Stop();
 
@@ -27,7 +27,7 @@ namespace IntegrationTests
         [Test]
 		public async Task when_subscribe_topic_then_succeeds()
 		{
-			var client = await GetClientAsync ();
+			var client = await GetConnectedClientAsync();
 			var topicFilter = Guid.NewGuid ().ToString () + "/#";
 
 			await client.SubscribeAsync (topicFilter, MqttQualityOfService.AtMostOnce)
@@ -44,7 +44,7 @@ namespace IntegrationTests
         [TestCase( 200 )]
         public async Task when_subscribe_multiple_topics_then_succeeds(int topicsToSubscribe)
         {
-            var client = await GetClientAsync();
+            var client = await GetConnectedClientAsync();
             var topics = new List<string> ();
 			var tasks = new List<Task> ();
 
@@ -71,7 +71,7 @@ namespace IntegrationTests
         [TestCase("foo/#/bar")]
         public async Task when_subscribing_invalid_topic_then_fails(string topicFilter)
         {
-            var client = await GetClientAsync ();
+            var client = await GetConnectedClientAsync();
 
             var ex = Assert.Throws<AggregateException> (() => client.SubscribeAsync (topicFilter, MqttQualityOfService.AtMostOnce).Wait ());
 
@@ -86,7 +86,7 @@ namespace IntegrationTests
         [Test]
         public async Task when_subscribing_emtpy_topic_then_fails_with_protocol_violation()
         {
-            var client = await GetClientAsync();
+            var client = await GetConnectedClientAsync();
 
             var ex = Assert.Throws<AggregateException> (() => client.SubscribeAsync (string.Empty, MqttQualityOfService.AtMostOnce).Wait ());
 
@@ -102,7 +102,7 @@ namespace IntegrationTests
         [TestCase( 500 )]
         public async Task when_unsubscribe_topic_then_succeeds(int topicsToSubscribe)
 		{
-			var client = await GetClientAsync ();
+			var client = await GetConnectedClientAsync();
 			var topics = new List<string> ();
 			var tasks = new List<Task> ();
 
@@ -125,7 +125,7 @@ namespace IntegrationTests
         [Test]
         public async Task when_unsubscribing_emtpy_topic_then_fails_with_protocol_violation()
         {
-            var client = await GetClientAsync ();
+            var client = await GetConnectedClientAsync();
 
             var ex = Assert.Throws<AggregateException> (() => client.UnsubscribeAsync (null).Wait ());
 

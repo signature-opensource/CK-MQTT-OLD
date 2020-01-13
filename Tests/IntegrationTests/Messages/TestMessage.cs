@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace IntegrationTests.Messages
 {
@@ -10,5 +10,7 @@ namespace IntegrationTests.Messages
 		public string Name { get; set; }
 
 		public int Value { get; set; }
+
+        public byte[] PayloadTest { get; set; }
 	}
 }
