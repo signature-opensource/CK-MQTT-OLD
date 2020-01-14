@@ -62,7 +62,7 @@ namespace CK.MQTT.Sdk.Flows
 					retainedRepository.Delete (existingRetainedMessage.Id);
 				}
 
-				if (publish.Payload.Length > 0) {
+				if (publish.Payload != null && publish.Payload.Length > 0) {
 					var retainedMessage = new RetainedMessage (publish.Topic,
 						publish.QualityOfService,
 						publish.Payload);
