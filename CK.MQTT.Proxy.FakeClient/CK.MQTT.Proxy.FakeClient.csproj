@@ -1,17 +1,17 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
+  <Import Project="..\Common\Shared.props" />
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp2.1;netstandard2.1</TargetFrameworks>
+    <TargetFrameworks>netcoreapp3.1;netstandard2.1</TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CK.ActivityMonitor.SimpleSender" Version="12.2.0" />
+    <PackageReference Include="CK.ActivityMonitor.SimpleSender" Version="13.0.0-a00-00-0008-develop" />
     <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="1.3.2" />
     <PackageReference Include="System.Diagnostics.Tracer" Version="2.0.8" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Reactive" Version="3.0.0" />
+    <PackageReference Include="System.Reactive" Version="4.3.2" />
   </ItemGroup>
 
   <ItemGroup>

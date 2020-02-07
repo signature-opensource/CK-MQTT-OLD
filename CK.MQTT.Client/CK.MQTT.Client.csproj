@@ -6,17 +6,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Reactive" Version="3.0.0" />
+    <PackageReference Include="System.Reactive" Version="4.3.2" />
     <PackageReference Include="System.Diagnostics.Tracer" Version="2.0.8" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\CK.MQTT.Client.Abstractions\CK.MQTT.Client.Abstractions.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Update="Properties\Resources.resx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </EmbeddedResource>
   </ItemGroup>
 </Project>
