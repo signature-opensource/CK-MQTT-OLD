@@ -7,14 +7,14 @@ namespace CK.MQTT.Sdk.Formatters
 {
 	internal class SubscribeAckFormatter : Formatter<SubscribeAck>
 	{
-		public override MqttPacketType PacketType { get { return Packets.MqttPacketType.SubscribeAck; } }
+		public override MqttPacketType PacketType { get { return MqttPacketType.SubscribeAck; } }
 
 		protected override SubscribeAck Read (byte[] bytes)
 		{
 			ValidateHeaderFlag (bytes, t => t == MqttPacketType.SubscribeAck, 0x00);
 
 			var remainingLengthBytesLength = 0;
-			var remainingLength = MqttImplementation.Encoding.DecodeRemainingLength (bytes, out remainingLengthBytesLength);
+			var remainingLength = MqttConstants.Encoding.DecodeRemainingLength (bytes, out remainingLengthBytesLength);
 
 			var packetIdentifierStartIndex = remainingLengthBytesLength + 1;
 			var packetIdentifier = bytes.Bytes (packetIdentifierStartIndex, 2).ToUInt16();
@@ -23,10 +23,10 @@ namespace CK.MQTT.Sdk.Formatters
 			var returnCodeBytes = bytes.Bytes(headerLength);
 
 			if (!returnCodeBytes.Any ())
-				throw new MqttProtocolViolationException  (Properties.Resources.GetString("SubscribeAckFormatter_MissingReturnCodes"));
+				throw new MqttProtocolViolationException  (Properties.SubscribeAckFormatter_MissingReturnCodes);
 
 			if (returnCodeBytes.Any (b => !Enum.IsDefined (typeof (SubscribeReturnCode), b)))
-				throw new MqttProtocolViolationException  (Properties.Resources.GetString("SubscribeAckFormatter_InvalidReturnCodes"));
+				throw new MqttProtocolViolationException  (Properties.SubscribeAckFormatter_InvalidReturnCodes);
 
 			var returnCodes = returnCodeBytes.Select(b => (SubscribeReturnCode)b).ToArray();
 
@@ -39,7 +39,7 @@ namespace CK.MQTT.Sdk.Formatters
 
 			var variableHeader = GetVariableHeader (packet);
 			var payload = GetPayload (packet);
-			var remainingLength = MqttImplementation.Encoding.EncodeRemainingLength (variableHeader.Length + payload.Length);
+			var remainingLength = MqttConstants.Encoding.EncodeRemainingLength (variableHeader.Length + payload.Length);
 			var fixedHeader = GetFixedHeader (remainingLength);
 
 			bytes.AddRange (fixedHeader);
@@ -68,7 +68,7 @@ namespace CK.MQTT.Sdk.Formatters
 		{
 			var variableHeader = new List<byte> ();
 
-			var packetIdBytes = MqttImplementation.Encoding.EncodeInteger(packet.PacketId);
+			var packetIdBytes = MqttConstants.Encoding.EncodeInteger(packet.PacketId);
 
 			variableHeader.AddRange (packetIdBytes);
 
@@ -78,7 +78,7 @@ namespace CK.MQTT.Sdk.Formatters
 		byte[] GetPayload (SubscribeAck packet)
 		{
 			if (packet.ReturnCodes == null || !packet.ReturnCodes.Any ())
-				throw new MqttProtocolViolationException  (Properties.Resources.GetString("SubscribeAckFormatter_MissingReturnCodes"));
+				throw new MqttProtocolViolationException  (Properties.SubscribeAckFormatter_MissingReturnCodes);
 
 			return packet.ReturnCodes
 				.Select (c => Convert.ToByte (c))

@@ -26,7 +26,7 @@ namespace Tests
 
 			foreach (var line in File.ReadLines (path).Where(l => !string.IsNullOrEmpty(l))) {
 				var aux = line;
-				var commentIndex = aux.IndexOf (Packet.CommentSymbol);
+				var commentIndex = aux.IndexOf ( CommentSymbol );
 
 				if(commentIndex != -1) {
 					aux = aux.Substring(0, commentIndex).Trim();

@@ -69,9 +69,9 @@ namespace CK.MQTT.Sdk
 
 				return new MqttClientImpl (channelFactory, flowProvider, repositoryProvider, packetIdProvider, configuration);
 			} catch (Exception ex) {
-				tracer.Error (ex, Properties.Resources.GetString("Client_InitializeError"));
+				tracer.Error (ex, Properties.Client_InitializeError);
 
-				throw new MqttClientException  (Properties.Resources.GetString("Client_InitializeError"), ex);
+				throw new MqttClientException  (Properties.Client_InitializeError, ex);
 			}
 		}
 	}

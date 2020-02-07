@@ -80,9 +80,9 @@ namespace CK.MQTT.Sdk
                 return new MqttServerImpl (channelProvider, channelFactory,
                     flowProvider, connectionProvider, undeliveredMessagesListener, configuration);
             } catch (Exception ex) {
-                tracer.Error (ex, ServerProperties.Resources.GetString("Server_InitializeError"));
+                tracer.Error (ex, ServerProperties.Server_InitializeError);
 
-                throw new MqttServerException (ServerProperties.Resources.GetString("Server_InitializeError"), ex);
+                throw new MqttServerException (ServerProperties.Server_InitializeError, ex);
             }
         }
     }

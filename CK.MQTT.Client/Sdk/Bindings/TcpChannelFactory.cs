@@ -23,7 +23,7 @@ namespace CK.MQTT.Sdk.Bindings
 
             _connectionString = connectionString;
             _configuration = configuration;
-            var match = MqttImplementation.ConnectionStringRegex.Match( connectionString );
+            var match = MqttConstants.ConnectionStringRegex.Match( connectionString );
             _hostAddress = match.Groups[match.Groups[1].Value != null ? 1 : 3].Value;
             _port = match.Groups[2].Value.Length == 0 ? MqttProtocol.DefaultNonSecurePort : int.Parse( match.Groups[2].Value );
             _bufferSize = match.Groups[4]?.Value.Length == 0 ? (int?)null : int.Parse( match.Groups[4]?.Value );
@@ -55,7 +55,7 @@ namespace CK.MQTT.Sdk.Bindings
             }
             catch( SocketException socketEx )
             {
-                var message = string.Format( Properties.Resources.GetString( "TcpChannelFactory_TcpClient_Failed" ), _connectionString, _port );
+                var message = string.Format( Properties.TcpChannelFactory_TcpClient_Failed, _connectionString, _port );
 
                 _tracer.Error( socketEx, message );
 
@@ -72,7 +72,7 @@ namespace CK.MQTT.Sdk.Bindings
                 }
                 catch { }
 
-                var message = string.Format( Properties.Resources.GetString( "TcpChannelFactory_TcpClient_Failed" ), _connectionString, _port );
+                var message = string.Format( Properties.TcpChannelFactory_TcpClient_Failed, _connectionString, _port );
 
                 _tracer.Error( timeoutEx, message );
 

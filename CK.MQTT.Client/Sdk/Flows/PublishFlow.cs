@@ -53,7 +53,7 @@ namespace CK.MQTT.Sdk.Flows
 			var session = sessionRepository.Read (clientId);
 
 			if (session == null) {
-				throw new MqttException (string.Format (Properties.Resources.GetString("SessionRepository_ClientSessionNotFound"), clientId));
+				throw new MqttException (string.Format (Properties.SessionRepository_ClientSessionNotFound, clientId));
 			}
 
 			var pendingAcknowledgement = session
@@ -72,7 +72,7 @@ namespace CK.MQTT.Sdk.Flows
 				.Interval (TimeSpan.FromSeconds (configuration.WaitTimeoutSecs), NewThreadScheduler.Default)
 				.Subscribe (async _ => {
 					if (channel.IsConnected) {
-						tracer.Warn (Properties.Resources.GetString("PublishFlow_RetryingQoSFlow"), sentMessage.Type, clientId);
+						tracer.Warn (Properties.PublishFlow_RetryingQoSFlow, sentMessage.Type, clientId);
 
 						await channel.SendAsync (sentMessage);
 					}
@@ -101,7 +101,7 @@ namespace CK.MQTT.Sdk.Flows
 			var session = sessionRepository.Read (clientId);
 
 			if (session == null) {
-				throw new MqttException (string.Format (Properties.Resources.GetString("SessionRepository_ClientSessionNotFound"), clientId));
+				throw new MqttException (string.Format (Properties.SessionRepository_ClientSessionNotFound, clientId));
 			}
 
 			session.AddPendingAcknowledgement (unacknowledgeMessage);

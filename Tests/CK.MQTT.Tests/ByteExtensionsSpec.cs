@@ -151,7 +151,7 @@ namespace Tests
 
 			bytes.Add(Convert.ToByte ("00101000", fromBase: 2));
 			bytes.Add(0xFE);
-			bytes.AddRange(MqttImplementation.Encoding.EncodeString("Foo"));
+			bytes.AddRange(MqttConstants.Encoding.EncodeString("Foo"));
             bytes.Add(0xA9);
             bytes.Add(Convert.ToByte("00000000", 2));
 
@@ -166,7 +166,7 @@ namespace Tests
 
 			bytes.Add(Convert.ToByte ("00101000", fromBase: 2));
 			bytes.Add(0xFE);
-			bytes.AddRange(MqttImplementation.Encoding.EncodeString("Foo"));
+			bytes.AddRange(MqttConstants.Encoding.EncodeString("Foo"));
             bytes.Add(0xA9);
             bytes.Add(Convert.ToByte("00000000", 2));
 

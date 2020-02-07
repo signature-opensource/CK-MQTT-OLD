@@ -20,7 +20,6 @@ namespace CK.MQTT.Sdk
 		readonly IProtocolFlowProvider flowProvider;
 		readonly MqttConfiguration configuration;
 		readonly ReplaySubject<IPacket> packets;
-		readonly TaskRunner flowRunner;
 		CompositeDisposable listenerDisposable;
 		bool disposed;
 		string clientId = string.Empty;
@@ -36,7 +35,6 @@ namespace CK.MQTT.Sdk
 			this.flowProvider = flowProvider;
 			this.configuration = configuration;
 			packets = new ReplaySubject<IPacket> (window: TimeSpan.FromSeconds (configuration.WaitTimeoutSecs));
-			flowRunner = TaskRunner.Get ();
 		}
 
 		public IObservable<IPacket> PacketStream { get { return packets; } }
@@ -67,11 +65,10 @@ namespace CK.MQTT.Sdk
 			}
 
 			if (disposing) {
-				tracer.Info (ServerProperties.Resources.GetString("Mqtt_Disposing"), GetType ().FullName);
+				tracer.Info (Properties.Mqtt_Disposing, GetType ().FullName);
 
 				listenerDisposable.Dispose ();
 				packets.OnCompleted ();
-				(flowRunner as IDisposable)?.Dispose ();
 				disposed = true;
 			}
 		}
@@ -92,7 +89,7 @@ namespace CK.MQTT.Sdk
 					var connect = packet as Connect;
 
 					if (connect == null) {
-						await NotifyErrorAsync (ServerProperties.Resources.GetString("ServerPacketListener_FirstPacketMustBeConnect"))
+						await NotifyErrorAsync ( ServerProperties.ServerPacketListener_FirstPacketMustBeConnect)
                             .ConfigureAwait (continueOnCapturedContext: false);
 
 						return;
@@ -102,7 +99,7 @@ namespace CK.MQTT.Sdk
 					keepAlive = connect.KeepAlive;
 					connectionProvider.AddConnection (clientId, channel);
 
-					tracer.Info (ServerProperties.Resources.GetString("ServerPacketListener_ConnectPacketReceived"), clientId);
+					tracer.Info ( ServerProperties.ServerPacketListener_ConnectPacketReceived, clientId);
 
 					await DispatchPacketAsync (connect)
 						.ConfigureAwait (continueOnCapturedContext: false);
@@ -119,7 +116,7 @@ namespace CK.MQTT.Sdk
 				.Skip (1)
 				.Subscribe (async packet => {
 					if (packet is Connect) {
-						await NotifyErrorAsync (new MqttProtocolViolationException (ServerProperties.Resources.GetString("ServerPacketListener_SecondConnectNotAllowed")))
+						await NotifyErrorAsync (new MqttProtocolViolationException ( ServerProperties.ServerPacketListener_SecondConnectNotAllowed))
                             .ConfigureAwait (continueOnCapturedContext: false);
 
 						return;
@@ -161,10 +158,10 @@ namespace CK.MQTT.Sdk
 		async Task HandleConnectionExceptionAsync (Exception exception)
 		{
 			if (exception is TimeoutException) {
-				await NotifyErrorAsync (ServerProperties.Resources.GetString("ServerPacketListener_NoConnectReceived"), exception)
+				await NotifyErrorAsync (ServerProperties.ServerPacketListener_NoConnectReceived, exception)
                     .ConfigureAwait (continueOnCapturedContext: false);
 			} else if (exception is MqttConnectionException) {
-				tracer.Error (exception, ServerProperties.Resources.GetString("ServerPacketListener_ConnectionError"), clientId ?? "N/A");
+				tracer.Error (exception, ServerProperties.ServerPacketListener_ConnectionError, clientId ?? "N/A");
 
 				var connectEx = exception as MqttConnectionException;
 				var errorAck = new ConnectAck (connectEx.ReturnCode, existingSession: false);
@@ -193,7 +190,7 @@ namespace CK.MQTT.Sdk
 					if (timeEx == null) {
 						await NotifyErrorAsync (ex).ConfigureAwait (continueOnCapturedContext: false);
 					} else {
-						var message = string.Format (ServerProperties.Resources.GetString("ServerPacketListener_KeepAliveTimeExceeded"), tolerance, clientId);
+						var message = string.Format ( ServerProperties.ServerPacketListener_KeepAliveTimeExceeded, tolerance, clientId);
 
 						await NotifyErrorAsync (message, timeEx).ConfigureAwait (continueOnCapturedContext: false);
 					}
@@ -220,18 +217,18 @@ namespace CK.MQTT.Sdk
 			try {
 				packets.OnNext (packet);
 
-				await flowRunner.Run (async () => {
+				await Task.Run (async () => {
 					if (packet.Type == MqttPacketType.Publish) {
 						var publish = packet as Publish;
 
-						tracer.Info (ServerProperties.Resources.GetString("ServerPacketListener_DispatchingPublish"), flow.GetType ().Name, clientId, publish.Topic);
+						tracer.Info ( ServerProperties.ServerPacketListener_DispatchingPublish, flow.GetType ().Name, clientId, publish.Topic);
 					} else if (packet.Type == MqttPacketType.Subscribe) {
 						var subscribe = packet as Subscribe;
 						var topics = subscribe.Subscriptions == null ? new List<string> () : subscribe.Subscriptions.Select (s => s.TopicFilter);
 
-						tracer.Info (ServerProperties.Resources.GetString("ServerPacketListener_DispatchingSubscribe"), flow.GetType ().Name, clientId, string.Join (", ", topics));
+						tracer.Info ( ServerProperties.ServerPacketListener_DispatchingSubscribe, flow.GetType ().Name, clientId, string.Join (", ", topics));
 					} else {
-						tracer.Info (ServerProperties.Resources.GetString("ServerPacketListener_DispatchingMessage"), packet.Type, flow.GetType ().Name, clientId);
+						tracer.Info ( ServerProperties.ServerPacketListener_DispatchingMessage, packet.Type, flow.GetType ().Name, clientId);
 					}
 
 					await flow.ExecuteAsync (clientId, packet, channel)
@@ -249,7 +246,7 @@ namespace CK.MQTT.Sdk
 
 		async Task NotifyErrorAsync (Exception exception)
 		{
-			tracer.Error (exception, ServerProperties.Resources.GetString("ServerPacketListener_Error"), clientId ?? "N/A");
+			tracer.Error (exception, ServerProperties.ServerPacketListener_Error, clientId ?? "N/A");
 
             listenerDisposable.Dispose ();
 			RemoveClient ();
@@ -296,7 +293,7 @@ namespace CK.MQTT.Sdk
                 RemoveClient ();
             }
 
-            tracer.Warn (ServerProperties.Resources.GetString("PacketChannelCompleted"), clientId ?? "N/A");
+            tracer.Warn ( ServerProperties.PacketChannelCompleted, clientId ?? "N/A");
 
             packets.OnCompleted ();
         }

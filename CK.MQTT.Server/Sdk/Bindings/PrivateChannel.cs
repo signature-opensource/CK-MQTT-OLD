@@ -41,19 +41,19 @@ namespace CK.MQTT.Sdk.Bindings
             }
 
             if (!IsConnected) {
-                throw new MqttException (Properties.Resources.GetString("MqttChannel_ClientNotConnected"));
+                throw new MqttException (Properties.MqttChannel_ClientNotConnected);
             }
 
             sender.OnNext (message);
 
             try {
-                tracer.Verbose ( Properties.Resources.GetString("MqttChannel_SendingPacket"), message.Length);
+                tracer.Verbose ( Properties.MqttChannel_SendingPacket, message.Length);
 
                 stream.Send (message, identifier);
 
                 return Task.FromResult (true);
             } catch (ObjectDisposedException disposedEx) {
-                throw new MqttException ( Properties.Resources.GetString("MqttChannel_StreamDisconnected"), disposedEx);
+                throw new MqttException ( Properties.MqttChannel_StreamDisconnected, disposedEx);
             }
         }
 
@@ -68,7 +68,7 @@ namespace CK.MQTT.Sdk.Bindings
             if (disposed) return;
 
             if (disposing) {
-                tracer.Info (ServerProperties.Resources.GetString("Mqtt_Disposing"), nameof (PrivateChannel));
+                tracer.Info (ServerProperties.Mqtt_Disposing, nameof (PrivateChannel));
 
                 streamSubscription.Dispose ();
                 receiver.OnCompleted ();
@@ -88,17 +88,17 @@ namespace CK.MQTT.Sdk.Bindings
                 .Receive (senderIdentifier)
                 .ObserveOn (NewThreadScheduler.Default)
                 .Subscribe (packet => {
-                    tracer.Verbose( Properties.Resources.GetString("MqttChannel_ReceivedPacket"), packet.Length);
+                    tracer.Verbose( Properties.MqttChannel_ReceivedPacket, packet.Length);
 
                     receiver.OnNext (packet);
                 }, ex => {
                     if (ex is ObjectDisposedException) {
-                        receiver.OnError (new MqttException ( Properties.Resources.GetString("MqttChannel_StreamDisconnected"), ex));
+                        receiver.OnError (new MqttException ( Properties.MqttChannel_StreamDisconnected, ex));
                     } else {
                         receiver.OnError (ex);
                     }
                 }, () => {
-                    tracer.Warn ( Properties.Resources.GetString("MqttChannel_NetworkStreamCompleted"));
+                    tracer.Warn ( Properties.MqttChannel_NetworkStreamCompleted);
                     receiver.OnCompleted ();
                 });
         }

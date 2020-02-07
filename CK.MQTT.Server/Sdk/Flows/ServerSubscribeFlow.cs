@@ -7,112 +7,126 @@ using System.Threading.Tasks;
 
 namespace CK.MQTT.Sdk.Flows
 {
-	internal class ServerSubscribeFlow : IProtocolFlow
-	{
-		static readonly ITracer tracer = Tracer.Get<ServerSubscribeFlow> ();
+    internal class ServerSubscribeFlow : IProtocolFlow
+    {
+        static readonly ITracer tracer = Tracer.Get<ServerSubscribeFlow>();
 
-		readonly IMqttTopicEvaluator topicEvaluator;
-		readonly IRepository<ClientSession> sessionRepository;
-		readonly IRepository<RetainedMessage> retainedRepository;
-		readonly IPacketIdProvider packetIdProvider;
-		readonly IPublishSenderFlow senderFlow;
-		readonly MqttConfiguration configuration;
+        readonly IMqttTopicEvaluator topicEvaluator;
+        readonly IRepository<ClientSession> sessionRepository;
+        readonly IRepository<RetainedMessage> retainedRepository;
+        readonly IPacketIdProvider packetIdProvider;
+        readonly IPublishSenderFlow senderFlow;
+        readonly MqttConfiguration configuration;
 
-		public ServerSubscribeFlow (IMqttTopicEvaluator topicEvaluator,
-			IRepository<ClientSession> sessionRepository,
-			IRepository<RetainedMessage> retainedRepository,
-			IPacketIdProvider packetIdProvider,
-			IPublishSenderFlow senderFlow,
-			MqttConfiguration configuration)
-		{
-			this.topicEvaluator = topicEvaluator;
-			this.sessionRepository = sessionRepository;
-			this.retainedRepository = retainedRepository;
-			this.packetIdProvider = packetIdProvider;
-			this.senderFlow = senderFlow;
-			this.configuration = configuration;
-		}
+        public ServerSubscribeFlow( IMqttTopicEvaluator topicEvaluator,
+            IRepository<ClientSession> sessionRepository,
+            IRepository<RetainedMessage> retainedRepository,
+            IPacketIdProvider packetIdProvider,
+            IPublishSenderFlow senderFlow,
+            MqttConfiguration configuration )
+        {
+            this.topicEvaluator = topicEvaluator;
+            this.sessionRepository = sessionRepository;
+            this.retainedRepository = retainedRepository;
+            this.packetIdProvider = packetIdProvider;
+            this.senderFlow = senderFlow;
+            this.configuration = configuration;
+        }
 
-		public async Task ExecuteAsync (string clientId, IPacket input, IMqttChannel<IPacket> channel)
-		{
-			if (input.Type != MqttPacketType.Subscribe) {
-				return;
-			}
+        public async Task ExecuteAsync( string clientId, IPacket input, IMqttChannel<IPacket> channel )
+        {
+            if( input.Type != MqttPacketType.Subscribe )
+            {
+                return;
+            }
 
-			var subscribe = input as Subscribe;
-			var session = sessionRepository.Read (clientId);
+            var subscribe = input as Subscribe;
+            var session = sessionRepository.Read( clientId );
 
-			if (session == null) {
-				throw new MqttException (string.Format(ServerProperties.Resources.GetString("SessionRepository_ClientSessionNotFound"), clientId));
-			}
+            if( session == null )
+            {
+                throw new MqttException( string.Format( Properties.SessionRepository_ClientSessionNotFound, clientId ) );
+            }
 
-			var returnCodes = new List<SubscribeReturnCode> ();
+            var returnCodes = new List<SubscribeReturnCode>();
 
-			foreach (var subscription in subscribe.Subscriptions) {
-				try {
-					if (!topicEvaluator.IsValidTopicFilter (subscription.TopicFilter)) {
-						tracer.Error (ServerProperties.Resources.GetString("ServerSubscribeFlow_InvalidTopicSubscription"), subscription.TopicFilter, clientId);
+            foreach( var subscription in subscribe.Subscriptions )
+            {
+                try
+                {
+                    if( !topicEvaluator.IsValidTopicFilter( subscription.TopicFilter ) )
+                    {
+                        tracer.Error( ServerProperties.ServerSubscribeFlow_InvalidTopicSubscription, subscription.TopicFilter, clientId );
 
-						returnCodes.Add (SubscribeReturnCode.Failure);
-						continue;
-					}
+                        returnCodes.Add( SubscribeReturnCode.Failure );
+                        continue;
+                    }
 
-					var clientSubscription = session
-						.GetSubscriptions()
-						.FirstOrDefault(s => s.TopicFilter == subscription.TopicFilter);
+                    var clientSubscription = session
+                        .GetSubscriptions()
+                        .FirstOrDefault( s => s.TopicFilter == subscription.TopicFilter );
 
-					if (clientSubscription != null) {
-						clientSubscription.MaximumQualityOfService = subscription.MaximumQualityOfService;
-					} else {
-						clientSubscription = new ClientSubscription {
-							ClientId = clientId,
-							TopicFilter = subscription.TopicFilter,
-							MaximumQualityOfService = subscription.MaximumQualityOfService
-						};
+                    if( clientSubscription != null )
+                    {
+                        clientSubscription.MaximumQualityOfService = subscription.MaximumQualityOfService;
+                    }
+                    else
+                    {
+                        clientSubscription = new ClientSubscription
+                        {
+                            ClientId = clientId,
+                            TopicFilter = subscription.TopicFilter,
+                            MaximumQualityOfService = subscription.MaximumQualityOfService
+                        };
 
-						session.AddSubscription (clientSubscription);
-					}
+                        session.AddSubscription( clientSubscription );
+                    }
 
-					await SendRetainedMessagesAsync (clientSubscription, channel)
-						.ConfigureAwait (continueOnCapturedContext: false);
+                    await SendRetainedMessagesAsync( clientSubscription, channel )
+                        .ConfigureAwait( continueOnCapturedContext: false );
 
-					var supportedQos = configuration.GetSupportedQos(subscription.MaximumQualityOfService);
-					var returnCode = supportedQos.ToReturnCode ();
+                    var supportedQos = configuration.GetSupportedQos( subscription.MaximumQualityOfService );
+                    var returnCode = supportedQos.ToReturnCode();
 
-					returnCodes.Add (returnCode);
-				} catch (RepositoryException repoEx) {
-					tracer.Error (repoEx, ServerProperties.Resources.GetString("ServerSubscribeFlow_ErrorOnSubscription"), clientId, subscription.TopicFilter);
+                    returnCodes.Add( returnCode );
+                }
+                catch( RepositoryException repoEx )
+                {
+                    tracer.Error( repoEx, ServerProperties.ServerSubscribeFlow_ErrorOnSubscription, clientId, subscription.TopicFilter );
 
-					returnCodes.Add (SubscribeReturnCode.Failure);
-				}
-			}
+                    returnCodes.Add( SubscribeReturnCode.Failure );
+                }
+            }
 
-			sessionRepository.Update (session);
+            sessionRepository.Update( session );
 
-			await channel.SendAsync (new SubscribeAck (subscribe.PacketId, returnCodes.ToArray ()))
-				.ConfigureAwait (continueOnCapturedContext: false);
-		}
+            await channel.SendAsync( new SubscribeAck( subscribe.PacketId, returnCodes.ToArray() ) )
+                .ConfigureAwait( continueOnCapturedContext: false );
+        }
 
-		async Task SendRetainedMessagesAsync (ClientSubscription subscription, IMqttChannel<IPacket> channel)
-		{
-			var retainedMessages = retainedRepository
-				.ReadAll ()
-				.Where (r => topicEvaluator.Matches (topicName: r.Id, topicFilter: subscription.TopicFilter));
+        async Task SendRetainedMessagesAsync( ClientSubscription subscription, IMqttChannel<IPacket> channel )
+        {
+            var retainedMessages = retainedRepository
+                .ReadAll()
+                .Where( r => topicEvaluator.Matches( topicName: r.Id, topicFilter: subscription.TopicFilter ) );
 
-			if (retainedMessages != null) {
-				foreach (var retainedMessage in retainedMessages) {
-					ushort? packetId = subscription.MaximumQualityOfService == MqttQualityOfService.AtMostOnce ?
-						null : (ushort?)packetIdProvider.GetPacketId ();
-					var publish = new Publish (topic: retainedMessage.Id, 
-						qualityOfService: subscription.MaximumQualityOfService,
-						retain: true, duplicated: false, packetId: packetId) {
-						Payload = retainedMessage.Payload
-					};
+            if( retainedMessages != null )
+            {
+                foreach( var retainedMessage in retainedMessages )
+                {
+                    ushort? packetId = subscription.MaximumQualityOfService == MqttQualityOfService.AtMostOnce ?
+                        null : (ushort?)packetIdProvider.GetPacketId();
+                    var publish = new Publish( topic: retainedMessage.Id,
+                        qualityOfService: subscription.MaximumQualityOfService,
+                        retain: true, duplicated: false, packetId: packetId )
+                    {
+                        Payload = retainedMessage.Payload
+                    };
 
-					await senderFlow.SendPublishAsync (subscription.ClientId, publish, channel)
-						.ConfigureAwait (continueOnCapturedContext: false);
-				}
-			}
-		}
-	}
+                    await senderFlow.SendPublishAsync( subscription.ClientId, publish, channel )
+                        .ConfigureAwait( continueOnCapturedContext: false );
+                }
+            }
+        }
+    }
 }

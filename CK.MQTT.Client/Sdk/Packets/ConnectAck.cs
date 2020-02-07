@@ -41,7 +41,7 @@ namespace CK.MQTT.Sdk.Packets
 		public static bool operator == (ConnectAck connectAck, ConnectAck other)
 		{
 			if ((object)connectAck == null || (object)other == null)
-				return Object.Equals (connectAck, other);
+				return object.Equals (connectAck, other);
 
 			return connectAck.Equals (other);
 		}
@@ -49,7 +49,7 @@ namespace CK.MQTT.Sdk.Packets
 		public static bool operator != (ConnectAck connectAck, ConnectAck other)
 		{
 			if ((object)connectAck == null || (object)other == null)
-				return !Object.Equals (connectAck, other);
+				return !object.Equals (connectAck, other);
 
 			return !connectAck.Equals (other);
 		}

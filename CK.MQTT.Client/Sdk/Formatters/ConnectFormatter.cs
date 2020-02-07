@@ -7,7 +7,7 @@ namespace CK.MQTT.Sdk.Formatters
 {
 	internal class ConnectFormatter : Formatter<Connect>
 	{
-		public override MqttPacketType PacketType { get { return Packets.MqttPacketType.Connect; } }
+		public override MqttPacketType PacketType { get { return MqttPacketType.Connect; } }
 
 		protected override Connect Read (byte[] bytes)
 		{
@@ -15,21 +15,21 @@ namespace CK.MQTT.Sdk.Formatters
 
 			var remainingLengthBytesLength = 0;
 
-            MqttImplementation.Encoding.DecodeRemainingLength (bytes, out remainingLengthBytesLength);
+            MqttConstants.Encoding.DecodeRemainingLength (bytes, out remainingLengthBytesLength);
 
-			var protocolName = bytes.GetString ( MqttImplementation.PacketTypeLength + remainingLengthBytesLength);
+			var protocolName = bytes.GetString ( MqttConstants.PacketTypeLength + remainingLengthBytesLength);
 
-			if (protocolName != MqttImplementation.Name) {
-				var error = string.Format (Properties.Resources.GetString("ConnectFormatter_InvalidProtocolName"), protocolName);
+			if (protocolName != MqttConstants.Name) {
+				var error = string.Format (Properties.ConnectFormatter_InvalidProtocolName, protocolName);
 
 				throw new MqttException (error);
 			}
 
-			var protocolLevelIndex = MqttImplementation.PacketTypeLength + remainingLengthBytesLength + MqttImplementation.NameLength;
+			var protocolLevelIndex = MqttConstants.PacketTypeLength + remainingLengthBytesLength + MqttConstants.NameLength;
 			var protocolLevel = bytes.Byte (protocolLevelIndex);
 
-			if (protocolLevel < MqttImplementation.SupportedLevel) {
-				var error = string.Format (Properties.Resources.GetString("ConnectFormatter_UnsupportedLevel"), protocolLevel);
+			if (protocolLevel < MqttConstants.SupportedLevel) {
+				var error = string.Format (Properties.ConnectFormatter_UnsupportedLevel, protocolLevel);
 
 				throw new MqttConnectionException (MqttConnectionStatus.UnacceptableProtocolVersion, error);
 			}
@@ -39,22 +39,22 @@ namespace CK.MQTT.Sdk.Formatters
 			var connectFlags = bytes.Byte (connectFlagsIndex);
 
 			if (connectFlags.IsSet (0))
-				throw new MqttException (Properties.Resources.GetString("ConnectFormatter_InvalidReservedFlag"));
+				throw new MqttException (Properties.ConnectFormatter_InvalidReservedFlag);
 
 			if (connectFlags.Bits (4, 2) == 0x03)
-				throw new MqttException (Properties.Resources.GetString("Formatter_InvalidQualityOfService"));
+				throw new MqttException (Properties.Formatter_InvalidQualityOfService);
 
 			var willFlag = connectFlags.IsSet (2);
 			var willRetain = connectFlags.IsSet (5);
 
 			if (!willFlag && willRetain)
-				throw new MqttException (Properties.Resources.GetString("ConnectFormatter_InvalidWillRetainFlag"));
+				throw new MqttException (Properties.ConnectFormatter_InvalidWillRetainFlag);
 
 			var userNameFlag = connectFlags.IsSet (7);
 			var passwordFlag = connectFlags.IsSet (6);
 
 			if (!userNameFlag && passwordFlag)
-				throw new MqttException (Properties.Resources.GetString("ConnectFormatter_InvalidPasswordFlag"));
+				throw new MqttException (Properties.ConnectFormatter_InvalidPasswordFlag);
 
 			var willQos = (MqttQualityOfService)connectFlags.Bits (4, 2);
 			var cleanSession = connectFlags.IsSet (1);
@@ -67,17 +67,17 @@ namespace CK.MQTT.Sdk.Formatters
 			var nextIndex = 0;
 			var clientId = bytes.GetString (payloadStartIndex, out nextIndex);
 
-			if (clientId.Length > MqttImplementation.ClientIdMaxLength)
-				throw new MqttConnectionException (MqttConnectionStatus.IdentifierRejected, Properties.Resources.GetString("ConnectFormatter_ClientIdMaxLengthExceeded"));
+			if (clientId.Length > MqttConstants.ClientIdMaxLength)
+				throw new MqttConnectionException (MqttConnectionStatus.IdentifierRejected, Properties.ConnectFormatter_ClientIdMaxLengthExceeded);
 
 			if (!IsValidClientId (clientId)) {
-				var error = string.Format (Properties.Resources.GetString("ConnectFormatter_InvalidClientIdFormat"), clientId);
+				var error = string.Format (Properties.ConnectFormatter_InvalidClientIdFormat, clientId);
 
 				throw new MqttConnectionException (MqttConnectionStatus.IdentifierRejected, error);
 			}
 
 			if (string.IsNullOrEmpty (clientId) && !cleanSession)
-				throw new MqttConnectionException (MqttConnectionStatus.IdentifierRejected, Properties.Resources.GetString("ConnectFormatter_ClientIdEmptyRequiresCleanSession"));
+				throw new MqttConnectionException (MqttConnectionStatus.IdentifierRejected, Properties.ConnectFormatter_ClientIdEmptyRequiresCleanSession);
 
 			if (string.IsNullOrEmpty (clientId)) {
 				clientId = MqttClient.GetAnonymousClientId ();
@@ -119,7 +119,7 @@ namespace CK.MQTT.Sdk.Formatters
 
 			var variableHeader = GetVariableHeader (packet);
 			var payload = GetPayload (packet);
-			var remainingLength = MqttImplementation.Encoding.EncodeRemainingLength (variableHeader.Length + payload.Length);
+			var remainingLength = MqttConstants.Encoding.EncodeRemainingLength (variableHeader.Length + payload.Length);
 			var fixedHeader = GetFixedHeader (remainingLength);
 
 			bytes.AddRange (fixedHeader);
@@ -148,8 +148,8 @@ namespace CK.MQTT.Sdk.Formatters
 		{
 			var variableHeader = new List<byte> ();
 
-			var protocolNameBytes = MqttImplementation.Encoding.EncodeString( MqttImplementation.Name);
-			var protocolLevelByte = Convert.ToByte( MqttImplementation.SupportedLevel);
+			var protocolNameBytes = MqttConstants.Encoding.EncodeString( MqttConstants.Name);
+			var protocolLevelByte = Convert.ToByte( MqttConstants.SupportedLevel);
 
 			var reserved = 0x00;
 			var cleanSession = Convert.ToInt32 (packet.CleanSession);
@@ -160,7 +160,7 @@ namespace CK.MQTT.Sdk.Formatters
 			var passwordFlag = userNameFlag == 1 ? Convert.ToInt32 (!string.IsNullOrEmpty (packet.Password)) : 0;
 
 			if (userNameFlag == 0 && passwordFlag == 1)
-				throw new MqttException (Properties.Resources.GetString("ConnectFormatter_InvalidPasswordFlag"));
+				throw new MqttException (Properties.ConnectFormatter_InvalidPasswordFlag);
 
 			cleanSession <<= 1;
 			willFlag <<= 2;
@@ -170,7 +170,7 @@ namespace CK.MQTT.Sdk.Formatters
 			userNameFlag <<= 7;
 
 			var connectFlagsByte = Convert.ToByte(reserved | cleanSession | willFlag | willQos | willRetain | passwordFlag | userNameFlag);
-			var keepAliveBytes = MqttImplementation.Encoding.EncodeInteger(packet.KeepAlive);
+			var keepAliveBytes = MqttConstants.Encoding.EncodeInteger(packet.KeepAlive);
 
 			variableHeader.AddRange (protocolNameBytes);
 			variableHeader.Add (protocolLevelByte);
@@ -183,25 +183,25 @@ namespace CK.MQTT.Sdk.Formatters
 
 		byte[] GetPayload (Connect packet)
 		{
-			if (packet.ClientId.Length > MqttImplementation.ClientIdMaxLength)
-				throw new MqttException (Properties.Resources.GetString("ConnectFormatter_ClientIdMaxLengthExceeded"));
+			if (packet.ClientId.Length > MqttConstants.ClientIdMaxLength)
+				throw new MqttException (Properties.ConnectFormatter_ClientIdMaxLengthExceeded);
 
 			if (!IsValidClientId (packet.ClientId)) {
-				var error = string.Format (Properties.Resources.GetString("ConnectFormatter_InvalidClientIdFormat"), packet.ClientId);
+				var error = string.Format (Properties.ConnectFormatter_InvalidClientIdFormat, packet.ClientId);
 
 				throw new MqttException (error);
 			}
 
 			var payload = new List<byte> ();
 
-			var clientIdBytes = MqttImplementation.Encoding.EncodeString (packet.ClientId);
+			var clientIdBytes = MqttConstants.Encoding.EncodeString (packet.ClientId);
 
 			payload.AddRange (clientIdBytes);
 
 			if (packet.Will != null) {
-				var willTopicBytes = MqttImplementation.Encoding.EncodeString (packet.Will.Topic);
+				var willTopicBytes = MqttConstants.Encoding.EncodeString (packet.Will.Topic);
 				var willMessageBytes = packet.Will.Payload;
-				var willMessageLengthBytes = MqttImplementation.Encoding.EncodeInteger (willMessageBytes.Length);
+				var willMessageLengthBytes = MqttConstants.Encoding.EncodeInteger (willMessageBytes.Length);
 
 				payload.AddRange (willTopicBytes);
 				payload.Add (willMessageLengthBytes [willMessageLengthBytes.Length - 2]);
@@ -210,16 +210,16 @@ namespace CK.MQTT.Sdk.Formatters
 			}
 
 			if (string.IsNullOrEmpty (packet.UserName) && !string.IsNullOrEmpty (packet.Password))
-				throw new MqttException (Properties.Resources.GetString("ConnectFormatter_PasswordNotAllowed"));
+				throw new MqttException (Properties.ConnectFormatter_PasswordNotAllowed);
 
 			if (!string.IsNullOrEmpty (packet.UserName)) {
-				var userNameBytes = MqttImplementation.Encoding.EncodeString(packet.UserName);
+				var userNameBytes = MqttConstants.Encoding.EncodeString(packet.UserName);
 
 				payload.AddRange (userNameBytes);
 			}
 
 			if (!string.IsNullOrEmpty (packet.Password)) {
-				var passwordBytes = MqttImplementation.Encoding.EncodeString(packet.Password);
+				var passwordBytes = MqttConstants.Encoding.EncodeString(packet.Password);
 
 				payload.AddRange (passwordBytes);
 			}

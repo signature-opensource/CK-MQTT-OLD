@@ -26,7 +26,6 @@ namespace CK.MQTT.Sdk
 		readonly IRepository<ClientSession> _sessionRepository;
 		readonly IPacketIdProvider _packetIdProvider;
 		readonly MqttConfiguration _configuration;
-		readonly TaskRunner _clientSender;
 
 		internal MqttClientImpl(IPacketChannelFactory channelFactory,
 			IProtocolFlowProvider flowProvider,
@@ -40,7 +39,6 @@ namespace CK.MQTT.Sdk
 			_sessionRepository = repositoryProvider.GetRepository<ClientSession>();
 			_packetIdProvider = packetIdProvider;
 			_configuration = configuration;
-			_clientSender = TaskRunner.Get();
 		}
 
 		public event EventHandler<MqttEndpointDisconnected> Disconnected = (sender, args) => { };
@@ -72,12 +70,12 @@ namespace CK.MQTT.Sdk
 			{
 				if (IsConnected)
 				{
-					throw new MqttClientException(string.Format(Properties.Resources.GetString("Client_AlreadyConnected"), Id));
+					throw new MqttClientException(string.Format(Properties.Client_AlreadyConnected, Id));
 				}
 
 				if (string.IsNullOrEmpty(credentials.ClientId) && !cleanSession)
 				{
-					throw new MqttClientException(Properties.Resources.GetString("Client_AnonymousClientWithoutCleanSession"));
+					throw new MqttClientException(Properties.Client_AnonymousClientWithoutCleanSession);
 				}
 
 				Id = string.IsNullOrEmpty(credentials.ClientId) ?
@@ -109,7 +107,7 @@ namespace CK.MQTT.Sdk
 
 				if (ack == null)
 				{
-					var message = string.Format(Properties.Resources.GetString("Client_ConnectionDisconnected"), Id);
+					var message = string.Format(Properties.Client_ConnectionDisconnected, Id);
 
 					throw new MqttClientException(message);
 				}
@@ -126,13 +124,13 @@ namespace CK.MQTT.Sdk
 			catch (TimeoutException timeEx)
 			{
 				Close(timeEx);
-				throw new MqttClientException(string.Format(Properties.Resources.GetString("Client_ConnectionTimeout"), Id), timeEx);
+				throw new MqttClientException(string.Format(Properties.Client_ConnectionTimeout, Id), timeEx);
 			}
 			catch (MqttConnectionException connectionEx)
 			{
 				Close(connectionEx);
 
-				var message = string.Format(Properties.Resources.GetString("Client_ConnectNotAccepted"), Id, connectionEx.ReturnCode);
+				var message = string.Format(Properties.Client_ConnectNotAccepted, Id, connectionEx.ReturnCode);
 
 				throw new MqttClientException(message, connectionEx);
 			}
@@ -144,7 +142,7 @@ namespace CK.MQTT.Sdk
 			catch (Exception ex)
 			{
 				Close(ex);
-				throw new MqttClientException(string.Format(Properties.Resources.GetString("Client_ConnectionError"), Id), ex);
+				throw new MqttClientException(string.Format(Properties.Client_ConnectionError, Id), ex);
 			}
 		}
 
@@ -177,7 +175,7 @@ namespace CK.MQTT.Sdk
 
 				if (ack == null)
 				{
-					var message = string.Format(Properties.Resources.GetString("Client_SubscriptionDisconnected"), Id, topicFilter);
+					var message = string.Format(Properties.Client_SubscriptionDisconnected, Id, topicFilter);
 
 					_tracer.Error(message);
 
@@ -186,7 +184,7 @@ namespace CK.MQTT.Sdk
 
 				if (ack.ReturnCodes.FirstOrDefault() == SubscribeReturnCode.Failure)
 				{
-					var message = string.Format(Properties.Resources.GetString("Client_SubscriptionRejected"), Id, topicFilter);
+					var message = string.Format(Properties.Client_SubscriptionRejected, Id, topicFilter);
 
 					_tracer.Error(message);
 
@@ -197,7 +195,7 @@ namespace CK.MQTT.Sdk
 			{
 				Close(timeEx);
 
-				var message = string.Format(Properties.Resources.GetString("Client_SubscribeTimeout"), Id, topicFilter);
+				var message = string.Format(Properties.Client_SubscribeTimeout, Id, topicFilter);
 
 				throw new MqttClientException(message, timeEx);
 			}
@@ -210,7 +208,7 @@ namespace CK.MQTT.Sdk
 			{
 				Close(ex);
 
-				var message = string.Format(Properties.Resources.GetString("Client_SubscribeError"), Id, topicFilter);
+				var message = string.Format(Properties.Client_SubscribeError, Id, topicFilter);
 
 				throw new MqttClientException(message, ex);
 			}
@@ -233,7 +231,7 @@ namespace CK.MQTT.Sdk
 
 				var senderFlow = _flowProvider.GetFlow<PublishSenderFlow>();
 
-				await _clientSender.Run(async () =>
+				await Task.Run(async () =>
 				{
 					await senderFlow.SendPublishAsync(Id, publish, Channel)
 						.ConfigureAwait(continueOnCapturedContext: false);
@@ -274,7 +272,7 @@ namespace CK.MQTT.Sdk
 
 				if (ack == null)
 				{
-					var message = string.Format(Properties.Resources.GetString("Client_UnsubscribeDisconnected"), Id, string.Join(", ", topics));
+					var message = string.Format(Properties.Client_UnsubscribeDisconnected, Id, string.Join(", ", topics));
 
 					_tracer.Error(message);
 
@@ -285,7 +283,7 @@ namespace CK.MQTT.Sdk
 			{
 				Close(timeEx);
 
-				var message = string.Format(Properties.Resources.GetString("Client_UnsubscribeTimeout"), Id, string.Join(", ", topics));
+				var message = string.Format(Properties.Client_UnsubscribeTimeout, Id, string.Join(", ", topics));
 
 				_tracer.Error(message);
 
@@ -300,7 +298,7 @@ namespace CK.MQTT.Sdk
 			{
 				Close(ex);
 
-				var message = string.Format(Properties.Resources.GetString("Client_UnsubscribeError"), Id, string.Join(", ", topics));
+				var message = string.Format(Properties.Client_UnsubscribeError, Id, string.Join(", ", topics));
 
 				_tracer.Error(message);
 
@@ -314,7 +312,7 @@ namespace CK.MQTT.Sdk
 			{
 				if (!IsConnected)
 				{
-					throw new MqttClientException(Properties.Resources.GetString("Client_AlreadyDisconnected"));
+					throw new MqttClientException(Properties.Client_AlreadyDisconnected);
 				}
 
 				_packetsSubscription?.Dispose();
@@ -351,7 +349,6 @@ namespace CK.MQTT.Sdk
 					await DisconnectAsync().ConfigureAwait(continueOnCapturedContext: false);
 				}
 
-				(_clientSender as IDisposable)?.Dispose();
 				_disposed = true;
 			}
 		}
@@ -364,7 +361,7 @@ namespace CK.MQTT.Sdk
 
 		void Close(DisconnectedReason reason, string message = null)
 		{
-			_tracer.Info(Properties.Resources.GetString("Client_Closing"), Id, reason);
+			_tracer.Info(Properties.Client_Closing, Id, reason);
 
 			CloseClientSession();
 			_packetsSubscription?.Dispose();
@@ -398,14 +395,14 @@ namespace CK.MQTT.Sdk
 				_sessionRepository.Delete(session.Id);
 				session = null;
 
-				_tracer.Info(Properties.Resources.GetString("Client_CleanedOldSession"), Id);
+				_tracer.Info(Properties.Client_CleanedOldSession, Id);
 			}
             if( session != null ) return;
             session = new ClientSession(Id, cleanSession);
 
             _sessionRepository.Create(session);
 
-            _tracer.Info(Properties.Resources.GetString("Client_CreatedSession"), Id);
+            _tracer.Info(Properties.Client_CreatedSession, Id);
         }
 
 		void CloseClientSession()
@@ -421,13 +418,13 @@ namespace CK.MQTT.Sdk
 			{
 				_sessionRepository.Delete(session.Id);
 
-				_tracer.Info(Properties.Resources.GetString("Client_DeletedSessionOnDisconnect"), Id);
+				_tracer.Info(Properties.Client_DeletedSessionOnDisconnect, Id);
 			}
 		}
 
 		async Task SendPacketAsync(IPacket packet)
 		{
-			await _clientSender.Run(async () => await Channel.SendAsync(packet).ConfigureAwait(continueOnCapturedContext: false))
+			await Task.Run(async () => await Channel.SendAsync(packet).ConfigureAwait(continueOnCapturedContext: false))
 				.ConfigureAwait(continueOnCapturedContext: false);
 		}
 
@@ -435,7 +432,7 @@ namespace CK.MQTT.Sdk
 		{
 			if (_isProtocolConnected && !Channel.IsConnected)
 			{
-				Close(DisconnectedReason.Error, Properties.Resources.GetString("Client_UnexpectedChannelDisconnection"));
+				Close(DisconnectedReason.Error, Properties.Client_UnexpectedChannelDisconnection);
 			}
 		}
 
@@ -451,12 +448,12 @@ namespace CK.MQTT.Sdk
                     var message = new MqttApplicationMessage(publish.Topic, publish.Payload);
 
                     _receiver.OnNext(message);
-                    _tracer.Info(Properties.Resources.GetString("Client_NewApplicationMessageReceived"), Id, publish.Topic);
+                    _tracer.Info(Properties.Client_NewApplicationMessageReceived, Id, publish.Topic);
                 },
                     Close,
                     () =>
 				{
-					_tracer.Warn(Properties.Resources.GetString("Client_PacketsObservableCompleted"));
+					_tracer.Warn(Properties.Client_PacketsObservableCompleted);
 					Close(DisconnectedReason.RemoteDisconnected);
 				});
 		}

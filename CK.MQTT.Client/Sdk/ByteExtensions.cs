@@ -9,7 +9,7 @@ namespace CK.MQTT.Sdk
 		internal static bool IsSet (this byte @byte, int bit)
 		{
 			if (bit > 7)
-				throw new ArgumentOutOfRangeException ("bit", Properties.Resources.GetString("ByteExtensions_InvalidBitPosition"));
+				throw new ArgumentOutOfRangeException ("bit", Properties.ByteExtensions_InvalidBitPosition);
 
 			return (@byte & (1 << bit)) != 0;
 		}
@@ -17,7 +17,7 @@ namespace CK.MQTT.Sdk
 		internal static byte Set (this byte @byte, int bit)
 		{
 			if (bit > 7)
-				throw new ArgumentOutOfRangeException ("bit", Properties.Resources.GetString("ByteExtensions_InvalidBitPosition"));
+				throw new ArgumentOutOfRangeException ("bit", Properties.ByteExtensions_InvalidBitPosition);
 
 			return Convert.ToByte (@byte | (1 << bit));
 		}
@@ -25,7 +25,7 @@ namespace CK.MQTT.Sdk
         internal static byte Unset (this byte @byte, int bit)
 		{
 			if (bit > 7)
-				throw new ArgumentOutOfRangeException ("bit", Properties.Resources.GetString("ByteExtensions_InvalidBitPosition"));
+				throw new ArgumentOutOfRangeException ("bit", Properties.ByteExtensions_InvalidBitPosition);
 
 			return Convert.ToByte (@byte & ~(1 << bit));
 		}
@@ -38,7 +38,7 @@ namespace CK.MQTT.Sdk
 		internal static byte Bits (this byte @byte, int index, int count)
 		{
 			if (index < 1 || index > 8)
-				throw new ArgumentOutOfRangeException ("index", Properties.Resources.GetString("ByteExtensions_InvalidByteIndex"));
+				throw new ArgumentOutOfRangeException ("index", Properties.ByteExtensions_InvalidByteIndex);
 
 			if (index > 1) {
 				var i = 1;
@@ -74,16 +74,16 @@ namespace CK.MQTT.Sdk
 		{
 			var length = bytes.GetStringLenght (index);
 
-			return length == 0 ? string.Empty : Encoding.UTF8.GetString (bytes, index + MqttImplementation.StringPrefixLength, length);
+			return length == 0 ? string.Empty : Encoding.UTF8.GetString (bytes, index + MqttConstants.StringPrefixLength, length);
 		}
 
         internal static string GetString (this byte[] bytes, int index, out int nextIndex)
 		{
 			var length = bytes.GetStringLenght (index);
 
-			nextIndex = index + MqttImplementation.StringPrefixLength + length;
+			nextIndex = index + MqttConstants.StringPrefixLength + length;
 
-			return length == 0 ? string.Empty : Encoding.UTF8.GetString (bytes, index + MqttImplementation.StringPrefixLength, length);
+			return length == 0 ? string.Empty : Encoding.UTF8.GetString (bytes, index + MqttConstants.StringPrefixLength, length);
 		}
 
 		internal static ushort ToUInt16 (this byte[] bytes)

@@ -11,8 +11,8 @@ namespace IntegrationTests
     public abstract class AuthenticationSpec : IntegrationContext
     {
          protected AuthenticationSpec() : base(authenticationProvider: new TestAuthenticationProvider( expectedUsername: "foo", expectedPassword: "foo123" ) )
-        {
-        }
+         {
+         }
 
         [Test]
         public async Task when_client_connects_with_invalid_credentials_and_authentication_is_supported_then_connection_is_closed()

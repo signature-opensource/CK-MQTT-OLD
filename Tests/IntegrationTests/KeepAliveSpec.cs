@@ -65,21 +65,26 @@ namespace IntegrationTests
         [Test]
         public async Task keepalive_not_sent_if_client_send_messages()
         {
-            bool serverReceivedPing = false;
-            void OnFlowEvent( object sender, TestServerFlow.ServerFlowEventArg args )
+            for( int i = 0; i < 10; i++ )
             {
-                if( args.Type != ProtocolFlowType.Ping ) return;
-                serverReceivedPing = true;
+                bool serverReceivedPing = false;
+                void OnFlowEvent( object sender, TestServerFlow.ServerFlowEventArg args )
+                {
+                    if( args.Type != ProtocolFlowType.Ping ) return;
+                    serverReceivedPing = true;
+                }
+                _serverFlow += OnFlowEvent;
+                using( IMqttClient client = await GetConnectedClientAsync() )
+                {
+                    await Task.Delay( KeepAliveSecs * 800 );
+                    await client.PublishAsync( new MqttApplicationMessage( "test", Array.Empty<byte>() ), MqttQualityOfService.ExactlyOnce );
+                    await Task.Delay( KeepAliveSecs * 800 );
+                    serverReceivedPing.Should().BeFalse();
+                    await Task.Delay( KeepAliveSecs * 550 );
+                    serverReceivedPing.Should().BeTrue();
+                }
+                _serverFlow -= OnFlowEvent;
             }
-            _serverFlow += OnFlowEvent;
-            var client = await GetConnectedClientAsync();
-            await Task.Delay( KeepAliveSecs * 500 );
-            await client.PublishAsync( new MqttApplicationMessage( "test", Array.Empty<byte>() ), MqttQualityOfService.ExactlyOnce );
-            await Task.Delay( KeepAliveSecs * 700 );
-            serverReceivedPing.Should().BeFalse();
-            await Task.Delay( KeepAliveSecs * 550 );
-            serverReceivedPing.Should().BeTrue();
-            _serverFlow -= OnFlowEvent;
         }
 
     }

@@ -43,7 +43,7 @@ namespace CK.MQTT.Sdk.Packets
 		public static bool operator == (Unsubscribe unsubscribe, Unsubscribe other)
 		{
 			if ((object)unsubscribe == null || (object)other == null)
-				return Object.Equals (unsubscribe, other);
+				return object.Equals (unsubscribe, other);
 
 			return unsubscribe.Equals (other);
 		}
@@ -51,7 +51,7 @@ namespace CK.MQTT.Sdk.Packets
 		public static bool operator != (Unsubscribe unsubscribe, Unsubscribe other)
 		{
 			if ((object)unsubscribe == null || (object)other == null)
-				return !Object.Equals (unsubscribe, other);
+				return !object.Equals (unsubscribe, other);
 
 			return !unsubscribe.Equals (other);
 		}

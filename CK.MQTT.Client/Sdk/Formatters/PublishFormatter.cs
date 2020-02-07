@@ -13,23 +13,23 @@ namespace CK.MQTT.Sdk.Formatters
 			this.topicEvaluator = topicEvaluator;
 		}
 
-		public override MqttPacketType PacketType { get { return Packets.MqttPacketType.Publish; } }
+		public override MqttPacketType PacketType { get { return MqttPacketType.Publish; } }
 
 		protected override Publish Read (byte[] bytes)
 		{
 			var remainingLengthBytesLength = 0;
-			var remainingLength = MqttImplementation.Encoding.DecodeRemainingLength (bytes, out remainingLengthBytesLength);
+			var remainingLength = MqttConstants.Encoding.DecodeRemainingLength (bytes, out remainingLengthBytesLength);
 
 			var packetFlags = bytes.Byte (0).Bits(5, 4);
 
 			if (packetFlags.Bits (6, 2) == 0x03)
-				throw new MqttException  (Properties.Resources.GetString("Formatter_InvalidQualityOfService"));
+				throw new MqttException  (Properties.Formatter_InvalidQualityOfService);
 
 			var qos = (MqttQualityOfService)packetFlags.Bits (6, 2);
 			var duplicated = packetFlags.IsSet (3);
 
 			if (qos == MqttQualityOfService.AtMostOnce && duplicated)
-				throw new MqttException  (Properties.Resources.GetString("PublishFormatter_InvalidDuplicatedWithQoSZero"));
+				throw new MqttException  (Properties.PublishFormatter_InvalidDuplicatedWithQoSZero);
 
 			var retainFlag = packetFlags.IsSet (0);
 
@@ -38,7 +38,7 @@ namespace CK.MQTT.Sdk.Formatters
 			var topic = bytes.GetString (topicStartIndex, out nextIndex);
 
 			if (!topicEvaluator.IsValidTopicName (topic)) {
-				var error = string.Format (Properties.Resources.GetString("PublishFormatter_InvalidTopicName"), topic);
+				var error = string.Format (Properties.PublishFormatter_InvalidTopicName, topic);
 
 				throw new MqttException (error);
 			}
@@ -68,7 +68,7 @@ namespace CK.MQTT.Sdk.Formatters
 
 			var variableHeader = GetVariableHeader (packet);
 			var payloadLength = packet.Payload == null ? 0 : packet.Payload.Length;
-			var remainingLength = MqttImplementation.Encoding.EncodeRemainingLength (variableHeader.Length + payloadLength);
+			var remainingLength = MqttConstants.Encoding.EncodeRemainingLength (variableHeader.Length + payloadLength);
 			var fixedHeader = GetFixedHeader (packet, remainingLength);
 
 			bytes.AddRange (fixedHeader);
@@ -84,7 +84,7 @@ namespace CK.MQTT.Sdk.Formatters
 		byte[] GetFixedHeader (Publish packet, byte[] remainingLength)
 		{
 			if (packet.QualityOfService == MqttQualityOfService.AtMostOnce && packet.Duplicated)
-				throw new MqttException  (Properties.Resources.GetString("PublishFormatter_InvalidDuplicatedWithQoSZero"));
+				throw new MqttException  (Properties.PublishFormatter_InvalidDuplicatedWithQoSZero);
 
 			var fixedHeader = new List<byte> ();
 
@@ -109,22 +109,22 @@ namespace CK.MQTT.Sdk.Formatters
 		byte[] GetVariableHeader (Publish packet)
 		{
 			if (!topicEvaluator.IsValidTopicName (packet.Topic))
-				throw new MqttException  (Properties.Resources.GetString("PublishFormatter_InvalidTopicName"));
+				throw new MqttException  (Properties.PublishFormatter_InvalidTopicName);
 
 			if (packet.PacketId.HasValue && packet.QualityOfService == MqttQualityOfService.AtMostOnce)
-				throw new MqttException  (Properties.Resources.GetString("PublishFormatter_InvalidPacketId"));
+				throw new MqttException  (Properties.PublishFormatter_InvalidPacketId);
 
 			if (!packet.PacketId.HasValue && packet.QualityOfService != MqttQualityOfService.AtMostOnce)
-				throw new MqttException  (Properties.Resources.GetString("PublishFormatter_PacketIdRequired"));
+				throw new MqttException  (Properties.PublishFormatter_PacketIdRequired);
 
 			var variableHeader = new List<byte> ();
 
-			var topicBytes = MqttImplementation.Encoding.EncodeString(packet.Topic);
+			var topicBytes = MqttConstants.Encoding.EncodeString(packet.Topic);
 
 			variableHeader.AddRange (topicBytes);
 
 			if (packet.PacketId.HasValue) {
-				var packetIdBytes = MqttImplementation.Encoding.EncodeInteger(packet.PacketId.Value);
+				var packetIdBytes = MqttConstants.Encoding.EncodeInteger(packet.PacketId.Value);
 
 				variableHeader.AddRange (packetIdBytes);
 			}

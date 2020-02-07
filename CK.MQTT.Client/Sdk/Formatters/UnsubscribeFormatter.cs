@@ -7,14 +7,14 @@ namespace CK.MQTT.Sdk.Formatters
 {
 	internal class UnsubscribeFormatter : Formatter<Unsubscribe>
 	{
-		public override MqttPacketType PacketType { get { return Packets.MqttPacketType.Unsubscribe; } }
+		public override MqttPacketType PacketType { get { return MqttPacketType.Unsubscribe; } }
 
 		protected override Unsubscribe Read (byte[] bytes)
 		{
 			ValidateHeaderFlag (bytes, t => t == MqttPacketType.Unsubscribe, 0x02);
 
 			var remainingLengthBytesLength = 0;
-			var remainingLength = MqttImplementation.Encoding.DecodeRemainingLength (bytes, out remainingLengthBytesLength);
+			var remainingLength = MqttConstants.Encoding.DecodeRemainingLength (bytes, out remainingLengthBytesLength);
 
 			var packetIdentifierStartIndex = remainingLengthBytesLength + 1;
 			var packetIdentifier = bytes.Bytes (packetIdentifierStartIndex, 2).ToUInt16();
@@ -22,7 +22,7 @@ namespace CK.MQTT.Sdk.Formatters
 			var index = 1 + remainingLengthBytesLength + 2;
 
 			if (bytes.Length == index)
-				throw new MqttProtocolViolationException  (Properties.Resources.GetString("UnsubscribeFormatter_MissingTopics"));
+				throw new MqttProtocolViolationException  (Properties.UnsubscribeFormatter_MissingTopics);
 
 			var topics = new List<string> ();
 
@@ -41,7 +41,7 @@ namespace CK.MQTT.Sdk.Formatters
 
 			var variableHeader = GetVariableHeader (packet);
 			var payload = GetPayload (packet);
-			var remainingLength = MqttImplementation.Encoding.EncodeRemainingLength (variableHeader.Length + payload.Length);
+			var remainingLength = MqttConstants.Encoding.EncodeRemainingLength (variableHeader.Length + payload.Length);
 			var fixedHeader = GetFixedHeader (remainingLength);
 
 			bytes.AddRange (fixedHeader);
@@ -70,7 +70,7 @@ namespace CK.MQTT.Sdk.Formatters
 		{
 			var variableHeader = new List<byte> ();
 
-			var packetIdBytes = MqttImplementation.Encoding.EncodeInteger(packet.PacketId);
+			var packetIdBytes = MqttConstants.Encoding.EncodeInteger(packet.PacketId);
 
 			variableHeader.AddRange (packetIdBytes);
 
@@ -80,12 +80,12 @@ namespace CK.MQTT.Sdk.Formatters
 		byte[] GetPayload (Unsubscribe packet)
 		{
 			if (packet.Topics == null || !packet.Topics.Any ())
-				throw new MqttProtocolViolationException  (Properties.Resources.GetString("UnsubscribeFormatter_MissingTopics"));
+				throw new MqttProtocolViolationException  (Properties.UnsubscribeFormatter_MissingTopics);
 
 			var payload = new List<byte> ();
 
 			foreach (var topic in packet.Topics) {
-				var topicBytes = MqttImplementation.Encoding.EncodeString (topic);
+				var topicBytes = MqttConstants.Encoding.EncodeString (topic);
 
 				payload.AddRange (topicBytes);
 			}

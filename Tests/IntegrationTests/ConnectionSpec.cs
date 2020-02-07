@@ -1,6 +1,7 @@
 using IntegrationTests.Context;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using CK.MQTT;
 using CK.MQTT.Sdk;
@@ -16,7 +17,7 @@ namespace IntegrationTests
 {
     public abstract class ConnectionSpec : IntegrationContext
     {
-        public ConnectionSpec() : base(25)
+        public ConnectionSpec() : base( 50 )
         {
 
         }
@@ -128,10 +129,10 @@ namespace IntegrationTests
             }
         }
 
-        [TestCase(100)]
-        [TestCase(200)]
-        [TestCase(500)]
-        public async Task when_connect_clients_then_succeeds(int count)
+        [TestCase( 100 )]
+        [TestCase( 200 )]
+        [TestCase( 500 )]
+        public async Task when_connect_clients_then_succeeds( int count )
         {
             var clients = new List<IMqttClient>();
             var clientIds = new List<string>();
@@ -157,6 +158,7 @@ namespace IntegrationTests
             {
                 client.Dispose();
             }
+
         }
 
         [Test]
@@ -308,7 +310,7 @@ namespace IntegrationTests
         [Test]
         public async Task when_connecting_client_with_clean_session_true_then_session_is_not_preserved()
         {
-            using (var client = await GetClientAsync())
+            using( var client = await GetClientAsync() )
             {
                 var clientId = MqttTestHelper.GetClientId();
 
@@ -329,7 +331,7 @@ namespace IntegrationTests
         [Test]
         public async Task when_connecting_client_with_clean_session_false_and_then_true_then_session_is_not_preserved()
         {
-            using (var client = await GetClientAsync())
+            using( var client = await GetClientAsync() )
             {
                 var clientId = MqttTestHelper.GetClientId();
 
@@ -348,7 +350,7 @@ namespace IntegrationTests
         [Test]
         public async Task when_connecting_client_with_clean_session_false_then_session_is_preserved()
         {
-            using (var client = await GetClientAsync())
+            using( var client = await GetClientAsync() )
             {
                 var clientId = MqttTestHelper.GetClientId();
 
@@ -368,7 +370,7 @@ namespace IntegrationTests
         [TestCase( 100 )]
         [TestCase( 200 )]
         [TestCase( 500 )]
-        public async Task when_disconnect_clients_then_succeeds(int count)
+        public async Task when_disconnect_clients_then_succeeds( int count )
         {
             var clients = new List<IMqttClient>();
             var clientIds = new List<string>();

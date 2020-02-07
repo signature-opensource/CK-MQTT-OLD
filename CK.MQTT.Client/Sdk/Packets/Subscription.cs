@@ -39,7 +39,7 @@ namespace CK.MQTT.Sdk.Packets
 		public static bool operator == (Subscription subscription, Subscription other)
 		{
 			if ((object)subscription == null || (object)other == null)
-				return Object.Equals (subscription, other);
+				return object.Equals (subscription, other);
 
 			return subscription.Equals (other);
 		}
@@ -47,7 +47,7 @@ namespace CK.MQTT.Sdk.Packets
 		public static bool operator != (Subscription subscription, Subscription other)
 		{
 			if ((object)subscription == null || (object)other == null)
-				return !Object.Equals (subscription, other);
+				return !object.Equals (subscription, other);
 
 			return !subscription.Equals (other);
 		}

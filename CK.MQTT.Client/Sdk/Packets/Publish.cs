@@ -62,7 +62,7 @@ namespace CK.MQTT.Sdk.Packets
 		public static bool operator == (Publish publish, Publish other)
 		{
 			if ((object)publish == null || (object)other == null)
-				return Object.Equals (publish, other);
+				return object.Equals (publish, other);
 
 			return publish.Equals (other);
 		}
@@ -70,7 +70,7 @@ namespace CK.MQTT.Sdk.Packets
 		public static bool operator != (Publish publish, Publish other)
 		{
 			if ((object)publish == null || (object)other == null)
-				return !Object.Equals (publish, other);
+				return !object.Equals (publish, other);
 
 			return !publish.Equals (other);
 		}

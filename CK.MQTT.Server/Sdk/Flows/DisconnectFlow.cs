@@ -31,20 +31,20 @@ namespace CK.MQTT.Sdk.Flows
 			await Task.Run (() => {
 				var disconnect = input as Disconnect;
 
-				tracer.Info (ServerProperties.Resources.GetString("DisconnectFlow_Disconnecting"), clientId);
+				tracer.Info (ServerProperties.DisconnectFlow_Disconnecting, clientId);
 
 				willRepository.Delete (clientId);
 
 				var session = sessionRepository.Read (clientId);
 
 				if (session == null) {
-					throw new MqttException (string.Format (ServerProperties.Resources.GetString("SessionRepository_ClientSessionNotFound"), clientId));
+					throw new MqttException (string.Format (ServerProperties.SessionRepository_ClientSessionNotFound, clientId));
 				}
 
 				if (session.Clean) {
 					sessionRepository.Delete (session.Id);
 
-					tracer.Info (ServerProperties.Resources.GetString("Server_DeletedSessionOnDisconnect"), clientId);
+					tracer.Info (ServerProperties.Server_DeletedSessionOnDisconnect, clientId);
 				}
 
 				connectionProvider.RemoveConnection (clientId);

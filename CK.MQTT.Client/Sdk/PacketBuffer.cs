@@ -65,7 +65,7 @@ namespace CK.MQTT.Sdk
 				if ((@byte & 128) == 0) {
 					var bytesLenght = default (int);
 
-					packetRemainingLength = MqttImplementation.Encoding.DecodeRemainingLength (mainBuffer.ToArray (), out bytesLenght);
+					packetRemainingLength = MqttConstants.Encoding.DecodeRemainingLength (mainBuffer.ToArray (), out bytesLenght);
 					packetRemainingLengthReadCompleted = true;
 
 					if (packetRemainingLength == 0)

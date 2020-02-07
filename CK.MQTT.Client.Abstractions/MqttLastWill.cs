@@ -115,7 +115,7 @@ namespace CK.MQTT
 		public static bool operator == (MqttLastWill will, MqttLastWill other)
 		{
 			if ((object)will == null || (object)other == null)
-				return Object.Equals (will, other);
+				return object.Equals (will, other);
 
 			return will.Equals (other);
 		}
@@ -133,7 +133,7 @@ namespace CK.MQTT
 		public static bool operator != (MqttLastWill will, MqttLastWill other)
 		{
 			if ((object)will == null || (object)other == null)
-				return !Object.Equals (will, other);
+				return !object.Equals (will, other);
 
 			return !will.Equals (other);
 		}

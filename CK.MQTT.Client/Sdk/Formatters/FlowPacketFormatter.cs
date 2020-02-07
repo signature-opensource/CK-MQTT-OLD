@@ -24,9 +24,9 @@ namespace CK.MQTT.Sdk.Formatters
 
 			var remainingLengthBytesLength = 0;
 
-            MqttImplementation.Encoding.DecodeRemainingLength (bytes, out remainingLengthBytesLength);
+            MqttConstants.Encoding.DecodeRemainingLength (bytes, out remainingLengthBytesLength);
 
-			var packetIdIndex = MqttImplementation.PacketTypeLength + remainingLengthBytesLength;
+			var packetIdIndex = MqttConstants.PacketTypeLength + remainingLengthBytesLength;
 			var packetIdBytes = bytes.Bytes (packetIdIndex, 2);
 
 			return packetFactory (packetIdBytes.ToUInt16 ());
@@ -34,8 +34,8 @@ namespace CK.MQTT.Sdk.Formatters
 
 		protected override byte[] Write (T packet)
 		{
-			var variableHeader = MqttImplementation.Encoding.EncodeInteger(packet.PacketId);
-			var remainingLength = MqttImplementation.Encoding.EncodeRemainingLength (variableHeader.Length);
+			var variableHeader = MqttConstants.Encoding.EncodeInteger(packet.PacketId);
+			var remainingLength = MqttConstants.Encoding.EncodeRemainingLength (variableHeader.Length);
 			var fixedHeader = GetFixedHeader (packet.Type, remainingLength);
 			var bytes = new byte[fixedHeader.Length + variableHeader.Length];
 
@@ -49,7 +49,7 @@ namespace CK.MQTT.Sdk.Formatters
 		{
 			// MQTT 2.2.2: http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/csprd02/mqtt-v3.1.1-csprd02.html#_Toc385349758
 			// The flags for PUBREL are different than for the other flow packets.
-			var flags = packetType == Packets.MqttPacketType.PublishRelease ? 0x02 : 0x00;
+			var flags = packetType == MqttPacketType.PublishRelease ? 0x02 : 0x00;
 			var type = Convert.ToInt32(packetType) << 4;
 			var fixedHeaderByte1 = Convert.ToByte(flags | type);
 			var fixedHeader = new byte[1 + remainingLength.Length];

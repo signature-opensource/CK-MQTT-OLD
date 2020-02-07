@@ -7,7 +7,7 @@ namespace CK.MQTT
     /// Defines some well known values of the MQTT protocol,
     /// which are useful to access anywhere
     /// </summary>
-	public static class MqttImplementation
+	public static class MqttConstants
 	{
         /// <summary>
         /// Supported protocol level for the version 3.1.1 of the protocol, which is level 4.

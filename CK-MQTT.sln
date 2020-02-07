@@ -15,6 +15,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CK.MQTT.Client.Ssl", "CK.MQ
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{1A5ABB89-2797-4946-8D46-F07144F616F3}"
 	ProjectSection(SolutionItems) = preProject
+		NuGet.config = NuGet.config
 		..\README.md = ..\README.md
 	EndProjectSection
 EndProject
@@ -32,7 +33,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CK.MQTT.TCP.Tests", "Tests\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CK.MQTT.SslTcp.Tests", "Tests\CK.MQTT.SslTcp.Tests\CK.MQTT.SslTcp.Tests.csproj", "{DCC71502-FAEA-4A3F-89E3-67BF7E159A79}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CK.MQTT.Stub.Tests", "Tests\CK.MQTT.Stub.Tests\CK.MQTT.Stub.Tests.csproj", "{F74F4AE5-533D-4C0B-97D5-5D08C5262C18}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CK.MQTT.Stub.Tests", "Tests\CK.MQTT.Stub.Tests\CK.MQTT.Stub.Tests.csproj", "{F74F4AE5-533D-4C0B-97D5-5D08C5262C18}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
