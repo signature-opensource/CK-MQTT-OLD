@@ -13,8 +13,6 @@ namespace CK.MQTT.Sdk
 {
 	internal class MqttClientImpl : IMqttClient
 	{
-		static readonly ITracer _tracer = Tracer.Get<MqttClientImpl>();
-
 		bool _disposed;
 		bool _isProtocolConnected;
 		IPacketListener _packetListener;
@@ -424,7 +422,7 @@ namespace CK.MQTT.Sdk
 
 		async Task SendPacketAsync(IPacket packet)
 		{
-			await Task.Run(async () => await Channel.SendAsync(packet).ConfigureAwait(continueOnCapturedContext: false))
+			await Task.Run(async () => await Channel.SendAsync( message: packet ).ConfigureAwait(continueOnCapturedContext: false))
 				.ConfigureAwait(continueOnCapturedContext: false);
 		}
 

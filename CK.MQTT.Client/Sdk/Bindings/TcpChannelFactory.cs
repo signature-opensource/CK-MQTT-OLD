@@ -1,3 +1,4 @@
+using CK.Core;
 using System;
 using System.Diagnostics;
 using System.Net;
@@ -10,8 +11,6 @@ namespace CK.MQTT.Sdk.Bindings
 {
     internal class TcpChannelFactory : IMqttChannelFactory
     {
-        static readonly ITracer _tracer = Tracer.Get<TcpChannelFactory>();
-
         readonly string _connectionString;
         readonly MqttConfiguration _configuration;
 
@@ -29,7 +28,7 @@ namespace CK.MQTT.Sdk.Bindings
             _bufferSize = match.Groups[4]?.Value.Length == 0 ? (int?)null : int.Parse( match.Groups[4]?.Value );
         }
 
-        public async Task<IMqttChannel<byte[]>> CreateAsync()
+        public async Task<IMqttChannel<byte[]>> CreateAsync( IActivityMonitor m )
         {
             var tcpClient = new TcpClient();
             if( _bufferSize.HasValue )
@@ -51,13 +50,13 @@ namespace CK.MQTT.Sdk.Bindings
                 if( resultTask.IsFaulted )
                     ExceptionDispatchInfo.Capture( resultTask.Exception.InnerException ).Throw();
 
-                return new TcpChannel( tcpClient, new PacketBuffer(), _configuration );
+                return new TcpChannel( m, tcpClient, new PacketBuffer(), _configuration );
             }
             catch( SocketException socketEx )
             {
                 var message = string.Format( Properties.TcpChannelFactory_TcpClient_Failed, _connectionString, _port );
 
-                _tracer.Error( socketEx, message );
+                m.Error( message, socketEx );
 
                 throw new MqttException( message, socketEx );
             }
@@ -74,7 +73,7 @@ namespace CK.MQTT.Sdk.Bindings
 
                 var message = string.Format( Properties.TcpChannelFactory_TcpClient_Failed, _connectionString, _port );
 
-                _tracer.Error( timeoutEx, message );
+                m.Error( message, timeoutEx );
 
                 throw new MqttException( message, timeoutEx );
             }

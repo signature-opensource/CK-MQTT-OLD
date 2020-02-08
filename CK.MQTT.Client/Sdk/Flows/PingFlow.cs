@@ -11,8 +11,8 @@ namespace CK.MQTT.Sdk.Flows
 				return;
 			}
 
-			await channel.SendAsync (new PingResponse ())
-				.ConfigureAwait (continueOnCapturedContext: false);
+			await channel.SendAsync( message: new PingResponse() )
+                .ConfigureAwait (continueOnCapturedContext: false);
 		}
 	}
 }

@@ -1,3 +1,4 @@
+using CK.Core;
 using CK.MQTT.Sdk;
 using System;
 using System.Diagnostics;
@@ -9,8 +10,6 @@ namespace CK.MQTT.Ssl
     public class GenericListener<TChannel> : IMqttChannelListener
         where TChannel : IMqttChannel<byte[]>
     {
-        static readonly ITracer _tracer = Tracer.Get<GenericListener<TChannel>>();
-
         readonly MqttConfiguration _configuration;
         /// <summary>
         /// A lazy initialized listener. Start the listener at the initialisation.
@@ -18,10 +17,10 @@ namespace CK.MQTT.Ssl
         readonly Lazy<IListener<TChannel>> _listener;
         bool _disposed;
 
-        public GenericListener( MqttConfiguration configuration, Func<MqttConfiguration, IListener<TChannel>> listenerFactory )
-        {
+        public GenericListener(IActivityMonitor m,  MqttConfiguration configuration, Func<MqttConfiguration, IListener<TChannel>> listenerFactory )
+        {//TODO: Should be a factory, too much side effects in this constructor.
             _configuration = configuration;
-            _listener = new Lazy<IListener<TChannel>>( () =>
+            _listener = new Lazy<IListener<TChannel>>( () =>//TODO: remove Lazy.
             {
                 if( _disposed ) return null;
                 var tcpListener = listenerFactory( _configuration);
@@ -32,7 +31,7 @@ namespace CK.MQTT.Ssl
                 }
                 catch( SocketException socketEx )
                 {
-                    _tracer.Error( socketEx, Properties.TcpChannelProvider_TcpListener_Failed );
+                    m.Error( Properties.TcpChannelProvider_TcpListener_Failed, socketEx );
 
                     throw new MqttException( Properties.TcpChannelProvider_TcpListener_Failed, socketEx );
                 }

@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using CK.MQTT.Sdk.Packets;
 using System.Reactive.Subjects;
 using System.Threading.Tasks;
@@ -8,8 +8,6 @@ namespace CK.MQTT.Sdk
 {
 	internal class PacketChannel : IMqttChannel<IPacket>
 	{
-        static readonly ITracer tracer = Tracer.Get<PacketChannel> ();
-
         bool disposed;
 		
 		readonly IMqttChannel<byte[]> innerChannel;
@@ -58,8 +56,8 @@ namespace CK.MQTT.Sdk
 
 			sender.OnNext (packet);
 
-			await innerChannel.SendAsync (bytes)
-				.ConfigureAwait (continueOnCapturedContext: false);
+			await innerChannel.SendAsync( message: bytes )
+                .ConfigureAwait (continueOnCapturedContext: false);
 		}
 
 		public void Dispose ()

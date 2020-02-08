@@ -7,12 +7,13 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading.Tasks;
 using System;
+using CK.Core;
 
 namespace CK.MQTT.Sdk
 {
     internal class ClientPacketListener : IPacketListener
     {
-        static readonly ITracer _tracer = Tracer.Get<ClientPacketListener>();
+        readonly IActivityMonitor _monitor;
         IDisposable _keepAliveMonitor;
         readonly IMqttChannel<IPacket> _channel;
         readonly IProtocolFlowProvider _flowProvider;
@@ -61,7 +62,7 @@ namespace CK.MQTT.Sdk
 
             if( disposing )
             {
-                _tracer.Info( Properties.Mqtt_Disposing, GetType().FullName );
+                _monitor.Info( string.Format( Properties.Mqtt_Disposing, GetType().FullName ) );
 
                 _listenerDisposable.Dispose();
                 StopKeepAliveMonitor();
@@ -75,16 +76,19 @@ namespace CK.MQTT.Sdk
             return _channel
                 .ReceiverStream
                 .FirstOrDefaultAsync()
-                .Subscribe( async packet =>
+                .Subscribe( async ( (IPacket packet, IActivityMonitor monitor) param ) =>
                 {
-                    if( packet == default( IPacket ) )
+                    if( param.packet == default( IPacket ) )
                     {
                         return;
                     }
 
-                    _tracer.Info( Properties.ClientPacketListener_FirstPacketReceived, _clientId, packet.Type );
+                    param.monitor.Info( string.Format(
+                        Properties.ClientPacketListener_FirstPacketReceived,
+                        _clientId, param.packet.Type )
+                    );
 
-                    var connectAck = packet as ConnectAck;
+                    var connectAck = param.packet as ConnectAck;
 
                     if( connectAck == null )
                     {
@@ -97,7 +101,7 @@ namespace CK.MQTT.Sdk
                         StartKeepAliveMonitor();
                     }
 
-                    await DispatchPacketAsync( packet )
+                    await DispatchPacketAsync( param.packet )
                         .ConfigureAwait( continueOnCapturedContext: false );
                 }, ex =>
                 {
@@ -110,9 +114,9 @@ namespace CK.MQTT.Sdk
             return _channel
                 .ReceiverStream
                 .Skip( 1 )
-                .Subscribe( async packet =>
+                .Subscribe( async ( (IPacket packet, IActivityMonitor m) param ) =>
                 {
-                    await DispatchPacketAsync( packet )
+                    await DispatchPacketAsync( param.packet )
                         .ConfigureAwait( continueOnCapturedContext: false );
                 }, ex =>
                 {
@@ -130,7 +134,7 @@ namespace CK.MQTT.Sdk
                         NotifyError( ex );
                     }, () =>
                     {
-                        _tracer.Warn( Properties.ClientPacketListener_PacketChannelCompleted, _clientId );
+                        //_tracer.Warn( Properties.ClientPacketListener_PacketChannelCompleted, _clientId );
 
                         _packets.OnCompleted();
                     }
@@ -141,7 +145,7 @@ namespace CK.MQTT.Sdk
         {
             return _channel
                 .SenderStream
-                .OfType<Connect>()
+                .OfType<(Connect, IActivityMonitor)>()
                 .FirstAsync()
                 .Subscribe( connect =>
                 {
@@ -176,7 +180,7 @@ namespace CK.MQTT.Sdk
 
                         var ping = new PingRequest();
 
-                        _channel.SendAsync( ping );
+                        _channel.SendAsync( message: ping );
                     }
                     catch( Exception ex )
                     {

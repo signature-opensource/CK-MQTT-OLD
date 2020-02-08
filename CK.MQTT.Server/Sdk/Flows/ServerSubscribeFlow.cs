@@ -9,8 +9,6 @@ namespace CK.MQTT.Sdk.Flows
 {
     internal class ServerSubscribeFlow : IProtocolFlow
     {
-        static readonly ITracer tracer = Tracer.Get<ServerSubscribeFlow>();
-
         readonly IMqttTopicEvaluator topicEvaluator;
         readonly IRepository<ClientSession> sessionRepository;
         readonly IRepository<RetainedMessage> retainedRepository;
@@ -100,7 +98,7 @@ namespace CK.MQTT.Sdk.Flows
 
             sessionRepository.Update( session );
 
-            await channel.SendAsync( new SubscribeAck( subscribe.PacketId, returnCodes.ToArray() ) )
+            await channel.SendAsync( message: new SubscribeAck( subscribe.PacketId, returnCodes.ToArray() ) )
                 .ConfigureAwait( continueOnCapturedContext: false );
         }
 

@@ -1,3 +1,4 @@
+using CK.Core;
 using System;
 using System.Diagnostics;
 using System.Net;
@@ -8,14 +9,12 @@ namespace CK.MQTT.Sdk.Bindings
 {
     internal class TcpChannelListener : IMqttChannelListener
     {
-        static readonly ITracer _tracer = Tracer.Get<TcpChannelListener>();
-
         readonly MqttConfiguration _configuration;
         readonly Lazy<TcpListener> _listener;
         bool disposed;
 
-        public TcpChannelListener( int port, MqttConfiguration configuration )
-        {
+        public TcpChannelListener( IActivityMonitor m, int port, MqttConfiguration configuration )
+        {//TODO: too much side effects, do this in a constructor.
             _configuration = configuration;
             _listener = new Lazy<TcpListener>( () =>
             {
@@ -28,7 +27,7 @@ namespace CK.MQTT.Sdk.Bindings
                 }
                 catch( SocketException socketEx )
                 {
-                    _tracer.Error( socketEx, ServerProperties.TcpChannelProvider_TcpListener_Failed );
+                    m.Error( ServerProperties.TcpChannelProvider_TcpListener_Failed, socketEx );
 
                     throw new MqttException( ServerProperties.TcpChannelProvider_TcpListener_Failed, socketEx );
                 }
@@ -46,8 +45,9 @@ namespace CK.MQTT.Sdk.Bindings
 
             return Observable
                 .FromAsync( _listener.Value.AcceptTcpClientAsync )
+                .Select<TcpClient, (IActivityMonitor monitor, TcpClient client)>( s => (new ActivityMonitor(), s) )
                 .Repeat()
-                .Select( client => new TcpChannel( client, new PacketBuffer(), _configuration ) );
+                .Select( ( s ) => new TcpChannel( s.monitor, s.client, new PacketBuffer(), _configuration ) );
         }
 
         public void Dispose()

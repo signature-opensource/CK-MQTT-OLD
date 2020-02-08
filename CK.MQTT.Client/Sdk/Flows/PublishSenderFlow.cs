@@ -7,13 +7,12 @@ using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using System;
+using CK.Core;
 
 namespace CK.MQTT.Sdk.Flows
 {
 	internal class PublishSenderFlow : PublishFlow, IPublishSenderFlow
 	{
-		static readonly ITracer _tracer = Tracer.Get<PublishSenderFlow> ();
-
 		IDictionary<MqttPacketType, Func<string, ushort, IFlowPacket>> _senderRules;
 
 		public PublishSenderFlow (IRepository<ClientSession> sessionRepository,
@@ -23,7 +22,7 @@ namespace CK.MQTT.Sdk.Flows
 			DefineSenderRules ();
 		}
 
-		public override async Task ExecuteAsync (string clientId, IPacket input, IMqttChannel<IPacket> channel)
+		public override async Task ExecuteAsync (IActivityMonitor m, string clientId, IPacket input, IMqttChannel<IPacket> channel)
 		{
             if (!_senderRules.TryGetValue (input.Type, out Func<string, ushort, IFlowPacket> senderRule)) {
 				return;
@@ -36,12 +35,12 @@ namespace CK.MQTT.Sdk.Flows
 			var ackPacket = senderRule (clientId, flowPacket.PacketId);
 
 			if (ackPacket != default (IFlowPacket)) {
-				await SendAckAsync (clientId, ackPacket, channel)
+				await SendAckAsync (m, clientId, ackPacket, channel)
 					.ConfigureAwait (continueOnCapturedContext: false);
 			}
 		}
 
-		public async Task SendPublishAsync (string clientId, Publish message, IMqttChannel<IPacket> channel, PendingMessageStatus status = PendingMessageStatus.PendingToSend)
+		public async Task SendPublishAsync (IActivityMonitor m, string clientId, Publish message, IMqttChannel<IPacket> channel, PendingMessageStatus status = PendingMessageStatus.PendingToSend)
 		{
 			if (channel == null || !channel.IsConnected) {
 				SaveMessage (message, clientId, PendingMessageStatus.PendingToSend);
@@ -54,8 +53,8 @@ namespace CK.MQTT.Sdk.Flows
 				SaveMessage (message, clientId, PendingMessageStatus.PendingToAcknowledge);
 			}
 
-			await channel.SendAsync (message)
-				.ConfigureAwait (continueOnCapturedContext: false);
+			await channel.SendAsync(m, message)
+                .ConfigureAwait (continueOnCapturedContext: false);
 
 			if (qos == MqttQualityOfService.AtLeastOnce) {
 				await MonitorAckAsync<PublishAck> (message, clientId, channel)
@@ -101,7 +100,7 @@ namespace CK.MQTT.Sdk.Flows
 							Payload = sentMessage.Payload
 						};
 
-						await channel.SendAsync (duplicated);
+						await channel.SendAsync( message: duplicated );
 					}
 				});
 

@@ -1,4 +1,5 @@
-﻿using System;
+using CK.Core;
+using System;
 using System.Threading.Tasks;
 
 namespace CK.MQTT.Sdk
@@ -17,20 +18,23 @@ namespace CK.MQTT.Sdk
         /// <summary>
         /// Represents the stream of incoming information received by the channel
         /// </summary>
-		IObservable<T> ReceiverStream { get; }
+		IObservable<(IActivityMonitor activityMonitor, T packet)> ReceiverStream { get; }
 
         /// <summary>
         /// Represents the stream of outgoing information sent by the channel
         /// </summary>
-		IObservable<T> SenderStream { get; }
+		IObservable<(IActivityMonitor activityMonitor, T packet)> SenderStream { get; }
 
         /// <summary>
         /// Sends information to the other end, through the underlying stream
         /// </summary>
+        /// <param name="activityMonitor">
+        /// The activity monitor.
+        /// </param>
         /// <param name="message">
         /// Message to send to the other end of the channel
         /// </param>
 		/// <exception cref="MqttException">MqttException</exception>
-		Task SendAsync (T message);
+		Task SendAsync(IActivityMonitor activityMonitor, T message);
 	}
 }

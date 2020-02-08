@@ -6,6 +6,7 @@ using Moq;
 using CK.MQTT.Sdk;
 using FluentAssertions;
 using NUnit.Framework;
+using static CK.Testing.MonitorTestHelper;
 
 namespace Tests.Flows
 {
@@ -18,7 +19,7 @@ namespace Tests.Flows
 			var channel = new Mock<IMqttChannel<IPacket>> ();
 			var sentPacket = default(IPacket);
 
-			channel.Setup (c => c.SendAsync (It.IsAny<IPacket> ()))
+			channel.Setup (c => c.SendAsync(TestHelper.Monitor, It.IsAny<IPacket>()))
 				.Callback<IPacket> (packet => sentPacket = packet)
 				.Returns(Task.Delay(0));
 

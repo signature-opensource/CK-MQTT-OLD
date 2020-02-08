@@ -13,8 +13,6 @@ namespace CK.MQTT.Ssl
 {
     public sealed class GenericChannel : IMqttChannel<byte[]>
     {
-        static readonly ITracer _tracer = Tracer.Get<GenericChannel>();
-
         bool _disposed;
 
         readonly IChannelClient _client;

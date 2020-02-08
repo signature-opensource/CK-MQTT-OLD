@@ -4,13 +4,12 @@ using CK.MQTT.Sdk.Packets;
 using CK.MQTT.Sdk.Storage;
 using System.Reactive.Subjects;
 using System.Threading.Tasks;
+using CK.Core;
 
 namespace CK.MQTT.Sdk.Flows
 {
 	internal class ServerPublishReceiverFlow : PublishReceiverFlow, IServerPublishReceiverFlow
     {
-		static readonly ITracer tracer = Tracer.Get<ServerPublishReceiverFlow> ();
-
 		readonly IConnectionProvider connectionProvider;
 		readonly IPublishSenderFlow senderFlow;
 		readonly IRepository<ConnectionWill> willRepository;
@@ -35,7 +34,7 @@ namespace CK.MQTT.Sdk.Flows
 			this.undeliveredMessagesListener = undeliveredMessagesListener;
 		}
 
-        public async Task SendWillAsync(string clientId)
+        public async Task SendWillAsync(IActivityMonitor m, string clientId)
         {
             var will = willRepository.Read(clientId);
 
@@ -46,14 +45,14 @@ namespace CK.MQTT.Sdk.Flows
                     Payload = will.Will.Payload
                 };
 
-                tracer.Info(ServerProperties.ServerPublishReceiverFlow_SendingWill, clientId, willPublish.Topic);
+                m.Info( string.Format(ServerProperties.ServerPublishReceiverFlow_SendingWill, clientId, willPublish.Topic));
 
-                await DispatchAsync(willPublish, clientId, isWill: true)
+                await DispatchAsync(m, willPublish, clientId, isWill: true)
                     .ConfigureAwait(continueOnCapturedContext: false);
             }
         }
 
-        protected override async Task ProcessPublishAsync (Publish publish, string clientId)
+        protected override async Task ProcessPublishAsync (IActivityMonitor m, Publish publish, string clientId)
 		{
 			if (publish.Retain) {
 				var existingRetainedMessage = retainedRepository.Read (publish.Topic);
@@ -71,7 +70,7 @@ namespace CK.MQTT.Sdk.Flows
 				}
 			}
 
-			await DispatchAsync (publish, clientId)
+			await DispatchAsync (m, publish, clientId)
 				.ConfigureAwait (continueOnCapturedContext: false);
 		}
 
@@ -85,7 +84,7 @@ namespace CK.MQTT.Sdk.Flows
             }
         }
 
-		async Task DispatchAsync (Publish publish, string clientId, bool isWill = false)
+		async Task DispatchAsync (IActivityMonitor m, Publish publish, string clientId, bool isWill = false)
 		{
 			var subscriptions = sessionRepository
 				.ReadAll ().ToList ()
@@ -93,18 +92,18 @@ namespace CK.MQTT.Sdk.Flows
 				.Where (x => topicEvaluator.Matches (publish.Topic, x.TopicFilter));
 
 			if (!subscriptions.Any ()) {
-				tracer.Verbose (ServerProperties.ServerPublishReceiverFlow_TopicNotSubscribed, publish.Topic, clientId);
+                m.Trace ( string.Format(ServerProperties.ServerPublishReceiverFlow_TopicNotSubscribed, publish.Topic, clientId) );
 
 				undeliveredMessagesListener.OnNext (new MqttUndeliveredMessage { SenderId = clientId, Message = new MqttApplicationMessage (publish.Topic, publish.Payload) });
 			} else {
 				foreach (var subscription in subscriptions) {
-					await DispatchAsync (publish, subscription, isWill)
+					await DispatchAsync (m, publish, subscription, isWill)
 						.ConfigureAwait (continueOnCapturedContext: false);
 				}
 			}
 		}
 
-		async Task DispatchAsync (Publish publish, ClientSubscription subscription, bool isWill = false)
+		async Task DispatchAsync (IActivityMonitor m, Publish publish, ClientSubscription subscription, bool isWill = false)
 		{
 			var requestedQos = isWill ? publish.QualityOfService : subscription.MaximumQualityOfService;
 			var supportedQos = configuration.GetSupportedQos(requestedQos);
@@ -115,7 +114,7 @@ namespace CK.MQTT.Sdk.Flows
 			};
 			var clientChannel = connectionProvider.GetConnection (subscription.ClientId);
 
-			await senderFlow.SendPublishAsync (subscription.ClientId, subscriptionPublish, clientChannel)
+			await senderFlow.SendPublishAsync (m, subscription.ClientId, subscriptionPublish, clientChannel)
 				.ConfigureAwait (continueOnCapturedContext: false);
 		}
 	}

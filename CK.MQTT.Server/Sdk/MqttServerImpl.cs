@@ -13,8 +13,6 @@ namespace CK.MQTT.Sdk
 {
     internal class MqttServerImpl : IMqttServer
 	{
-        static readonly ITracer tracer = Tracer.Get<MqttServerImpl>();
-
         bool started;
         bool disposed;
 		IDisposable channelSubscription;

@@ -11,6 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 using FluentAssertions;
 using NUnit.Framework;
+using static CK.Testing.MonitorTestHelper;
 
 namespace Tests.Flows
 {
@@ -46,7 +47,7 @@ namespace Tests.Flows
 
 			var response = default(IPacket);
 
-			channel.Setup (c => c.SendAsync (It.IsAny<IPacket> ()))
+			channel.Setup (c => c.SendAsync(TestHelper.Monitor, It.IsAny<IPacket>()))
 				.Callback<IPacket> (p => response = p)
 				.Returns(Task.Delay(0));
 
@@ -106,7 +107,7 @@ namespace Tests.Flows
 
 			var response = default(IPacket);
 
-			channel.Setup (c => c.SendAsync (It.IsAny<IPacket> ()))
+			channel.Setup (c => c.SendAsync(TestHelper.Monitor, It.IsAny<IPacket>()))
 				.Callback<IPacket> (p => response = p)
 				.Returns(Task.Delay(0));
 
@@ -162,7 +163,7 @@ namespace Tests.Flows
 
 			var response = default(IPacket);
 
-			channel.Setup (c => c.SendAsync (It.IsAny<IPacket> ()))
+			channel.Setup (c => c.SendAsync(TestHelper.Monitor, It.IsAny<IPacket>()))
 				.Callback<IPacket> (p => response = p)
 				.Returns(Task.Delay(0));
 

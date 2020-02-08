@@ -11,8 +11,6 @@ namespace CK.MQTT.Sdk
 {
     class MqttConnectedClientFactory
     {
-        static readonly ITracer tracer = Tracer.Get<MqttClientFactory>();
-
         readonly ISubject<PrivateStream> privateStreamListener;
 
         public MqttConnectedClientFactory( ISubject<PrivateStream> privateStreamListener )
