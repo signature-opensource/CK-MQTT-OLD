@@ -54,7 +54,7 @@ namespace Tests.Flows
 			var connectionProvider = new Mock<IConnectionProvider> ();
 
 			connectionProvider
-				.Setup (p => p.GetConnection (It.Is<string> (c => c == clientId)))
+				.Setup (p => p.GetConnection ( TestHelper.Monitor, It.Is<string> (c => c == clientId)))
 				.Returns (channel.Object);
 
 			var flow = new ServerSubscribeFlow (topicEvaluator.Object, sessionRepository.Object, 
@@ -114,7 +114,7 @@ namespace Tests.Flows
 			var connectionProvider = new Mock<IConnectionProvider> ();
 
 			connectionProvider
-				.Setup (p => p.GetConnection (It.Is<string> (c => c == clientId)))
+				.Setup (p => p.GetConnection ( TestHelper.Monitor, It.Is<string> (c => c == clientId)))
 				.Returns (channel.Object);
 
 			var flow = new ServerSubscribeFlow (topicEvaluator.Object,  sessionRepository.Object, 
@@ -170,7 +170,7 @@ namespace Tests.Flows
 			var connectionProvider = new Mock<IConnectionProvider> ();
 
 			connectionProvider
-				.Setup (p => p.GetConnection (It.Is<string> (c => c == clientId)))
+				.Setup (p => p.GetConnection ( TestHelper.Monitor, It.Is<string> (c => c == clientId)))
 				.Returns (channel.Object);
 
 			var flow = new ServerSubscribeFlow (topicEvaluator.Object, sessionRepository.Object, 
@@ -228,7 +228,7 @@ namespace Tests.Flows
 			var connectionProvider = new Mock<IConnectionProvider> ();
 
 			connectionProvider
-				.Setup (p => p.GetConnection (It.Is<string> (c => c == clientId)))
+				.Setup (p => p.GetConnection ( TestHelper.Monitor, It.Is<string> (c => c == clientId)))
 				.Returns (channel.Object);
 
 			var flow = new ServerSubscribeFlow (topicEvaluator.Object, 
@@ -238,7 +238,8 @@ namespace Tests.Flows
 			await flow.ExecuteAsync (clientId, subscribe, channel.Object)
 				.ConfigureAwait(continueOnCapturedContext: false);
 
-			senderFlow.Verify (f => f.SendPublishAsync (It.Is<string>(s => s == clientId),
+			senderFlow.Verify (f => f.SendPublishAsync ( TestHelper.Monitor,
+                It.Is<string>(s => s == clientId),
 				It.Is<Publish> (p => p.Topic == retainedTopic && 
 					p.QualityOfService == fooQoS && 
 					p.Payload.ToList().SequenceEqual(retainedPayload) && 

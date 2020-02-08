@@ -20,7 +20,7 @@ namespace Tests
         public void when_creating_packet_channel_then_succeeds()
         {
             var configuration = new MqttConfiguration { WaitTimeoutSecs = 1 };
-            var receiver = new Subject<(IActivityMonitor, byte[])>();
+            var receiver = new Subject<Monitored<byte[]>>();
             var bufferedChannel = new Mock<IMqttChannel<byte[]>>();
 
             bufferedChannel.Setup( x => x.ReceiverStream ).Returns( receiver );
@@ -52,7 +52,7 @@ namespace Tests
         public void when_reading_bytes_from_source_then_notifies_packet( string packetPath, string jsonPath, Type packetType )
         {
             var configuration = new MqttConfiguration { WaitTimeoutSecs = 1 };
-            var receiver = new Subject<(IActivityMonitor, byte[])>();
+            var receiver = new Subject<Monitored<byte[]>>();
             var innerChannel = new Mock<IMqttChannel<byte[]>>();
 
             innerChannel.Setup( x => x.ReceiverStream ).Returns( receiver );
@@ -92,7 +92,7 @@ namespace Tests
         public void when_reading_bytes_then_notifies_packet( string packetPath, Type packetType )
         {
             var configuration = new MqttConfiguration { WaitTimeoutSecs = 1 };
-            var receiver = new Subject<(IActivityMonitor, byte[])>();
+            var receiver = new Subject<Monitored<byte[]>>();
             var innerChannel = new Mock<IMqttChannel<byte[]>>();
 
             innerChannel.Setup( x => x.ReceiverStream ).Returns( receiver );
@@ -147,7 +147,7 @@ namespace Tests
 
             var bytes = Packet.ReadAllBytes( packetPath );
 
-            var receiver = new Subject<(IActivityMonitor, byte[])>();
+            var receiver = new Subject<Monitored<byte[]>>();
             var innerChannel = new Mock<IMqttChannel<byte[]>>();
 
             innerChannel.Setup( x => x.ReceiverStream ).Returns( receiver );
@@ -184,7 +184,7 @@ namespace Tests
 
             var bytes = Packet.ReadAllBytes( packetPath );
 
-            var receiver = new Subject<(IActivityMonitor, byte[])>();
+            var receiver = new Subject<Monitored<byte[]>>();
             var innerChannel = new Mock<IMqttChannel<byte[]>>();
 
             innerChannel.Setup( x => x.ReceiverStream ).Returns( receiver );
@@ -211,7 +211,7 @@ namespace Tests
         public void when_packet_channel_error_then_notifies()
         {
             var configuration = new MqttConfiguration { WaitTimeoutSecs = 1 };
-            var receiver = new Subject<(IActivityMonitor, byte[])>();
+            var receiver = new Subject<Monitored<byte[]>>();
             var innerChannel = new Mock<IMqttChannel<byte[]>>();
 
             innerChannel.Setup( x => x.ReceiverStream ).Returns( receiver );

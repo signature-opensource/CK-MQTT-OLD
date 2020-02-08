@@ -7,7 +7,6 @@ using System.Reactive.Linq;
 using System.Threading.Tasks;
 using System;
 using CK.Core;
-using CK.MQTT.Client.netfx;
 
 namespace CK.MQTT.Sdk.Flows
 {

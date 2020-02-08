@@ -37,7 +37,7 @@ namespace Tests.Flows
             var connectionProvider = new Mock<IConnectionProvider>();
 
             connectionProvider
-                .Setup( p => p.GetConnection( It.Is<string>( c => c == clientId ) ) )
+                .Setup( p => p.GetConnection(TestHelper.Monitor, It.Is<string>( c => c == clientId ) ) )
                 .Returns( channel.Object );
 
             var flow = new ServerConnectFlow( authenticationProvider, sessionRepository.Object, willRepository.Object, senderFlow.Object );
@@ -86,7 +86,7 @@ namespace Tests.Flows
             var connectionProvider = new Mock<IConnectionProvider>();
 
             connectionProvider
-                .Setup( p => p.GetConnection( It.Is<string>( c => c == clientId ) ) )
+                .Setup( p => p.GetConnection( TestHelper.Monitor, It.Is<string>( c => c == clientId ) ) )
                 .Returns( channel.Object );
 
             var flow = new ServerConnectFlow( authenticationProvider, sessionRepository.Object, willRepository.Object, senderFlow.Object );
@@ -134,7 +134,7 @@ namespace Tests.Flows
             var connectionProvider = new Mock<IConnectionProvider>();
 
             connectionProvider
-                .Setup( p => p.GetConnection( It.Is<string>( c => c == clientId ) ) )
+                .Setup( p => p.GetConnection( TestHelper.Monitor, It.Is<string>( c => c == clientId ) ) )
                 .Returns( channel.Object );
 
             var flow = new ServerConnectFlow( authenticationProvider, sessionRepository.Object, willRepository.Object, senderFlow.Object );
@@ -180,7 +180,7 @@ namespace Tests.Flows
             var connectionProvider = new Mock<IConnectionProvider>();
 
             connectionProvider
-                .Setup( p => p.GetConnection( It.Is<string>( c => c == clientId ) ) )
+                .Setup( p => p.GetConnection( TestHelper.Monitor, It.Is<string>( c => c == clientId ) ) )
                 .Returns( channel.Object );
 
             var flow = new ServerConnectFlow( authenticationProvider, sessionRepository.Object, willRepository.Object, senderFlow.Object );
@@ -220,7 +220,7 @@ namespace Tests.Flows
             var connectionProvider = new Mock<IConnectionProvider>();
 
             connectionProvider
-                .Setup( p => p.GetConnection( It.Is<string>( c => c == clientId ) ) )
+                .Setup( p => p.GetConnection( TestHelper.Monitor, It.Is<string>( c => c == clientId ) ) )
                 .Returns( channel.Object );
 
             var flow = new ServerConnectFlow( authenticationProvider, sessionRepository.Object, willRepository.Object, senderFlow.Object );
@@ -260,7 +260,7 @@ namespace Tests.Flows
             var connectionProvider = new Mock<IConnectionProvider>();
 
             connectionProvider
-                .Setup( p => p.GetConnection( It.Is<string>( c => c == clientId ) ) )
+                .Setup( p => p.GetConnection( TestHelper.Monitor, It.Is<string>( c => c == clientId ) ) )
                 .Returns( channel.Object );
 
             var flow = new ServerConnectFlow( authenticationProvider, sessionRepository.Object, willRepository.Object, senderFlow.Object );
@@ -333,7 +333,7 @@ namespace Tests.Flows
                 .Setup( f => f.SendAckAsync( TestHelper.Monitor, It.IsAny<string>(), It.IsAny<IFlowPacket>(), It.IsAny<IMqttChannel<IPacket>>(), It.IsAny<PendingMessageStatus>() ) )
                 .Callback<string, IFlowPacket, IMqttChannel<IPacket>, PendingMessageStatus>( async ( id, pack, ch, stat ) =>
                  {
-                     await ch.SendAsync( TestHelper.Monitor, pack, TestHelper.Monitor );
+                     await ch.SendAsync( TestHelper.Monitor, pack );
                  } )
                 .Returns( Task.Delay( 0 ) );
 
@@ -360,7 +360,7 @@ namespace Tests.Flows
             var connectionProvider = new Mock<IConnectionProvider>();
 
             connectionProvider
-                .Setup( p => p.GetConnection( It.Is<string>( c => c == clientId ) ) )
+                .Setup( p => p.GetConnection( TestHelper.Monitor, It.Is<string>( c => c == clientId ) ) )
                 .Returns( channel.Object );
 
             var flow = new ServerConnectFlow( authenticationProvider, sessionRepository.Object, willRepository.Object, senderFlow.Object );

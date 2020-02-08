@@ -145,7 +145,7 @@ namespace CK.MQTT.Sdk
         {
             return _channel
                 .SenderStream
-                .OfType<(Connect, IActivityMonitor)>()
+                .OfType<(Connect, IActivityMonitor>>()
                 .FirstAsync()
                 .Subscribe( connect =>
                 {

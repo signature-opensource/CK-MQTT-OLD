@@ -11,14 +11,14 @@ namespace CK.MQTT.Sdk.Bindings
     {
         readonly MqttConfiguration _configuration;
         readonly Lazy<TcpListener> _listener;
-        bool disposed;
+        bool _disposed;
 
         public TcpChannelListener( IActivityMonitor m, int port, MqttConfiguration configuration )
         {//TODO: too much side effects, do this in a constructor.
             _configuration = configuration;
             _listener = new Lazy<TcpListener>( () =>
             {
-                if( disposed ) return null;
+                if( _disposed ) return null;
                 var tcpListener = new TcpListener( IPAddress.Any, port );
 
                 try
@@ -38,16 +38,12 @@ namespace CK.MQTT.Sdk.Bindings
 
         public IObservable<IMqttChannel<byte[]>> GetChannelStream()
         {
-            if( disposed )
-            {
-                throw new ObjectDisposedException( GetType().FullName );
-            }
-
+            if( _disposed ) throw new ObjectDisposedException( GetType().FullName );
             return Observable
                 .FromAsync( _listener.Value.AcceptTcpClientAsync )
-                .Select<TcpClient, (IActivityMonitor monitor, TcpClient client)>( s => (new ActivityMonitor(), s) )
+                .Select( s => new Monitored<TcpClient>( new ActivityMonitor(), s ) )
                 .Repeat()
-                .Select( ( s ) => new TcpChannel( s.monitor, s.client, new PacketBuffer(), _configuration ) );
+                .Select( ( s ) => new TcpChannel( s.ActivityMonitor, s.Item, new PacketBuffer(), _configuration ) );
         }
 
         public void Dispose()
@@ -58,11 +54,11 @@ namespace CK.MQTT.Sdk.Bindings
 
         protected virtual void Dispose( bool disposing )
         {
-            if( disposed ) return;
+            if( _disposed ) return;
 
             if( disposing )
             {
-                disposed = true;
+                _disposed = true;
                 _listener.Value?.Stop();
             }
         }

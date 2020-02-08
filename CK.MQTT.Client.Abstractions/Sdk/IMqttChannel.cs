@@ -18,12 +18,12 @@ namespace CK.MQTT.Sdk
         /// <summary>
         /// Represents the stream of incoming information received by the channel
         /// </summary>
-		IObservable<(IActivityMonitor activityMonitor, T packet)> ReceiverStream { get; }
+		IObservable<Monitored<T>> ReceiverStream { get; }
 
         /// <summary>
         /// Represents the stream of outgoing information sent by the channel
         /// </summary>
-		IObservable<(IActivityMonitor activityMonitor, T packet)> SenderStream { get; }
+		IObservable<Monitored<T>> SenderStream { get; }
 
         /// <summary>
         /// Sends information to the other end, through the underlying stream

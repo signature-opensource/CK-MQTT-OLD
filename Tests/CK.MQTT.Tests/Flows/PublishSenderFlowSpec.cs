@@ -42,18 +42,18 @@ namespace Tests.Flows
 
             publish.Payload = Encoding.UTF8.GetBytes( "Publish Receiver Flow Test" );
 
-            var receiver = new Subject<(IActivityMonitor, IPacket)>();
-            var sender = new Subject<(IActivityMonitor, IPacket)>();
+            var receiver = new Subject<Monitored<IPacket>>();
+            var sender = new Subject<Monitored<IPacket>>();
             var channel = new Mock<IMqttChannel<IPacket>>();
 
             channel.Setup( c => c.IsConnected ).Returns( true );
             channel.Setup( c => c.ReceiverStream ).Returns( receiver );
             channel.Setup( c => c.SenderStream ).Returns( sender );
             channel.Setup( c => c.SendAsync( TestHelper.Monitor, It.IsAny<IPacket>() ) )
-                .Callback<IPacket>( packet => sender.OnNext( (TestHelper.Monitor, packet) ) )
+                .Callback<IPacket>( packet => sender.OnNext( new Monitored<IPacket>(TestHelper.Monitor, packet) ) )
                 .Returns( Task.Delay( 0 ) );
 
-            connectionProvider.Setup( m => m.GetConnection( It.IsAny<string>() ) ).Returns( channel.Object );
+            connectionProvider.Setup( m => m.GetConnection( TestHelper.Monitor, It.IsAny<string>() ) ).Returns( channel.Object );
 
             var retrySignal = new ManualResetEventSlim( initialState: false );
             var retries = 0;
@@ -106,18 +106,18 @@ namespace Tests.Flows
 
             publish.Payload = Encoding.UTF8.GetBytes( "Publish Receiver Flow Test" );
 
-            var receiver = new Subject<(IActivityMonitor, IPacket)>();
-            var sender = new Subject<(IActivityMonitor, IPacket)>();
+            var receiver = new Subject<Monitored<IPacket>>();
+            var sender = new Subject<Monitored<IPacket>>();
             var channel = new Mock<IMqttChannel<IPacket>>();
 
             channel.Setup( c => c.IsConnected ).Returns( true );
             channel.Setup( c => c.ReceiverStream ).Returns( receiver );
             channel.Setup( c => c.SenderStream ).Returns( sender );
             channel.Setup( c => c.SendAsync( TestHelper.Monitor, It.IsAny<IPacket>() ) )
-                .Callback<IPacket>( packet => sender.OnNext( (TestHelper.Monitor, packet) ) )
+                .Callback<IPacket>( packet => sender.OnNext( new Monitored<IPacket>(TestHelper.Monitor, packet) ) )
                 .Returns( Task.Delay( 0 ) );
 
-            connectionProvider.Setup( m => m.GetConnection( It.IsAny<string>() ) ).Returns( channel.Object );
+            connectionProvider.Setup( m => m.GetConnection( TestHelper.Monitor, It.IsAny<string>() ) ).Returns( channel.Object );
 
             var retrySignal = new ManualResetEventSlim( initialState: false );
             var retries = 0;
@@ -166,18 +166,18 @@ namespace Tests.Flows
 
             var packetId = (ushort)new Random().Next( 0, ushort.MaxValue );
             var publishReceived = new PublishReceived( packetId );
-            var receiver = new Subject<(IActivityMonitor, IPacket)>();
-            var sender = new Subject<(IActivityMonitor, IPacket)>();
+            var receiver = new Subject<Monitored<IPacket>>();
+            var sender = new Subject<Monitored<IPacket>>();
             var channel = new Mock<IMqttChannel<IPacket>>();
 
             channel.Setup( c => c.IsConnected ).Returns( true );
             channel.Setup( c => c.ReceiverStream ).Returns( receiver );
             channel.Setup( c => c.SenderStream ).Returns( sender );
             channel.Setup( c => c.SendAsync( TestHelper.Monitor, It.IsAny<IPacket>() ) )
-                .Callback<IPacket>( packet => sender.OnNext( (TestHelper.Monitor, packet) ) )
+                .Callback<IPacket>( packet => sender.OnNext( new Monitored<IPacket> (TestHelper.Monitor, packet) ) )
                 .Returns( Task.Delay( 0 ) );
 
-            connectionProvider.Setup( m => m.GetConnection( It.Is<string>( s => s == clientId ) ) ).Returns( channel.Object );
+            connectionProvider.Setup( m => m.GetConnection( TestHelper.Monitor, It.Is<string>( s => s == clientId ) ) ).Returns( channel.Object );
 
             var ackSentSignal = new ManualResetEventSlim( initialState: false );
 
@@ -218,18 +218,18 @@ namespace Tests.Flows
 
             var packetId = (ushort)new Random().Next( 0, ushort.MaxValue );
             var publishReceived = new PublishReceived( packetId );
-            var receiver = new Subject<(IActivityMonitor, IPacket)>();
-            var sender = new Subject<(IActivityMonitor, IPacket)>();
+            var receiver = new Subject<Monitored<IPacket>>();
+            var sender = new Subject<Monitored<IPacket>>();
             var channel = new Mock<IMqttChannel<IPacket>>();
 
             channel.Setup( c => c.IsConnected ).Returns( true );
             channel.Setup( c => c.ReceiverStream ).Returns( receiver );
             channel.Setup( c => c.SenderStream ).Returns( sender );
             channel.Setup( c => c.SendAsync( TestHelper.Monitor, It.IsAny<IPacket>() ) )
-                .Callback<IPacket>( packet => sender.OnNext( (TestHelper.Monitor, packet) ) )
+                .Callback<IPacket>( packet => sender.OnNext( new Monitored<IPacket> (TestHelper.Monitor, packet) ) )
                 .Returns( Task.Delay( 0 ) );
 
-            connectionProvider.Setup( m => m.GetConnection( It.Is<string>( s => s == clientId ) ) ).Returns( channel.Object );
+            connectionProvider.Setup( m => m.GetConnection( TestHelper.Monitor, It.Is<string>( s => s == clientId ) ) ).Returns( channel.Object );
 
             var ackSentSignal = new ManualResetEventSlim( initialState: false );
 

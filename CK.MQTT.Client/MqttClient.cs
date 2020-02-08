@@ -1,3 +1,4 @@
+using CK.Core;
 using CK.MQTT.Sdk;
 using CK.MQTT.Sdk.Bindings;
 using System;
@@ -30,16 +31,21 @@ namespace CK.MQTT
 		/// to implement a custom binding
 		/// </param>
 		/// <returns>A new MQTT Client</returns>
-		public static Task<IMqttClient> CreateAsync (string hostAddress, MqttConfiguration configuration, IMqttBinding binding = null) =>
-			new MqttClientFactory (hostAddress, binding ?? new TcpBinding ()).CreateClientAsync (configuration);
+		public static Task<IMqttClient> CreateAsync (
+            IActivityMonitor m,
+            string hostAddress,
+            MqttConfiguration configuration,
+            IMqttBinding binding = null
+        ) =>
+            new MqttClientFactory (hostAddress, binding ?? new TcpBinding ()).CreateClientAsync (m, configuration);
 
 		/// <summary>
 		/// Creates an <see cref="IMqttClient"/> and connects it to the destination 
 		/// <paramref name="connectionString"/> server via TCP using the protocol defaults.
 		/// </summary>
 		/// <returns>A new MQTT Client</returns>
-		public static Task<IMqttClient> CreateAsync (string connectionString) =>
-			new MqttClientFactory (connectionString).CreateClientAsync (new MqttConfiguration ());
+		public static Task<IMqttClient> CreateAsync ( IActivityMonitor m, string connectionString) =>
+			new MqttClientFactory (connectionString).CreateClientAsync (m, new MqttConfiguration ());
 
 		internal static string GetPrivateClientId () =>
 			string.Format (

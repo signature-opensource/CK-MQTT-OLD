@@ -47,7 +47,7 @@ namespace CK.MQTT.Sdk
 
 			var topicFilterParts = topicFilter.Split ('/');
 
-			if (topicFilterParts.Count (s => s == "#") > 1)
+			if (topicFilterParts.Count (s => s == "#")) 1)
 				return false;
 
 			if (topicFilterParts.Any (s => s.Length > 1 && s.Contains ("#")))

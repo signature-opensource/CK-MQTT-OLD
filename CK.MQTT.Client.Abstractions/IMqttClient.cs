@@ -1,3 +1,4 @@
+using CK.Core;
 using System;
 using System.Threading.Tasks;
 
@@ -41,7 +42,7 @@ namespace CK.MQTT
 		/// See <a href="http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/mqtt-v3.1.1.html#_Toc442180841">MQTT Connect</a>
 		/// for more details about the protocol connection
 		/// </remarks>
-		Task<SessionState> ConnectAsync(MqttClientCredentials credentials, MqttLastWill will = null, bool cleanSession = false);
+		Task<SessionState> ConnectAsync(IActivityMonitor m, MqttClientCredentials credentials, MqttLastWill will = null, bool cleanSession = false);
 
 		/// <summary>
 		/// Represents the protocol connection, which consists of sending a CONNECT packet
@@ -62,7 +63,7 @@ namespace CK.MQTT
 		/// See <a href="http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/mqtt-v3.1.1.html#_Toc442180841">MQTT Connect</a>
 		/// for more details about the protocol connection
 		/// </remarks>
-		Task<SessionState> ConnectAsync(MqttLastWill will = null);
+		Task<SessionState> ConnectAsync( IActivityMonitor m, MqttLastWill will = null);
 
 		/// <summary>
 		/// Represents the protocol disconnection, which consists of sending a DISCONNECT packet to the Server

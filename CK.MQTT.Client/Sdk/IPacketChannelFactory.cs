@@ -1,12 +1,13 @@
-﻿using CK.MQTT.Sdk.Packets;
+using CK.Core;
+using CK.MQTT.Sdk.Packets;
 using System.Threading.Tasks;
 
 namespace CK.MQTT.Sdk
 {
 	internal interface IPacketChannelFactory
 	{
-		Task<IMqttChannel<IPacket>> CreateAsync ();
+		Task<IMqttChannel<IPacket>> CreateAsync (IActivityMonitor m);
 
-		IMqttChannel<IPacket> Create (IMqttChannel<byte[]> binaryChannel);
+		IMqttChannel<IPacket> Create (IActivityMonitor m, IMqttChannel<Monitored<byte[]>> binaryChannel);
 	}
 }

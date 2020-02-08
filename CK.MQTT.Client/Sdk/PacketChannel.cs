@@ -3,6 +3,7 @@ using CK.MQTT.Sdk.Packets;
 using System.Reactive.Subjects;
 using System.Threading.Tasks;
 using System;
+using CK.Core;
 
 namespace CK.MQTT.Sdk
 {
@@ -16,7 +17,7 @@ namespace CK.MQTT.Sdk
 		readonly ReplaySubject<IPacket> sender;
 		readonly IDisposable subscription;
 
-		public PacketChannel (IMqttChannel<byte[]> innerChannel, 
+		public PacketChannel (IMqttChannel<Monitored<byte[]>> innerChannel, 
 			IPacketManager manager, 
 			MqttConfiguration configuration)
 		{

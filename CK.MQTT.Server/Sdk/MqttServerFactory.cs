@@ -4,6 +4,7 @@ using CK.MQTT.Sdk.Flows;
 using CK.MQTT.Sdk.Storage;
 using System.Reactive.Subjects;
 using System;
+using CK.Core;
 
 namespace CK.MQTT.Sdk
 {
@@ -12,8 +13,6 @@ namespace CK.MQTT.Sdk
 	/// </summary>
 	public class MqttServerFactory
     {
-        static readonly ITracer tracer = Tracer.Get<MqttServerFactory> ();
-
         readonly IMqttServerBinding binding;
         readonly IMqttAuthenticationProvider authenticationProvider;
 
@@ -64,7 +63,7 @@ namespace CK.MQTT.Sdk
         /// </param>
         /// <returns>A new MQTT Server</returns>
         /// <exception cref="MqttServerException">MqttServerException</exception>
-        public IMqttServer CreateServer (MqttConfiguration configuration)
+        public IMqttServer CreateServer (IActivityMonitor m, MqttConfiguration configuration)
         {
             try {
                 var topicEvaluator = new MqttTopicEvaluator (configuration);
@@ -80,8 +79,7 @@ namespace CK.MQTT.Sdk
                 return new MqttServerImpl (channelProvider, channelFactory,
                     flowProvider, connectionProvider, undeliveredMessagesListener, configuration);
             } catch (Exception ex) {
-                tracer.Error (ex, ServerProperties.Server_InitializeError);
-
+                m.Error( ServerProperties.Server_InitializeError, ex );
                 throw new MqttServerException (ServerProperties.Server_InitializeError, ex);
             }
         }

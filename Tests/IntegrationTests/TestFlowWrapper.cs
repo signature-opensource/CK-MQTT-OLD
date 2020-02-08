@@ -11,9 +11,9 @@ namespace IntegrationTests
     internal class TestFlowWrapper : IProtocolFlow
     {
         readonly IProtocolFlow _flow;
-        private readonly Action<(string clientId, IPacket input, IMqttChannel<IPacket> channel)> _callback;
+        private readonly Action<(string clientId, IPacket input, IMqttChannel<IPacket> channel>> _callback;
 
-        public TestFlowWrapper( IProtocolFlow flow, Action<(string clientId, IPacket input, IMqttChannel<IPacket> channel)> callback )
+        public TestFlowWrapper( IProtocolFlow flow, Action<(string clientId, IPacket input, IMqttChannel<IPacket> channel>> callback )
         {
             _flow = flow;
             _callback = callback;

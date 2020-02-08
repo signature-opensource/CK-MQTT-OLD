@@ -26,16 +26,16 @@ namespace Tests
 
             var configuration = Mock.Of<MqttConfiguration>( c => c.WaitTimeoutSecs == 60 );
 
-            var packets = new Subject<(IActivityMonitor, IPacket)>();
+            var packets = new Subject<Monitored<IPacket>>();
             var packetChannel = new Mock<IMqttChannel<IPacket>>();
-            var factory = Mock.Of<IPacketChannelFactory>( x => x.Create( It.IsAny<IMqttChannel<(IActivityMonitor, byte[])>>() ) == packetChannel.Object );
+            var factory = Mock.Of<IPacketChannelFactory>( x => x.Create( It.IsAny<IMqttChannel<Monitored<byte[]>>>() ) == packetChannel.Object );
 
             packetChannel
                 .Setup( c => c.IsConnected )
                 .Returns( true );
             packetChannel
                 .Setup( c => c.SenderStream )
-                .Returns( new Subject<(IActivityMonitor, IPacket)>() );
+                .Returns( new Subject<Monitored<IPacket>>() );
             packetChannel
                 .Setup( c => c.ReceiverStream )
                 .Returns( packets );
@@ -45,9 +45,9 @@ namespace Tests
 
             var server = new MqttServerImpl( channelProvider.Object, factory, flowProvider, connectionProvider.Object, Mock.Of<ISubject<MqttUndeliveredMessage>>(), configuration );
 
-            sockets.OnNext( Mock.Of<IMqttChannel<byte[]>>( x => x.ReceiverStream == new Subject<(IActivityMonitor, byte[])>() ) );
-            sockets.OnNext( Mock.Of<IMqttChannel<byte[]>>( x => x.ReceiverStream == new Subject<(IActivityMonitor, byte[])>() ) );
-            sockets.OnNext( Mock.Of<IMqttChannel<byte[]>>( x => x.ReceiverStream == new Subject<(IActivityMonitor, byte[])>() ) );
+            sockets.OnNext( Mock.Of<IMqttChannel<byte[]>>( x => x.ReceiverStream == new Subject<Monitored<byte[]>>() ) );
+            sockets.OnNext( Mock.Of<IMqttChannel<byte[]>>( x => x.ReceiverStream == new Subject<Monitored<byte[]>>() ) );
+            sockets.OnNext( Mock.Of<IMqttChannel<byte[]>>( x => x.ReceiverStream == new Subject<Monitored<byte[]>>() ) );
 
             0.Should().Be( server.ActiveConnections );
         }
@@ -64,16 +64,16 @@ namespace Tests
 
             var configuration = Mock.Of<MqttConfiguration>( c => c.WaitTimeoutSecs == 60 );
 
-            var packets = new Subject<(IActivityMonitor, IPacket)>();
+            var packets = new Subject<Monitored<IPacket>>();
             var packetChannel = new Mock<IMqttChannel<IPacket>>();
-            var factory = Mock.Of<IPacketChannelFactory>( x => x.Create( It.IsAny<IMqttChannel<(IActivityMonitor, byte[])>>() ) == packetChannel.Object );
+            var factory = Mock.Of<IPacketChannelFactory>( x => x.Create( It.IsAny<IMqttChannel<Monitored<byte[]>>>() ) == packetChannel.Object );
 
             packetChannel
                 .Setup( c => c.IsConnected )
                 .Returns( true );
             packetChannel
                 .Setup( c => c.SenderStream )
-                .Returns( new Subject<(IActivityMonitor, IPacket)>() );
+                .Returns( new Subject<Monitored<IPacket>>() );
             packetChannel
                 .Setup( c => c.ReceiverStream )
                 .Returns( packets );
@@ -85,9 +85,9 @@ namespace Tests
 
             server.Start();
 
-            sockets.OnNext( Mock.Of<IMqttChannel<byte[]>>( x => x.ReceiverStream == new Subject<(IActivityMonitor, byte[])>() ) );
-            sockets.OnNext( Mock.Of<IMqttChannel<byte[]>>( x => x.ReceiverStream == new Subject<(IActivityMonitor, byte[])>() ) );
-            sockets.OnNext( Mock.Of<IMqttChannel<byte[]>>( x => x.ReceiverStream == new Subject<(IActivityMonitor, byte[])>() ) );
+            sockets.OnNext( Mock.Of<IMqttChannel<byte[]>>( x => x.ReceiverStream == new Subject<Monitored<byte[]>>() ) );
+            sockets.OnNext( Mock.Of<IMqttChannel<byte[]>>( x => x.ReceiverStream == new Subject<Monitored<byte[]>>() ) );
+            sockets.OnNext( Mock.Of<IMqttChannel<byte[]>>( x => x.ReceiverStream == new Subject<Monitored<byte[]>>() ) );
 
             3.Should().Be( server.ActiveConnections );
         }
@@ -109,17 +109,20 @@ namespace Tests
                 .Returns( true );
             packetChannel
                 .Setup( c => c.SenderStream )
-                .Returns( new Subject<(IActivityMonitor, IPacket)>() );
+                .Returns( new Subject<Monitored<IPacket>>() );
             packetChannel
                 .Setup( c => c.ReceiverStream )
-                .Returns( new Subject<(IActivityMonitor, IPacket)>() );
+                .Returns( new Subject<Monitored<IPacket>>() );
 
             var flowProvider = Mock.Of<IProtocolFlowProvider>();
             var connectionProvider = new Mock<IConnectionProvider>();
 
             var configuration = Mock.Of<MqttConfiguration>( c => c.WaitTimeoutSecs == 60 );
 
-            var server = new MqttServerImpl( channelProvider.Object, Mock.Of<IPacketChannelFactory>( x => x.Create( It.IsAny<IMqttChannel<(IActivityMonitor, byte[])>>() ) == packetChannel.Object ),
+            var server = new MqttServerImpl(
+                channelProvider.Object,
+                Mock.Of<IPacketChannelFactory>(
+                    x => x.Create( It.IsAny<IMqttChannel<Monitored<byte[]>>>() ) == packetChannel.Object ),
                 flowProvider, connectionProvider.Object, Mock.Of<ISubject<MqttUndeliveredMessage>>(), configuration );
 
             server.Start();
@@ -145,7 +148,7 @@ namespace Tests
 
             var configuration = Mock.Of<MqttConfiguration>( c => c.WaitTimeoutSecs == 60 );
 
-            var packets = new Subject<(IActivityMonitor, IPacket)>();
+            var packets = new Subject<Monitored<IPacket>>();
 
             var packetChannel = new Mock<IMqttChannel<IPacket>>();
             var factory = new Mock<IPacketChannelFactory>();
@@ -155,19 +158,19 @@ namespace Tests
                 .Returns( true );
             packetChannel
                 .Setup( c => c.SenderStream )
-                .Returns( new Subject<(IActivityMonitor, IPacket)>() );
+                .Returns( new Subject<Monitored<IPacket>>() );
             packetChannel
                 .Setup( c => c.ReceiverStream )
                 .Returns( packets );
 
-            factory.Setup( x => x.Create( It.IsAny<IMqttChannel<(IActivityMonitor, byte[])>>() ) )
+            factory.Setup( x => x.Create( It.IsAny<IMqttChannel<Monitored<byte[]>>>() ) )
                 .Returns( packetChannel.Object );
 
             var flowProvider = Mock.Of<IProtocolFlowProvider>();
             var connectionProvider = new Mock<IConnectionProvider>();
 
             var server = new MqttServerImpl( channelProvider.Object, factory.Object, flowProvider, connectionProvider.Object, Mock.Of<ISubject<MqttUndeliveredMessage>>(), configuration );
-            var receiver = new Subject<(IActivityMonitor, byte[])>();
+            var receiver = new Subject<Monitored<byte[]>>();
             var socket = new Mock<IMqttChannel<byte[]>>();
 
             socket.Setup( x => x.ReceiverStream ).Returns( receiver );

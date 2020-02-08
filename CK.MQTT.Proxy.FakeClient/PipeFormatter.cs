@@ -155,14 +155,14 @@ namespace CK.MQTT.Proxy.FakeClient
             stream.Position = 0;
             return new CKBinaryReader( stream );
         }
-        public static async Task<(RelayHeader header, CKBinaryReader reader)> ReadRelayMessage( this PipeStream input, CancellationToken token )
+        public static async Task<(RelayHeader header, CKBinaryReader reader>> ReadRelayMessage( this PipeStream input, CancellationToken token )
         {
             var reader = await ReadMessageAsync( input, token );
             if( reader.BaseStream.Length == 0 ) return (RelayHeader.EndOfStream, null);
             return (reader.ReadEnum<RelayHeader>(), reader);
         }
 
-        public static async Task<(StubClientHeader header, CKBinaryReader reader)> ReadStubMessage( this PipeStream input, CancellationToken token )
+        public static async Task<(StubClientHeader header, CKBinaryReader reader>> ReadStubMessage( this PipeStream input, CancellationToken token )
         {
             var reader = await ReadMessageAsync( input, token );
             if( reader.BaseStream.Length == 0 ) return (StubClientHeader.EndOfStream, null);

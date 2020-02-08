@@ -28,11 +28,11 @@ namespace Tests
             flowProvider.Setup( p => p.GetFlow( It.IsAny<MqttPacketType>() ) ).Returns( flow.Object );
 
             var configuration = new MqttConfiguration { WaitTimeoutSecs = 10 };
-            var receiver = new Subject<(IActivityMonitor, IPacket)>();
+            var receiver = new Subject<Monitored<IPacket>>();
             var packetChannel = new Mock<IMqttChannel<IPacket>>();
 
             packetChannel.Setup( c => c.ReceiverStream ).Returns( receiver );
-            packetChannel.Setup( c => c.SenderStream ).Returns( new Subject<(IActivityMonitor, IPacket)>() );
+            packetChannel.Setup( c => c.SenderStream ).Returns( new Subject<Monitored<IPacket>>() );
 
             var listener = new ServerPacketListener( packetChannel.Object, connectionProvider.Object, flowProvider.Object, configuration );
 
@@ -42,8 +42,8 @@ namespace Tests
             var connect = new Connect( clientId, cleanSession: true );
             var publish = new Publish( Guid.NewGuid().ToString(), MqttQualityOfService.AtMostOnce, false, false );
 
-            receiver.OnNext( (TestHelper.Monitor, connect) );
-            receiver.OnNext( (TestHelper.Monitor, publish) );
+            receiver.OnNext( new Monitored<IPacket>( TestHelper.Monitor, connect ) );
+            receiver.OnNext( new Monitored<IPacket>( TestHelper.Monitor, publish ) );
 
             var connectReceived = false;
             var publishReceived = false;
@@ -71,8 +71,8 @@ namespace Tests
             Assert.True( signalSet );
 
             flowProvider.Verify( p => p.GetFlow( It.Is<MqttPacketType>( t => t == MqttPacketType.Publish ) ) );
-            flow.Verify( f => f.ExecuteAsync( It.Is<string>( s => s == clientId ), It.Is<IPacket>( p => p is Connect ), It.Is<IMqttChannel<IPacket>>( c => c == packetChannel.Object ) ) );
-            flow.Verify( f => f.ExecuteAsync( It.Is<string>( s => s == clientId ), It.Is<IPacket>( p => p is Publish ), It.Is<IMqttChannel<IPacket>>( c => c == packetChannel.Object ) ) );
+            flow.Verify( f => f.ExecuteAsync( TestHelper.Monitor, It.Is<string>( s => s == clientId ), It.Is<IPacket>( p => p is Connect ), It.Is<IMqttChannel<IPacket>>( c => c == packetChannel.Object ) ) );
+            flow.Verify( f => f.ExecuteAsync( TestHelper.Monitor, It.Is<string>( s => s == clientId ), It.Is<IPacket>( p => p is Publish ), It.Is<IMqttChannel<IPacket>>( c => c == packetChannel.Object ) ) );
         }
 
         [Test]
@@ -82,11 +82,11 @@ namespace Tests
             var flowProvider = Mock.Of<IProtocolFlowProvider>();
             var repositoryProvider = Mock.Of<IRepositoryProvider>();
             var configuration = new MqttConfiguration { WaitTimeoutSecs = 10 };
-            var receiver = new Subject<(IActivityMonitor, IPacket)>();
+            var receiver = new Subject<Monitored<IPacket>>();
             var packetChannel = new Mock<IMqttChannel<IPacket>>();
 
             packetChannel.Setup( c => c.ReceiverStream ).Returns( receiver );
-            packetChannel.Setup( c => c.SenderStream ).Returns( new Subject<(IActivityMonitor, IPacket)>() );
+            packetChannel.Setup( c => c.SenderStream ).Returns( new Subject<Monitored<IPacket>>() );
 
             var listener = new ServerPacketListener( packetChannel.Object, connectionProvider.Object, flowProvider, configuration );
 
@@ -95,9 +95,9 @@ namespace Tests
             var clientId = Guid.NewGuid().ToString();
             var connect = new Connect( clientId, cleanSession: true );
 
-            receiver.OnNext( (TestHelper.Monitor, connect) );
+            receiver.OnNext( new Monitored<IPacket>( TestHelper.Monitor, connect ) );
 
-            connectionProvider.Verify( m => m.AddConnection( It.Is<string>( s => s == clientId ), It.Is<IMqttChannel<IPacket>>( c => c == packetChannel.Object ) ) );
+            connectionProvider.Verify( m => m.AddConnection( TestHelper.Monitor, It.Is<string>( s => s == clientId ), It.Is<IMqttChannel<IPacket>>( c => c == packetChannel.Object ) ) );
         }
 
         [Test]
@@ -108,11 +108,11 @@ namespace Tests
             var repositoryProvider = Mock.Of<IRepositoryProvider>();
             var waitingTimeout = 1;
             var configuration = new MqttConfiguration { WaitTimeoutSecs = waitingTimeout };
-            var receiver = new Subject<(IActivityMonitor, IPacket)>();
+            var receiver = new Subject<Monitored<IPacket>>();
             var packetChannel = new Mock<IMqttChannel<IPacket>>();
 
             packetChannel.Setup( c => c.ReceiverStream ).Returns( receiver );
-            packetChannel.Setup( c => c.SenderStream ).Returns( new Subject<(IActivityMonitor, IPacket)>() );
+            packetChannel.Setup( c => c.SenderStream ).Returns( new Subject<Monitored<IPacket>>() );
 
             var listener = new ServerPacketListener( packetChannel.Object, connectionProvider.Object, flowProvider, configuration );
 
@@ -138,11 +138,11 @@ namespace Tests
             var repositoryProvider = Mock.Of<IRepositoryProvider>();
             var waitingTimeout = 1;
             var configuration = new MqttConfiguration { WaitTimeoutSecs = waitingTimeout };
-            var receiver = new Subject<(IActivityMonitor, IPacket)>();
+            var receiver = new Subject<Monitored<IPacket>>();
             var packetChannel = new Mock<IMqttChannel<IPacket>>();
 
             packetChannel.Setup( c => c.ReceiverStream ).Returns( receiver );
-            packetChannel.Setup( c => c.SenderStream ).Returns( new Subject<(IActivityMonitor, IPacket)>() );
+            packetChannel.Setup( c => c.SenderStream ).Returns( new Subject<Monitored<IPacket>>() );
 
             var listener = new ServerPacketListener( packetChannel.Object, connectionProvider.Object, flowProvider, configuration );
 
@@ -158,7 +158,7 @@ namespace Tests
             var clientId = Guid.NewGuid().ToString();
             var connect = new Connect( clientId, cleanSession: true );
 
-            receiver.OnNext( (TestHelper.Monitor, connect) );
+            receiver.OnNext( new Monitored<IPacket>( TestHelper.Monitor, connect ) );
 
             Assert.False( timeoutOccured );
         }
@@ -170,11 +170,11 @@ namespace Tests
             var flowProvider = Mock.Of<IProtocolFlowProvider>();
             var repositoryProvider = Mock.Of<IRepositoryProvider>();
             var configuration = new MqttConfiguration { WaitTimeoutSecs = 10 };
-            var receiver = new Subject<(IActivityMonitor, IPacket)>();
+            var receiver = new Subject<Monitored<IPacket>>();
             var packetChannel = new Mock<IMqttChannel<IPacket>>();
 
             packetChannel.Setup( c => c.ReceiverStream ).Returns( receiver );
-            packetChannel.Setup( c => c.SenderStream ).Returns( new Subject<(IActivityMonitor, IPacket)>() );
+            packetChannel.Setup( c => c.SenderStream ).Returns( new Subject<Monitored<IPacket>>() );
 
             var listener = new ServerPacketListener( packetChannel.Object, connectionProvider.Object, flowProvider, configuration );
 
@@ -187,7 +187,7 @@ namespace Tests
                 errorOccured = true;
             } );
 
-            receiver.OnNext( (TestHelper.Monitor, new PingRequest()) );
+            receiver.OnNext( new Monitored<IPacket>( TestHelper.Monitor, new PingRequest() ) );
 
             Assert.True( errorOccured );
         }
@@ -197,12 +197,12 @@ namespace Tests
         {
             var connectionProvider = new Mock<IConnectionProvider>();
 
-            connectionProvider.Setup( p => p.RemoveConnection( It.IsAny<string>() ) );
+            connectionProvider.Setup( p => p.RemoveConnection( TestHelper.Monitor, It.IsAny<string>() ) );
 
             var serverPublishReceiverFlow = new Mock<IServerPublishReceiverFlow>();
             var flowProvider = new Mock<IProtocolFlowProvider>();
             var configuration = new MqttConfiguration { WaitTimeoutSecs = 10 };
-            var receiver = new Subject<(IActivityMonitor, IPacket)>();
+            var receiver = new Subject<Monitored<IPacket>>();
             var packetChannel = new Mock<IMqttChannel<IPacket>>();
 
             serverPublishReceiverFlow.Setup( f => f.SendWillAsync(
@@ -210,7 +210,7 @@ namespace Tests
                 It.IsAny<string>() ) ).Returns( Task.FromResult( true ) );
             flowProvider.Setup( p => p.GetFlow<IServerPublishReceiverFlow>() ).Returns( serverPublishReceiverFlow.Object );
             packetChannel.Setup( c => c.ReceiverStream ).Returns( receiver );
-            packetChannel.Setup( c => c.SenderStream ).Returns( new Subject<(IActivityMonitor, IPacket)>() );
+            packetChannel.Setup( c => c.SenderStream ).Returns( new Subject<Monitored<IPacket>>() );
 
             var listener = new ServerPacketListener( packetChannel.Object, connectionProvider.Object, flowProvider.Object, configuration );
 
@@ -226,13 +226,13 @@ namespace Tests
             var clientId = Guid.NewGuid().ToString();
             var connect = new Connect( clientId, cleanSession: true );
 
-            receiver.OnNext( (TestHelper.Monitor, connect) );
-            receiver.OnNext( (TestHelper.Monitor, connect) );
+            receiver.OnNext( new Monitored<IPacket>( TestHelper.Monitor, connect ) );
+            receiver.OnNext( new Monitored<IPacket>( TestHelper.Monitor, connect ) );
 
             var errorOccured = errorSignal.Wait( TimeSpan.FromSeconds( 1 ) );
 
             Assert.True( errorOccured );
-            connectionProvider.Verify( p => p.RemoveConnection( It.Is<string>( s => s == clientId ) ) );
+            connectionProvider.Verify( p => p.RemoveConnection( TestHelper.Monitor, It.Is<string>( s => s == clientId ) ) );
         }
 
         [Test]
@@ -250,8 +250,8 @@ namespace Tests
                 .Returns( Mock.Of<IProtocolFlow>() );
 
             var configuration = new MqttConfiguration { WaitTimeoutSecs = 10 };
-            var receiver = new Subject<(IActivityMonitor, IPacket)>();
-            var sender = new Subject<(IActivityMonitor, IPacket)>();
+            var receiver = new Subject<Monitored<IPacket>>();
+            var sender = new Subject<Monitored<IPacket>>();
             var packetChannelMock = new Mock<IMqttChannel<IPacket>>();
 
             packetChannelMock.Setup( c => c.ReceiverStream ).Returns( receiver );
@@ -296,11 +296,11 @@ namespace Tests
 
             var repositoryProvider = Mock.Of<IRepositoryProvider>();
             var configuration = new MqttConfiguration { WaitTimeoutSecs = 10 };
-            var receiver = new Subject<(IActivityMonitor, IPacket)>();
+            var receiver = new Subject<Monitored<IPacket>>();
             var packetChannel = new Mock<IMqttChannel<IPacket>>();
 
             packetChannel.Setup( c => c.ReceiverStream ).Returns( receiver );
-            packetChannel.Setup( c => c.SenderStream ).Returns( new Subject<(IActivityMonitor, IPacket)>() );
+            packetChannel.Setup( c => c.SenderStream ).Returns( new Subject<Monitored<IPacket>>());
 
             var listener = new ServerPacketListener( packetChannel.Object, connectionProvider.Object, flowProvider.Object, configuration );
 
@@ -335,11 +335,11 @@ namespace Tests
 
             var repositoryProvider = Mock.Of<IRepositoryProvider>();
             var configuration = new MqttConfiguration { WaitTimeoutSecs = 10 };
-            var receiver = new Subject<(IActivityMonitor, IPacket)>();
+            var receiver = new Subject<Monitored<IPacket>>();
             var packetChannel = new Mock<IMqttChannel<IPacket>>();
 
             packetChannel.Setup( c => c.ReceiverStream ).Returns( receiver );
-            packetChannel.Setup( c => c.SenderStream ).Returns( new Subject<(IActivityMonitor, IPacket)>() );
+            packetChannel.Setup( c => c.SenderStream ).Returns( new Subject<Monitored<IPacket>>());
 
             var listener = new ServerPacketListener( packetChannel.Object, connectionProvider.Object, flowProvider.Object, configuration );
 

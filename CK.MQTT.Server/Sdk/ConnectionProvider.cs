@@ -2,96 +2,100 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using CK.Core;
 using CK.MQTT.Sdk.Packets;
 
 namespace CK.MQTT.Sdk
 {
-	internal class ConnectionProvider : IConnectionProvider
-	{
-        static readonly ITracer tracer = Tracer.Get<ConnectionProvider> ();
-        static readonly IList<string> privateClients;
-        static readonly ConcurrentDictionary<string, IMqttChannel<IPacket>> connections;
-        static readonly object lockObject = new object();
+    internal class ConnectionProvider : IConnectionProvider
+    {
+        static readonly IList<string> _privateClients;
+        static readonly ConcurrentDictionary<string, IMqttChannel<IPacket>> _connections;
+        static readonly object _lockObject = new object();
 
-		static ConnectionProvider ()
-		{
-            privateClients = new List<string>();
-            connections = new ConcurrentDictionary<string, IMqttChannel<IPacket>> ();
-		}
-
-		public int Connections => connections.Count;
-
-		public IEnumerable<string> ActiveClients
-		{
-			get
-			{
-				return connections
-					.Where (c => c.Value.IsConnected)
-					.Select (c => c.Key);
-			}
-		}
-
-        public IEnumerable<string> PrivateClients => privateClients;
-
-        public void RegisterPrivateClient (string clientId)
+        static ConnectionProvider()
         {
-            if (privateClients.Contains (clientId)) {
-                var message = string.Format (ServerProperties.ConnectionProvider_PrivateClientAlreadyRegistered, clientId);
+            _privateClients = new List<string>();
+            _connections = new ConcurrentDictionary<string, IMqttChannel<IPacket>>();
+        }
 
-                throw new MqttServerException (message);
-            }
+        public int Connections => _connections.Count;
 
-            lock (lockObject) {
-                privateClients.Add(clientId);
+        public IEnumerable<string> ActiveClients
+        {
+            get
+            {
+                return _connections
+                    .Where( c => c.Value.IsConnected )
+                    .Select( c => c.Key );
             }
         }
 
-        public void AddConnection (string clientId, IMqttChannel<IPacket> connection)
-		{
-			var existingConnection = default (IMqttChannel<IPacket>);
+        public IEnumerable<string> PrivateClients => _privateClients;
 
-			if (connections.TryGetValue (clientId, out existingConnection)) {
-				tracer.Warn (ServerProperties.ConnectionProvider_ClientIdExists, clientId);
+        public void RegisterPrivateClient( string clientId )
+        {
+            if( _privateClients.Contains( clientId ) )
+            {
+                var message = string.Format( ServerProperties.ConnectionProvider_PrivateClientAlreadyRegistered, clientId );
 
-				RemoveConnection (clientId);
-			}
+                throw new MqttServerException( message );
+            }
 
-			connections.TryAdd (clientId, connection);
-		}
+            lock( _lockObject )
+            {
+                _privateClients.Add( clientId );
+            }
+        }
 
-		public IMqttChannel<IPacket> GetConnection (string clientId)
-		{
-			var existingConnection = default(IMqttChannel<IPacket>);
+        public void AddConnection( IActivityMonitor m, string clientId, IMqttChannel<IPacket> connection )
+        {
+            if( _connections.TryGetValue( clientId, out _ ) )
+            {
+                m.Warn( string.Format( ServerProperties.ConnectionProvider_ClientIdExists, clientId ) );
+                RemoveConnection( m, clientId );
+            }
 
-			if (connections.TryGetValue (clientId, out existingConnection)) {
-				if (!existingConnection.IsConnected) {
-					tracer.Warn (ServerProperties.ConnectionProvider_ClientDisconnected, clientId);
+            _connections.TryAdd( clientId, connection );
+        }
 
-					RemoveConnection (clientId);
-					existingConnection = default (IMqttChannel<IPacket>);
-				}
-			}
+        public IMqttChannel<IPacket> GetConnection( IActivityMonitor m, string clientId )
+        {
 
-			return existingConnection;
-		}
+            if( _connections.TryGetValue( clientId, out IMqttChannel<IPacket> existingConnection ) )
+            {
+                if( !existingConnection.IsConnected )
+                {
+                    m.Warn( string.Format( ServerProperties.ConnectionProvider_ClientDisconnected, clientId ) );
 
-		public void RemoveConnection (string clientId)
-		{
-			var existingConnection = default (IMqttChannel<IPacket>);
+                    RemoveConnection(m, clientId );
+                    existingConnection = default;
+                }
+            }
 
-			if (connections.TryRemove (clientId, out existingConnection)) {
-				tracer.Info (ServerProperties.ConnectionProvider_RemovingClient, clientId);
+            return existingConnection;
+        }
 
-				existingConnection.Dispose ();
-			}
+        public void RemoveConnection( IActivityMonitor m, string clientId )
+        {
 
-            if (privateClients.Contains (clientId))  {
-                lock (lockObject) {
-                    if (privateClients.Contains (clientId)) {
-                        privateClients.Remove (clientId);
+            if( _connections.TryRemove( clientId, out IMqttChannel<IPacket> existingConnection ) )
+            {
+                m.Info( string.Format( ServerProperties.ConnectionProvider_RemovingClient, clientId ) );
+
+                existingConnection.Dispose();
+            }
+
+            if( _privateClients.Contains( clientId ) )
+            {
+                lock( _lockObject )
+                {
+                    if( _privateClients.Contains( clientId ) )
+                    {
+                        _privateClients.Remove( clientId );
                     }
                 }
             }
-		}
+        }
     }
 }

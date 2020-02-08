@@ -17,8 +17,8 @@ namespace CK.MQTT.Sdk.Bindings
         readonly IActivityMonitor _m;
         readonly TcpClient _client;
         readonly IPacketBuffer _buffer;
-        readonly ReplaySubject<(IActivityMonitor, byte[])> _receiver;
-        readonly ReplaySubject<(IActivityMonitor, byte[])> _sender;
+        readonly ReplaySubject<Monitored<byte[]>> _receiver;
+        readonly ReplaySubject<Monitored<byte[]>> _sender;
         readonly IDisposable _streamSubscription;
 
         public TcpChannel(
@@ -30,8 +30,8 @@ namespace CK.MQTT.Sdk.Bindings
             _m = m;
             _client = client;
             _buffer = buffer;
-            _receiver = new ReplaySubject<(IActivityMonitor, byte[])>( window: TimeSpan.FromSeconds( configuration.WaitTimeoutSecs ) );
-            _sender = new ReplaySubject<(IActivityMonitor, byte[])>( window: TimeSpan.FromSeconds( configuration.WaitTimeoutSecs ) );
+            _receiver = new ReplaySubject<Monitored<byte[]>>( window: TimeSpan.FromSeconds( configuration.WaitTimeoutSecs ));
+            _sender = new ReplaySubject<Monitored<byte[]>>( window: TimeSpan.FromSeconds( configuration.WaitTimeoutSecs ));
             _streamSubscription = SubscribeStream();
         }
 
@@ -54,9 +54,9 @@ namespace CK.MQTT.Sdk.Bindings
             }
         }
 
-        public IObservable<(IActivityMonitor, byte[])> ReceiverStream => _receiver;
+        public IObservable<Monitored<byte[]>> ReceiverStream => _receiver;
 
-        public IObservable<(IActivityMonitor, byte[])> SenderStream => _sender;
+        public IObservable<Monitored<byte[]>> SenderStream => _sender;
 
         public async Task SendAsync( IActivityMonitor m, byte[] message )
         {

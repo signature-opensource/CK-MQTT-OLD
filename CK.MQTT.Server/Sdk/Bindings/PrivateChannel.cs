@@ -14,8 +14,8 @@ namespace CK.MQTT.Sdk.Bindings
         readonly IActivityMonitor _m;
         readonly PrivateStream _stream;
         readonly EndpointIdentifier _identifier;
-        readonly ReplaySubject<(IActivityMonitor, byte[])> _receiver;
-        readonly ReplaySubject<(IActivityMonitor, byte[])> _sender;
+        readonly ReplaySubject<Monitored<byte[]>> _receiver;
+        readonly ReplaySubject<Monitored<byte[]>> _sender;
         readonly IDisposable _streamSubscription;
 
         public PrivateChannel( IActivityMonitor m, PrivateStream stream, EndpointIdentifier identifier, MqttConfiguration configuration )
@@ -23,16 +23,16 @@ namespace CK.MQTT.Sdk.Bindings
             _m = m;
             _stream = stream;
             _identifier = identifier;
-            _receiver = new ReplaySubject<(IActivityMonitor, byte[])>( window: TimeSpan.FromSeconds( configuration.WaitTimeoutSecs ) );
-            _sender = new ReplaySubject<(IActivityMonitor, byte[])>( window: TimeSpan.FromSeconds( configuration.WaitTimeoutSecs ) );
+            _receiver = new ReplaySubject<Monitored<byte[]>>( window: TimeSpan.FromSeconds( configuration.WaitTimeoutSecs ) );
+            _sender = new ReplaySubject<Monitored<byte[]>>( window: TimeSpan.FromSeconds( configuration.WaitTimeoutSecs ) );
             _streamSubscription = SubscribeStream();
         }
 
         public bool IsConnected => !_stream.IsDisposed;
 
-        public IObservable<(IActivityMonitor, byte[])> ReceiverStream => _receiver;
+        public IObservable<Monitored<byte[]>> ReceiverStream => _receiver;
 
-        public IObservable<(IActivityMonitor, byte[])> SenderStream => _sender;
+        public IObservable<Monitored<byte[]>> SenderStream => _sender;
 
         public Task SendAsync( IActivityMonitor m, byte[] message )
         {
@@ -46,7 +46,7 @@ namespace CK.MQTT.Sdk.Bindings
                 throw new MqttException( Properties.MqttChannel_ClientNotConnected );
             }
 
-            _sender.OnNext( (m, message) );
+            _sender.OnNext( new Monitored<byte[]>( m, message ) );
 
             try
             {
@@ -89,15 +89,15 @@ namespace CK.MQTT.Sdk.Bindings
             var senderIdentifier = _identifier == EndpointIdentifier.Client ?
                 EndpointIdentifier.Server :
                 EndpointIdentifier.Client;
-
+            var m = new ActivityMonitor();
             return _stream
                 .Receive( senderIdentifier )
                 .ObserveOn( NewThreadScheduler.Default )
                 .Subscribe( packet =>
                 {
-                    tracer.Verbose( Properties.MqttChannel_ReceivedPacket, packet.Length );
+                    m.Trace( string.Format( Properties.MqttChannel_ReceivedPacket, packet.Length ) );
 
-                    _receiver.OnNext( packet );
+                    _receiver.OnNext( new Monitored<byte[]>( m, packet ) );
                 }, ex =>
                 {
                     if( ex is ObjectDisposedException )
@@ -110,7 +110,7 @@ namespace CK.MQTT.Sdk.Bindings
                     }
                 }, () =>
                 {
-                    tracer.Warn( Properties.MqttChannel_NetworkStreamCompleted );
+                    m.Warn( Properties.MqttChannel_NetworkStreamCompleted );
                     _receiver.OnCompleted();
                 } );
         }

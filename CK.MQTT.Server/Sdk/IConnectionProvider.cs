@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using CK.Core;
 using CK.MQTT.Sdk.Packets;
 
 namespace CK.MQTT.Sdk
@@ -13,10 +14,10 @@ namespace CK.MQTT.Sdk
 
         void RegisterPrivateClient (string clientId);
 
-		void AddConnection (string clientId, IMqttChannel<IPacket> connection);
+		void AddConnection (IActivityMonitor m, string clientId, IMqttChannel<IPacket> connection);
 
-		IMqttChannel<IPacket> GetConnection (string clientId);
+		IMqttChannel<IPacket> GetConnection ( IActivityMonitor m, string clientId );
 
-		void RemoveConnection (string clientId);
+		void RemoveConnection ( IActivityMonitor m, string clientId );
 	}
 }
