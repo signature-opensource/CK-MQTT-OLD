@@ -56,24 +56,15 @@ namespace CK.MQTT.Sdk.Bindings
 
         public void Dispose()
         {
-            Dispose( disposing: true );
-            GC.SuppressFinalize( this );
-        }
-
-        protected virtual void Dispose( bool disposing )
-        {
             if( _disposed ) return;
 
-            if( disposing )
-            {
-                _tracer.Info( ServerProperties.Resources.GetString( "Mqtt_Disposing" ), nameof( PrivateChannel ) );
+            _tracer.Info( ServerProperties.Resources.GetString( "Mqtt_Disposing" ), nameof( PrivateChannel ) );
 
-                _streamSubscription.Dispose();
-                _receiver.OnCompleted();
-                _stream.Dispose();
+            _streamSubscription.Dispose();
+            _receiver.OnCompleted();
+            _stream.Dispose();
 
-                _disposed = true;
-            }
+            _disposed = true;
         }
 
         IDisposable SubscribeStream()

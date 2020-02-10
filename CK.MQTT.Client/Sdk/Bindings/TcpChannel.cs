@@ -88,31 +88,20 @@ namespace CK.MQTT.Sdk.Bindings
 
         public void Dispose()
         {
-            Dispose( true );
-            GC.SuppressFinalize( this );
-        }
-
-        protected virtual void Dispose( bool disposing )
-        {
             if( _disposed ) return;
+            _disposed = true;
+            _tracer.Info( Properties.Resources.GetString( "Mqtt_Disposing" ), GetType().FullName );
 
-            if( disposing )
+            _streamSubscription.Dispose();
+            _receiver.OnCompleted();
+
+            try
             {
-                _tracer.Info( Properties.Resources.GetString( "Mqtt_Disposing" ), GetType().FullName );
-
-                _streamSubscription.Dispose();
-                _receiver.OnCompleted();
-
-                try
-                {
-                    _client?.Dispose();
-                }
-                catch( SocketException socketEx )
-                {
-                    _tracer.Error( socketEx, Properties.Resources.GetString( "MqttChannel_DisposeError" ), socketEx.SocketErrorCode );
-                }
-
-                _disposed = true;
+                _client?.Dispose();
+            }
+            catch( SocketException socketEx )
+            {
+                _tracer.Error( socketEx, Properties.Resources.GetString( "MqttChannel_DisposeError" ), socketEx.SocketErrorCode );
             }
         }
 

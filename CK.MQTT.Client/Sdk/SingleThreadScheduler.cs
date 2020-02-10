@@ -48,19 +48,10 @@ namespace CK.MQTT.Sdk
 
         public void Dispose()
         {
-            Dispose( disposing: true );
-            GC.SuppressFinalize( this );
-        }
-
-        void Dispose( bool disposing )
-        {
-            if( disposing )
+            if( _tasks != null )
             {
-                if( _tasks != null )
-                {
-                    _tasks.CompleteAdding();
-                    _tasks = null;
-                }
+                _tasks.CompleteAdding();
+                _tasks = null;
             }
         }
     }

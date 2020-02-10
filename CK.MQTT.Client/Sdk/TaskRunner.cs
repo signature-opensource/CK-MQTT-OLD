@@ -61,21 +61,11 @@ namespace CK.MQTT.Sdk
 
         public void Dispose()
         {
-            Dispose( disposing: true );
-            GC.SuppressFinalize( this );
-        }
+            if( _disposed ) return;
 
-        protected virtual void Dispose( bool disposing )
-        {
-            if( _disposed )
-                return;
-
-            if( disposing )
-            {
-                (_taskFactory.Scheduler as IDisposable)?.Dispose();
-                _taskFactory = null;
-                _disposed = true;
-            }
+            (_taskFactory.Scheduler as IDisposable)?.Dispose();
+            _taskFactory = null;
+            _disposed = true;
         }
     }
 }

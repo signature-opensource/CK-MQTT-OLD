@@ -104,55 +104,43 @@ namespace CK.MQTT.Sdk
             return client;
         }
 
-        public void Stop()
-        {
-            Dispose( disposing: true );
-            GC.SuppressFinalize( this );
-        }
+        public void Stop() => Dispose();
 
-        void IDisposable.Dispose()
-        {
-            Stop();
-        }
-
-        protected virtual void Dispose( bool disposing )
+        public void Dispose()
         {
             if( _disposed ) return;
 
-            if( disposing )
+            try
             {
-                try
+                _tracer.Info( ServerProperties.Resources.GetString( "Mqtt_Disposing" ), GetType().FullName );
+
+                _streamSubscription?.Dispose();
+
+                foreach( IMqttChannel<IPacket> channel in _channels )
                 {
-                    _tracer.Info( ServerProperties.Resources.GetString( "Mqtt_Disposing" ), GetType().FullName );
-
-                    _streamSubscription?.Dispose();
-
-                    foreach( IMqttChannel<IPacket> channel in _channels )
-                    {
-                        channel.Dispose();
-                    }
-
-                    _channels.Clear();
-
-                    _channelSubscription?.Dispose();
-
-                    foreach( IMqttChannelListener binaryChannelProvider in _binaryChannelListeners )
-                    {
-                        binaryChannelProvider?.Dispose();
-                    }
-
-                    Stopped( this, new MqttEndpointDisconnected( DisconnectedReason.SelfDisconnected ) );
+                    channel.Dispose();
                 }
-                catch( Exception ex )
+
+                _channels.Clear();
+
+                _channelSubscription?.Dispose();
+
+                foreach( IMqttChannelListener binaryChannelProvider in _binaryChannelListeners )
                 {
-                    _tracer.Error( ex );
-                    Stopped( this, new MqttEndpointDisconnected( DisconnectedReason.Error, ex.Message ) );
+                    binaryChannelProvider?.Dispose();
                 }
-                finally
-                {
-                    _started = false;
-                    _disposed = true;
-                }
+
+                Stopped( this, new MqttEndpointDisconnected( DisconnectedReason.SelfDisconnected ) );
+            }
+            catch( Exception ex )
+            {
+                _tracer.Error( ex );
+                Stopped( this, new MqttEndpointDisconnected( DisconnectedReason.Error, ex.Message ) );
+            }
+            finally
+            {
+                _started = false;
+                _disposed = true;
             }
         }
 

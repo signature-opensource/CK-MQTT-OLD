@@ -90,32 +90,22 @@ namespace CK.MQTT.Ssl
 
         public void Dispose()
         {
-            Dispose( true );
-            GC.SuppressFinalize( this );
-        }
-
-        void Dispose( bool disposing )
-        {
             if( _disposed ) return;
+            _tracer.Info( "Disposing {0}...", GetType().FullName );
 
-            if( disposing )
+            _streamSubscription.Dispose();
+            _receiver.OnCompleted();
+
+            try
             {
-                _tracer.Info( "Disposing {0}...", GetType().FullName );
-
-                _streamSubscription.Dispose();
-                _receiver.OnCompleted();
-
-                try
-                {
-                    _client?.Dispose();
-                }
-                catch( SocketException socketEx )
-                {
-                    _tracer.Error( socketEx, "An error occurred while closing underlying communication channel. Error code: {0}", socketEx.SocketErrorCode );
-                }
-
-                _disposed = true;
+                _client?.Dispose();
             }
+            catch( SocketException socketEx )
+            {
+                _tracer.Error( socketEx, "An error occurred while closing underlying communication channel. Error code: {0}", socketEx.SocketErrorCode );
+            }
+
+            _disposed = true;
         }
 
         IDisposable SubscribeStream()

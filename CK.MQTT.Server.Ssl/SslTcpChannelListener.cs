@@ -43,8 +43,5 @@ namespace CK.MQTT.Ssl
         public void Start() => _listener.Start();
 
         public void Stop() => _listener.Stop();
-
-
-
     }
 }

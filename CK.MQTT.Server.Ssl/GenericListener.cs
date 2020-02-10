@@ -55,19 +55,10 @@ namespace CK.MQTT.Ssl
 
         public void Dispose()
         {
-            Dispose( true );
-            GC.SuppressFinalize( this );
-        }
-
-        protected virtual void Dispose( bool disposing )
-        {
             if( _disposed ) return;
 
-            if( disposing )
-            {
-                _listener.Value.Stop();
-                _disposed = true;
-            }
+            _listener.Value.Stop();
+            _disposed = true;
         }
     }
 }

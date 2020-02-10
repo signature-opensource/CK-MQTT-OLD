@@ -39,20 +39,11 @@ namespace CK.MQTT.Sdk.Bindings
 
         public void Dispose()
         {
-            Dispose( disposing: true );
-            GC.SuppressFinalize( this );
-        }
-
-        protected virtual void Dispose( bool disposing )
-        {
             if( _disposed ) return;
 
-            if( disposing )
-            {
-                payloadSequence.OnCompleted();
-                payloadSequence.Dispose();
-                _disposed = true;
-            }
+            payloadSequence.OnCompleted();
+            payloadSequence.Dispose();
+            _disposed = true;
         }
     }
 }

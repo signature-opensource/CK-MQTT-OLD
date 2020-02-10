@@ -69,23 +69,14 @@ namespace CK.MQTT.Sdk
 
         public void Dispose()
         {
-            Dispose( true );
-            GC.SuppressFinalize( this );
-        }
-
-        protected virtual void Dispose( bool disposing )
-        {
             if( _disposed ) return;
 
-            if( disposing )
-            {
-                _tracer.Info( Properties.Resources.GetString( "Mqtt_Disposing" ), GetType().FullName );
+            _tracer.Info( Properties.Resources.GetString( "Mqtt_Disposing" ), GetType().FullName );
 
-                _subscription.Dispose();
-                _receiver.OnCompleted();
-                _innerChannel.Dispose();
-                _disposed = true;
-            }
+            _subscription.Dispose();
+            _receiver.OnCompleted();
+            _innerChannel.Dispose();
+            _disposed = true;
         }
     }
 }

@@ -57,26 +57,14 @@ namespace CK.MQTT.Sdk
 
         public void Dispose()
         {
-            Dispose( disposing: true );
-            GC.SuppressFinalize( this );
-        }
+            if( _disposed ) return;
 
-        protected virtual void Dispose( bool disposing )
-        {
-            if( _disposed )
-            {
-                return;
-            }
+            _tracer.Info( ServerProperties.Resources.GetString( "Mqtt_Disposing" ), GetType().FullName );
 
-            if( disposing )
-            {
-                _tracer.Info( ServerProperties.Resources.GetString( "Mqtt_Disposing" ), GetType().FullName );
-
-                _listenerDisposable.Dispose();
-                _packets.OnCompleted();
-                (_flowRunner as IDisposable)?.Dispose();
-                _disposed = true;
-            }
+            _listenerDisposable.Dispose();
+            _packets.OnCompleted();
+            (_flowRunner as IDisposable)?.Dispose();
+            _disposed = true;
         }
 
         IDisposable ListenFirstPacket()
