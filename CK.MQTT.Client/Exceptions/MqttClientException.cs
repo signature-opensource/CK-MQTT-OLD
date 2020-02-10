@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.Serialization;
 
 namespace CK.MQTT
@@ -7,24 +7,24 @@ namespace CK.MQTT
     /// The exception that is thrown when a client operation fails
     /// </summary>
     [DataContract]
-	public class MqttClientException : MqttException
+    public class MqttClientException : MqttException
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="MqttClientException" /> class
         /// </summary>
-		public MqttClientException ()
-		{
-		}
+		public MqttClientException()
+        {
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MqttClientException" /> class,
         /// using the specified error message
         /// </summary>
         /// <param name="message">The error message that explains the reason for the exception</param>
-		public MqttClientException (string message)
-			: base (message)
-		{
-		}
+		public MqttClientException( string message )
+            : base( message )
+        {
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MqttClientException" /> class,
@@ -33,9 +33,9 @@ namespace CK.MQTT
         /// </summary>
         /// <param name="message">The error message that explains the reason for the exception</param>
         /// <param name="innerException">The exception that is the cause of the current exception</param>
-        public MqttClientException (string message, Exception innerException)
-			: base (message, innerException)
-		{
-		}
-	}
+        public MqttClientException( string message, Exception innerException )
+            : base( message, innerException )
+        {
+        }
+    }
 }

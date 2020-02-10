@@ -1,7 +1,7 @@
-﻿namespace CK.MQTT.Sdk.Packets
+namespace CK.MQTT.Sdk.Packets
 {
-	internal class PingRequest : IPacket
-	{
-		public MqttPacketType Type { get { return MqttPacketType.PingRequest; } }
-	}
+    internal class PingRequest : IPacket
+    {
+        public MqttPacketType Type => MqttPacketType.PingRequest;
+    }
 }

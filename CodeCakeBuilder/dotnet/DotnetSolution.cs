@@ -71,14 +71,14 @@ namespace CodeCake
                         Predicate = p => !System.IO.Path.GetFileName( p.Path.FullPath ).EndsWith( ".local.sln", StringComparison.OrdinalIgnoreCase )
                     } ).Single().FullPath
             );
-            var sln = globalInfo.Cake.ParseSolution( solutionFileName );
+            SolutionParserResult sln = globalInfo.Cake.ParseSolution( solutionFileName );
 
-            var projects = sln
+            List<SolutionProject> projects = sln
                 .Projects
                 .Where( p => !(p is SolutionFolder)
                             && p.Name != "CodeCakeBuilder" )
                 .ToList();
-            var projectsToPublish = projects.Where(
+            List<SolutionProject> projectsToPublish = projects.Where(
                     p => ((bool?)XDocument.Load( p.Path.FullPath )
                         .Root
                         .Elements( "PropertyGroup" )
@@ -106,9 +106,9 @@ namespace CodeCake
         /// <param name="excludedProjectName">Optional project names (without path nor .csproj extension).</param>
         public void Build( params string[] excludedProjectsName )
         {
-            using( var tempSln = _globalInfo.Cake.CreateTemporarySolutionFile( SolutionFileName ) )
+            using( ITemporarySolutionFile tempSln = _globalInfo.Cake.CreateTemporarySolutionFile( SolutionFileName ) )
             {
-                var exclude = new List<string>( excludedProjectsName ) { "CodeCakeBuilder" };
+                List<string> exclude = new List<string>( excludedProjectsName ) { "CodeCakeBuilder" };
                 tempSln.ExcludeProjectsFromBuild( exclude.ToArray() );
                 _globalInfo.Cake.DotNetCoreBuild( tempSln.FullPath.FullPath,
                     new DotNetCoreBuildSettings().AddVersionArguments( _globalInfo.GitInfo, s =>
@@ -170,7 +170,7 @@ namespace CodeCake
                         _globalInfo.Cake.Information( $"Testing via VSTest ({framework}): {testBinariesPath}" );
                         if( !_globalInfo.CheckCommitMemoryKey( testBinariesPath ) )
                         {
-                            var options = new DotNetCoreTestSettings()
+                            DotNetCoreTestSettings options = new DotNetCoreTestSettings()
                             {
                                 Configuration = _globalInfo.BuildConfiguration,
                                 Framework = framework,

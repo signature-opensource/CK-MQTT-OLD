@@ -1,31 +1,35 @@
-﻿namespace CK.MQTT.Sdk
+namespace CK.MQTT.Sdk
 {
-	internal class PacketIdProvider : IPacketIdProvider
-	{
-		readonly object lockObject;
-		volatile ushort lastValue;
+    internal class PacketIdProvider : IPacketIdProvider
+    {
+        readonly object _lockObject;
+        volatile ushort _lastValue;
 
-		public PacketIdProvider ()
-		{
-			lockObject = new object ();
-			lastValue = 0;
-		}
+        public PacketIdProvider()
+        {
+            _lockObject = new object();
+            _lastValue = 0;
+        }
 
-		public ushort GetPacketId ()
-		{
-			var id = default (ushort);
+        public ushort GetPacketId()
+        {
+            ushort id = default;
 
-			lock (lockObject) {
-				if (lastValue == ushort.MaxValue) {
-					id = 1;
-				} else {
-					id = (ushort)(lastValue + 1);
-				}
+            lock( _lockObject )
+            {
+                if( _lastValue == ushort.MaxValue )
+                {
+                    id = 1;
+                }
+                else
+                {
+                    id = (ushort)(_lastValue + 1);
+                }
 
-				lastValue = id;
-			}
+                _lastValue = id;
+            }
 
-			return id;
-		}
-	}
+            return id;
+        }
+    }
 }

@@ -18,5 +18,5 @@
         /// format of the application message
         /// </summary>
 		public MqttApplicationMessage Message { get; set; }
-	}
+    }
 }

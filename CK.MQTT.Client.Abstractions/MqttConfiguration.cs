@@ -1,26 +1,26 @@
 namespace CK.MQTT
 {
-	/// <summary>
-	/// General configuration used across the protocol implementation
-	/// </summary>
-	public class MqttConfiguration
-	{
+    /// <summary>
+    /// General configuration used across the protocol implementation
+    /// </summary>
+    public class MqttConfiguration
+    {
         /// <summary>
         /// Initializes a new instance of the <see cref="MqttConfiguration" /> class 
         /// </summary>
-		public MqttConfiguration ()
-		{
-			Port = MqttProtocol.DefaultNonSecurePort;
-			// The default receive buffer size of TcpClient according to
-			// http://msdn.microsoft.com/en-us/library/system.net.sockets.tcpclient.receivebuffersize.aspx
-			// is 8192 bytes
-			BufferSize = 8192;
-			MaximumQualityOfService = MqttQualityOfService.AtMostOnce;
-			KeepAliveSecs = 0;
-			WaitTimeoutSecs = 5;
-			ConnectionTimeoutSecs = 5;
-			AllowWildcardsInTopicFilters = true;
-		}
+		public MqttConfiguration()
+        {
+            Port = MqttProtocol.DefaultNonSecurePort;
+            // The default receive buffer size of TcpClient according to
+            // http://msdn.microsoft.com/en-us/library/system.net.sockets.tcpclient.receivebuffersize.aspx
+            // is 8192 bytes
+            BufferSize = 8192;
+            MaximumQualityOfService = MqttQualityOfService.AtMostOnce;
+            KeepAliveSecs = 0;
+            WaitTimeoutSecs = 5;
+            ConnectionTimeoutSecs = 5;
+            AllowWildcardsInTopicFilters = true;
+        }
 
         /// <summary>
         /// Port to connect a Client to a Server
@@ -66,5 +66,5 @@ namespace CK.MQTT
         /// Default value is true
         /// </summary>
 		public bool AllowWildcardsInTopicFilters { get; set; }
-	}
+    }
 }

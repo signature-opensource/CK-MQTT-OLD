@@ -3,7 +3,6 @@ using Microsoft.Extensions.Hosting;
 using System;
 using System.Collections.Generic;
 using System.IO.Pipes;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -18,7 +17,7 @@ namespace CK.MQTT.Proxy.FakeClient
         readonly bool _cleanSession;
         readonly IMqttClient _client;
         Task _task;
-        IDisposable _observing;
+        readonly IDisposable _observing;
         readonly CancellationTokenSource _tokenSource;
         public MqttRelay( IActivityMonitor m, NamedPipeServerStream pipe, MqttClientCredentials credentials, MqttLastWill lastWill, bool cleanSession, IMqttClient client )
         {
@@ -29,7 +28,7 @@ namespace CK.MQTT.Proxy.FakeClient
             _client = client;
             _tokenSource = new CancellationTokenSource();
             _pf = new PipeFormatter( pipe );
-            _observing = _client.MessageStream.Subscribe(MessageReceived);
+            _observing = _client.MessageStream.Subscribe( MessageReceived );
             client.Disconnected += Client_Disconnected;
         }
 
@@ -40,7 +39,7 @@ namespace CK.MQTT.Proxy.FakeClient
 
         void MessageReceived( MqttApplicationMessage msg )
         {
-             _pf.SendPayload( RelayHeader.MessageEvent, msg );
+            _pf.SendPayload( RelayHeader.MessageEvent, msg );
         }
 
         async Task Run( CancellationToken cancellationToken )

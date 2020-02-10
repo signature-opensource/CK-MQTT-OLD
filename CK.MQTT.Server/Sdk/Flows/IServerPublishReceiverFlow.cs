@@ -4,6 +4,6 @@ namespace CK.MQTT.Sdk.Flows
 {
     internal interface IServerPublishReceiverFlow : IProtocolFlow
     {
-        Task SendWillAsync (string clientId);
+        Task SendWillAsync( string clientId );
     }
 }

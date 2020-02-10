@@ -1,7 +1,7 @@
 ﻿namespace CK.MQTT.Sdk
 {
-	internal interface IPacketIdProvider
-	{
-		ushort GetPacketId ();
-	}
+    internal interface IPacketIdProvider
+    {
+        ushort GetPacketId();
+    }
 }

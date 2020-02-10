@@ -1,7 +1,5 @@
-using System.ComponentModel;
-using System.Text;
-using System.Linq;
 using System;
+using System.Linq;
 
 namespace CK.MQTT
 {
@@ -11,33 +9,33 @@ namespace CK.MQTT
     /// Any disconnection except the protocol disconnection is considered unexpected
     /// </summary>
 	public class MqttLastWill : IEquatable<MqttLastWill>
-	{
-		/// <summary>
-		/// Initializes a new instance of the <see cref="MqttLastWill" /> class,
-		/// specifying the topic to pusblish the last will message to, the Quality of Service (QoS)
-		/// to use, if the message should be sent as a retained message and also the content of the will message
-		/// to publish
-		/// </summary>
-		/// <param name="topic">Topic to publish the last will message to</param>
-		/// <param name="qualityOfService">
-		/// Quality of Service (QoS) to use when publishing the last will message.
-		/// See <see cref="MqttQualityOfService" /> for more details about the QoS meanings
-		/// </param>
-		/// <param name="retain">Specifies if the message should be retained or not</param>
-		/// <param name="payload">Payload of the will message to publish</param>
-		public MqttLastWill (string topic, MqttQualityOfService qualityOfService, bool retain, byte[] payload)
-		{
-			Topic = topic;
-			QualityOfService = qualityOfService;
-			Retain = retain;
-			Payload = payload;
-		}
+    {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MqttLastWill" /> class,
+        /// specifying the topic to pusblish the last will message to, the Quality of Service (QoS)
+        /// to use, if the message should be sent as a retained message and also the content of the will message
+        /// to publish
+        /// </summary>
+        /// <param name="topic">Topic to publish the last will message to</param>
+        /// <param name="qualityOfService">
+        /// Quality of Service (QoS) to use when publishing the last will message.
+        /// See <see cref="MqttQualityOfService" /> for more details about the QoS meanings
+        /// </param>
+        /// <param name="retain">Specifies if the message should be retained or not</param>
+        /// <param name="payload">Payload of the will message to publish</param>
+        public MqttLastWill( string topic, MqttQualityOfService qualityOfService, bool retain, byte[] payload )
+        {
+            Topic = topic;
+            QualityOfService = qualityOfService;
+            Retain = retain;
+            Payload = payload;
+        }
 
-		/// <summary>
-		/// Topic where the message will be published
-		/// The Clients needs to subscribe to this topic in order to receive the will messages
-		/// </summary>
-		public string Topic { get; }
+        /// <summary>
+        /// Topic where the message will be published
+        /// The Clients needs to subscribe to this topic in order to receive the will messages
+        /// </summary>
+        public string Topic { get; }
 
         /// <summary>
         /// Quality of Servive (QoS) associated to the will message,
@@ -53,31 +51,31 @@ namespace CK.MQTT
         /// </summary>
 		public bool Retain { get; }
 
-		/// <summary>
-		/// Payload of the will message
-		/// </summary>
-		public byte[] Payload { get; }
+        /// <summary>
+        /// Payload of the will message
+        /// </summary>
+        public byte[] Payload { get; }
 
-		/// <summary>
-		/// Determines whether this instance and another 
-		/// specified <see cref="MqttLastWill" /> have
-		/// the same values
-		/// </summary>
-		/// <param name="other">The <see cref="MqttLastWill" /> to compare to this instance</param>
-		/// <returns>true if the values of the <paramref name="other"/> parameter 
-		/// are the same values of this instance, otherwise returns false.
-		/// If <paramref name="other"/> is null, the method returns false
-		///</returns>
-		public bool Equals (MqttLastWill other)
-		{
-			if (other == null)
-				return false;
+        /// <summary>
+        /// Determines whether this instance and another 
+        /// specified <see cref="MqttLastWill" /> have
+        /// the same values
+        /// </summary>
+        /// <param name="other">The <see cref="MqttLastWill" /> to compare to this instance</param>
+        /// <returns>true if the values of the <paramref name="other"/> parameter 
+        /// are the same values of this instance, otherwise returns false.
+        /// If <paramref name="other"/> is null, the method returns false
+        ///</returns>
+        public bool Equals( MqttLastWill other )
+        {
+            if( other == null )
+                return false;
 
-			return Topic == other.Topic &&
-				QualityOfService == other.QualityOfService &&
-				Retain == other.Retain &&
-				Payload.SequenceEqual (other.Payload);
-		}
+            return Topic == other.Topic &&
+                QualityOfService == other.QualityOfService &&
+                Retain == other.Retain &&
+                Payload.SequenceEqual( other.Payload );
+        }
 
         /// <summary>
         /// Determines whether this instance and a specified object, 
@@ -89,18 +87,18 @@ namespace CK.MQTT
         /// are the same values of this instance, otherwise returns false.
         /// If <paramref name="obj"/> is null, the method returns false
         ///</returns>
-		public override bool Equals (object obj)
-		{
-			if (obj == null)
-				return false;
+		public override bool Equals( object obj )
+        {
+            if( obj == null )
+                return false;
 
-			var will = obj as MqttLastWill;
+            MqttLastWill will = obj as MqttLastWill;
 
-			if (will == null)
-				return false;
+            if( will == null )
+                return false;
 
-			return Equals (will);
-		}
+            return Equals( will );
+        }
 
         /// <summary>
         /// Determines whether the specified instances of 
@@ -112,13 +110,13 @@ namespace CK.MQTT
         /// and the <paramref name="other"/> parameter are the same, otherwise returns false.
         /// If <paramref name="will"/> or <paramref name="other"/> is null, the method returns false
         ///</returns>
-		public static bool operator == (MqttLastWill will, MqttLastWill other)
-		{
-			if ((object)will == null || (object)other == null)
-				return Object.Equals (will, other);
+		public static bool operator ==( MqttLastWill will, MqttLastWill other )
+        {
+            if( will is null || other is null )
+                return Equals( will, other );
 
-			return will.Equals (other);
-		}
+            return will.Equals( other );
+        }
 
         /// <summary>
         /// Determines whether the specified instances of 
@@ -130,21 +128,21 @@ namespace CK.MQTT
         /// and the <paramref name="other"/> parameter are different, otherwise returns false.
         /// If <paramref name="will"/> or <paramref name="other"/> is null, the method returns false
         ///</returns>
-		public static bool operator != (MqttLastWill will, MqttLastWill other)
-		{
-			if ((object)will == null || (object)other == null)
-				return !Object.Equals (will, other);
+		public static bool operator !=( MqttLastWill will, MqttLastWill other )
+        {
+            if( will is null || other is null )
+                return !Equals( will, other );
 
-			return !will.Equals (other);
-		}
+            return !will.Equals( other );
+        }
 
         /// <summary>
         /// Returns the hash code for this <see cref="MqttLastWill" /> instance 
         /// </summary>
         /// <returns>A 32-bit signed integer hash code</returns>
-		public override int GetHashCode ()
-		{
-			return Topic.GetHashCode () + Payload.GetHashCode ();
-		}
-	}
+		public override int GetHashCode()
+        {
+            return Topic.GetHashCode() + Payload.GetHashCode();
+        }
+    }
 }

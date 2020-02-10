@@ -1,92 +1,92 @@
-using System;
-using System.IO;
-using System.Threading.Tasks;
 using CK.MQTT;
 using CK.MQTT.Sdk.Formatters;
 using CK.MQTT.Sdk.Packets;
 using FluentAssertions;
 using NUnit.Framework;
+using System;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace Tests.Formatters
 {
-	public class UnsubscribeFormatterSpec
-	{
-		[Theory]
-		[TestCase("Files/Binaries/Unsubscribe_SingleTopic.packet", "Files/Packets/Unsubscribe_SingleTopic.json")]
-		[TestCase("Files/Binaries/Unsubscribe_MultiTopic.packet", "Files/Packets/Unsubscribe_MultiTopic.json")]
-		public async Task when_reading_unsubscribe_packet_then_succeeds(string packetPath, string jsonPath)
-		{
-			packetPath = Path.Combine (Environment.CurrentDirectory, packetPath);
-			jsonPath = Path.Combine (Environment.CurrentDirectory, jsonPath);
+    public class UnsubscribeFormatterSpec
+    {
+        [Theory]
+        [TestCase( "Files/Binaries/Unsubscribe_SingleTopic.packet", "Files/Packets/Unsubscribe_SingleTopic.json" )]
+        [TestCase( "Files/Binaries/Unsubscribe_MultiTopic.packet", "Files/Packets/Unsubscribe_MultiTopic.json" )]
+        public async Task when_reading_unsubscribe_packet_then_succeeds( string packetPath, string jsonPath )
+        {
+            packetPath = Path.Combine( Environment.CurrentDirectory, packetPath );
+            jsonPath = Path.Combine( Environment.CurrentDirectory, jsonPath );
 
-			var expectedUnsubscribe = Packet.ReadPacket<Unsubscribe> (jsonPath);
-			var formatter = new UnsubscribeFormatter ();
-			var packet = Packet.ReadAllBytes (packetPath);
+            Unsubscribe expectedUnsubscribe = Packet.ReadPacket<Unsubscribe>( jsonPath );
+            UnsubscribeFormatter formatter = new UnsubscribeFormatter();
+            byte[] packet = Packet.ReadAllBytes( packetPath );
 
-			var result = await formatter.FormatAsync (packet)
-				.ConfigureAwait(continueOnCapturedContext: false);
+            IPacket result = await formatter.FormatAsync( packet )
+                .ConfigureAwait( continueOnCapturedContext: false );
 
-			expectedUnsubscribe.Should().Be(result);
-		}
+            expectedUnsubscribe.Should().Be( result );
+        }
 
-		[Theory]
-		[TestCase("Files/Binaries/Unsubscribe_Invalid_HeaderFlag.packet")]
-		public void when_reading_invalid_unsubscribe_packet_then_fails(string packetPath)
-		{
-			packetPath = Path.Combine (Environment.CurrentDirectory, packetPath);
+        [Theory]
+        [TestCase( "Files/Binaries/Unsubscribe_Invalid_HeaderFlag.packet" )]
+        public void when_reading_invalid_unsubscribe_packet_then_fails( string packetPath )
+        {
+            packetPath = Path.Combine( Environment.CurrentDirectory, packetPath );
 
-			var formatter = new UnsubscribeFormatter ();
-			var packet = Packet.ReadAllBytes (packetPath);
-			
-			var ex = Assert.Throws<AggregateException> (() => formatter.FormatAsync (packet).Wait());
+            UnsubscribeFormatter formatter = new UnsubscribeFormatter();
+            byte[] packet = Packet.ReadAllBytes( packetPath );
 
-			Assert.True (ex.InnerException is MqttException);
-		}
+            AggregateException ex = Assert.Throws<AggregateException>( () => formatter.FormatAsync( packet ).Wait() );
 
-		[Theory]
-		[TestCase("Files/Binaries/Unsubscribe_Invalid_EmptyTopics.packet")]
-		public void when_reading_invalid_topic_in_unsubscribe_packet_then_fails(string packetPath)
-		{
-			packetPath = Path.Combine (Environment.CurrentDirectory, packetPath);
+            Assert.True( ex.InnerException is MqttException );
+        }
 
-			var formatter = new UnsubscribeFormatter ();
-			var packet = Packet.ReadAllBytes (packetPath);
-			
-			var ex = Assert.Throws<AggregateException> (() => formatter.FormatAsync (packet).Wait());
+        [Theory]
+        [TestCase( "Files/Binaries/Unsubscribe_Invalid_EmptyTopics.packet" )]
+        public void when_reading_invalid_topic_in_unsubscribe_packet_then_fails( string packetPath )
+        {
+            packetPath = Path.Combine( Environment.CurrentDirectory, packetPath );
 
-			Assert.True (ex.InnerException is MqttProtocolViolationException);
-		}
+            UnsubscribeFormatter formatter = new UnsubscribeFormatter();
+            byte[] packet = Packet.ReadAllBytes( packetPath );
 
-		[Theory]
-		[TestCase("Files/Packets/Unsubscribe_SingleTopic.json", "Files/Binaries/Unsubscribe_SingleTopic.packet")]
-		[TestCase("Files/Packets/Unsubscribe_MultiTopic.json", "Files/Binaries/Unsubscribe_MultiTopic.packet")]
-		public async Task when_writing_unsubscribe_packet_then_succeeds(string jsonPath, string packetPath)
-		{
-			jsonPath = Path.Combine (Environment.CurrentDirectory, jsonPath);
-			packetPath = Path.Combine (Environment.CurrentDirectory, packetPath);
+            AggregateException ex = Assert.Throws<AggregateException>( () => formatter.FormatAsync( packet ).Wait() );
 
-			var expectedPacket = Packet.ReadAllBytes (packetPath);
-			var formatter = new UnsubscribeFormatter ();
-			var unsubscribe = Packet.ReadPacket<Unsubscribe> (jsonPath);
+            Assert.True( ex.InnerException is MqttProtocolViolationException );
+        }
 
-			var result = await formatter.FormatAsync (unsubscribe)
-				.ConfigureAwait(continueOnCapturedContext: false);
+        [Theory]
+        [TestCase( "Files/Packets/Unsubscribe_SingleTopic.json", "Files/Binaries/Unsubscribe_SingleTopic.packet" )]
+        [TestCase( "Files/Packets/Unsubscribe_MultiTopic.json", "Files/Binaries/Unsubscribe_MultiTopic.packet" )]
+        public async Task when_writing_unsubscribe_packet_then_succeeds( string jsonPath, string packetPath )
+        {
+            jsonPath = Path.Combine( Environment.CurrentDirectory, jsonPath );
+            packetPath = Path.Combine( Environment.CurrentDirectory, packetPath );
 
-			expectedPacket.Should().BeEquivalentTo( result);
-		}
+            byte[] expectedPacket = Packet.ReadAllBytes( packetPath );
+            UnsubscribeFormatter formatter = new UnsubscribeFormatter();
+            Unsubscribe unsubscribe = Packet.ReadPacket<Unsubscribe>( jsonPath );
 
-		[Theory]
-		[TestCase("Files/Packets/Unsubscribe_Invalid_EmptyTopics.json")]
-		public void when_writing_invalid_unsubscribe_packet_then_fails(string jsonPath)
-		{
-			jsonPath = Path.Combine (Environment.CurrentDirectory, jsonPath);
+            byte[] result = await formatter.FormatAsync( unsubscribe )
+                .ConfigureAwait( continueOnCapturedContext: false );
 
-			var formatter = new UnsubscribeFormatter ();
-			var unsubscribe = Packet.ReadPacket<Unsubscribe> (jsonPath);
+            expectedPacket.Should().BeEquivalentTo( result );
+        }
 
-			var ex = Assert.Throws<AggregateException> (() => formatter.FormatAsync (unsubscribe).Wait());
+        [Theory]
+        [TestCase( "Files/Packets/Unsubscribe_Invalid_EmptyTopics.json" )]
+        public void when_writing_invalid_unsubscribe_packet_then_fails( string jsonPath )
+        {
+            jsonPath = Path.Combine( Environment.CurrentDirectory, jsonPath );
 
-			Assert.True (ex.InnerException is MqttProtocolViolationException);
-		}
-	}
+            UnsubscribeFormatter formatter = new UnsubscribeFormatter();
+            Unsubscribe unsubscribe = Packet.ReadPacket<Unsubscribe>( jsonPath );
+
+            AggregateException ex = Assert.Throws<AggregateException>( () => formatter.FormatAsync( unsubscribe ).Wait() );
+
+            Assert.True( ex.InnerException is MqttProtocolViolationException );
+        }
+    }
 }

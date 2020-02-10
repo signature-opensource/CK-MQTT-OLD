@@ -1,21 +1,21 @@
-using System.Diagnostics;
 using CK.MQTT.Sdk.Bindings;
 using CK.MQTT.Sdk.Flows;
 using CK.MQTT.Sdk.Storage;
-using System.Reactive.Subjects;
 using System;
+using System.Diagnostics;
+using System.Reactive.Subjects;
 
 namespace CK.MQTT.Sdk
 {
-	/// <summary>
-	/// Provides a factory for MQTT Servers
-	/// </summary>
-	public class MqttServerFactory
+    /// <summary>
+    /// Provides a factory for MQTT Servers
+    /// </summary>
+    public class MqttServerFactory
     {
-        static readonly ITracer tracer = Tracer.Get<MqttServerFactory> ();
+        static readonly ITracer _tracer = Tracer.Get<MqttServerFactory>();
 
-        readonly IMqttServerBinding binding;
-        readonly IMqttAuthenticationProvider authenticationProvider;
+        readonly IMqttServerBinding _binding;
+        readonly IMqttAuthenticationProvider _authenticationProvider;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MqttServerFactory" /> class,
@@ -29,8 +29,8 @@ namespace CK.MQTT.Sdk
         /// See <see cref="IMqttAuthenticationProvider" /> for more details about how to implement
         /// an authentication provider
         /// </param>
-        public MqttServerFactory (IMqttAuthenticationProvider authenticationProvider = null)
-            : this (new ServerTcpBinding (), authenticationProvider)
+        public MqttServerFactory( IMqttAuthenticationProvider authenticationProvider = null )
+            : this( new ServerTcpBinding(), authenticationProvider )
         {
         }
 
@@ -49,10 +49,10 @@ namespace CK.MQTT.Sdk
         /// See <see cref="IMqttAuthenticationProvider" /> for more details about how to implement
         /// an authentication provider
         /// </param>
-        public MqttServerFactory (IMqttServerBinding binding, IMqttAuthenticationProvider authenticationProvider = null)
+        public MqttServerFactory( IMqttServerBinding binding, IMqttAuthenticationProvider authenticationProvider = null )
         {
-            this.binding = binding;
-            this.authenticationProvider = authenticationProvider ?? NullAuthenticationProvider.Instance;
+            _binding = binding;
+            _authenticationProvider = authenticationProvider ?? NullAuthenticationProvider.Instance;
         }
 
         /// <summary>
@@ -64,25 +64,28 @@ namespace CK.MQTT.Sdk
         /// </param>
         /// <returns>A new MQTT Server</returns>
         /// <exception cref="MqttServerException">MqttServerException</exception>
-        public IMqttServer CreateServer (MqttConfiguration configuration)
+        public IMqttServer CreateServer( MqttConfiguration configuration )
         {
-            try {
-                var topicEvaluator = new MqttTopicEvaluator (configuration);
-                var channelProvider = binding.GetChannelListener (configuration);
-                var channelFactory = new PacketChannelFactory (topicEvaluator, configuration);
-                var repositoryProvider = new InMemoryRepositoryProvider ();
-                var connectionProvider = new ConnectionProvider ();
-                var packetIdProvider = new PacketIdProvider ();
-                var undeliveredMessagesListener = new Subject<MqttUndeliveredMessage> ();
-                var flowProvider = new ServerProtocolFlowProvider (authenticationProvider, connectionProvider, topicEvaluator,
-                    repositoryProvider, packetIdProvider, undeliveredMessagesListener, configuration);
+            try
+            {
+                MqttTopicEvaluator topicEvaluator = new MqttTopicEvaluator( configuration );
+                IMqttChannelListener channelProvider = _binding.GetChannelListener( configuration );
+                PacketChannelFactory channelFactory = new PacketChannelFactory( topicEvaluator, configuration );
+                InMemoryRepositoryProvider repositoryProvider = new InMemoryRepositoryProvider();
+                ConnectionProvider connectionProvider = new ConnectionProvider();
+                PacketIdProvider packetIdProvider = new PacketIdProvider();
+                Subject<MqttUndeliveredMessage> undeliveredMessagesListener = new Subject<MqttUndeliveredMessage>();
+                ServerProtocolFlowProvider flowProvider = new ServerProtocolFlowProvider( _authenticationProvider, connectionProvider, topicEvaluator,
+                    repositoryProvider, packetIdProvider, undeliveredMessagesListener, configuration );
 
-                return new MqttServerImpl (channelProvider, channelFactory,
-                    flowProvider, connectionProvider, undeliveredMessagesListener, configuration);
-            } catch (Exception ex) {
-                tracer.Error (ex, ServerProperties.Resources.GetString("Server_InitializeError"));
+                return new MqttServerImpl( channelProvider, channelFactory,
+                    flowProvider, connectionProvider, undeliveredMessagesListener, configuration );
+            }
+            catch( Exception ex )
+            {
+                _tracer.Error( ex, ServerProperties.Resources.GetString( "Server_InitializeError" ) );
 
-                throw new MqttServerException (ServerProperties.Resources.GetString("Server_InitializeError"), ex);
+                throw new MqttServerException( ServerProperties.Resources.GetString( "Server_InitializeError" ), ex );
             }
         }
     }

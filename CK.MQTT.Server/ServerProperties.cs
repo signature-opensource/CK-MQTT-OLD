@@ -11,7 +11,7 @@ namespace CK.MQTT
         {
             get
             {
-                var a = Assembly.GetExecutingAssembly();
+                Assembly a = Assembly.GetExecutingAssembly();
                 Debug.Assert( a.GetManifestResourceNames().Contains( "CK.MQTT.Server.Properties.Resources.resources" ) );
                 return new ResourceManager( "CK.MQTT.Server.Properties.Resources", a );
             }

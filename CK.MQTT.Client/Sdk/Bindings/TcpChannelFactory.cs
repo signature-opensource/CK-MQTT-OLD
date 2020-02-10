@@ -6,57 +6,64 @@ using System.Threading.Tasks;
 
 namespace CK.MQTT.Sdk.Bindings
 {
-	internal class TcpChannelFactory : IMqttChannelFactory
-	{
-		static readonly ITracer tracer = Tracer.Get<TcpChannelFactory> ();
+    internal class TcpChannelFactory : IMqttChannelFactory
+    {
+        static readonly ITracer _tracer = Tracer.Get<TcpChannelFactory>();
 
-		readonly string hostAddress;
-		readonly MqttConfiguration configuration;
+        readonly string _hostAddress;
+        readonly MqttConfiguration _configuration;
 
-		public TcpChannelFactory (string hostAddress, MqttConfiguration configuration)
-		{
-			this.hostAddress = hostAddress;
-			this.configuration = configuration;
-		}
+        public TcpChannelFactory( string hostAddress, MqttConfiguration configuration )
+        {
+            _hostAddress = hostAddress;
+            _configuration = configuration;
+        }
 
-		public async Task<IMqttChannel<byte[]>> CreateAsync ()
-		{
-			var tcpClient = new TcpClient ();
+        public async Task<IMqttChannel<byte[]>> CreateAsync()
+        {
+            TcpClient tcpClient = new TcpClient();
 
-			try {
-				var connectTask = tcpClient.ConnectAsync (hostAddress, configuration.Port);
-				var timeoutTask = Task.Delay (TimeSpan.FromSeconds (configuration.ConnectionTimeoutSecs));
-				var resultTask = await Task
-					.WhenAny (connectTask, timeoutTask)
-					.ConfigureAwait (continueOnCapturedContext: false);
+            try
+            {
+                Task connectTask = tcpClient.ConnectAsync( _hostAddress, _configuration.Port );
+                Task timeoutTask = Task.Delay( TimeSpan.FromSeconds( _configuration.ConnectionTimeoutSecs ) );
+                Task resultTask = await Task
+                    .WhenAny( connectTask, timeoutTask )
+                    .ConfigureAwait( continueOnCapturedContext: false );
 
-				if (resultTask == timeoutTask)
-					throw new TimeoutException ();
+                if( resultTask == timeoutTask )
+                    throw new TimeoutException();
 
-				if (resultTask.IsFaulted)
-					ExceptionDispatchInfo.Capture (resultTask.Exception.InnerException).Throw ();
+                if( resultTask.IsFaulted )
+                    ExceptionDispatchInfo.Capture( resultTask.Exception.InnerException ).Throw();
 
-				return new TcpChannel (tcpClient, new PacketBuffer (), configuration);
-			} catch (SocketException socketEx) {
-				var message = string.Format ( Properties.Resources.GetString("TcpChannelFactory_TcpClient_Failed"), hostAddress, configuration.Port);
+                return new TcpChannel( tcpClient, new PacketBuffer(), _configuration );
+            }
+            catch( SocketException socketEx )
+            {
+                string message = string.Format( Properties.Resources.GetString( "TcpChannelFactory_TcpClient_Failed" ), _hostAddress, _configuration.Port );
 
-				tracer.Error (socketEx, message);
+                _tracer.Error( socketEx, message );
 
-				throw new MqttException (message, socketEx);
-			} catch (TimeoutException timeoutEx) {
-				try {
-					// Just in case the connection is a little late,
-					// dispose the tcpClient. This may throw an exception,
-					// which we should just eat.
-					tcpClient.Dispose ();
-				} catch {}
+                throw new MqttException( message, socketEx );
+            }
+            catch( TimeoutException timeoutEx )
+            {
+                try
+                {
+                    // Just in case the connection is a little late,
+                    // dispose the tcpClient. This may throw an exception,
+                    // which we should just eat.
+                    tcpClient.Dispose();
+                }
+                catch { }
 
-				var message = string.Format (Properties.Resources.GetString("TcpChannelFactory_TcpClient_Failed"), hostAddress, configuration.Port);
+                string message = string.Format( Properties.Resources.GetString( "TcpChannelFactory_TcpClient_Failed" ), _hostAddress, _configuration.Port );
 
-				tracer.Error (timeoutEx, message);
+                _tracer.Error( timeoutEx, message );
 
-				throw new MqttException (message, timeoutEx);
-			}
-		}
-	}
+                throw new MqttException( message, timeoutEx );
+            }
+        }
+    }
 }

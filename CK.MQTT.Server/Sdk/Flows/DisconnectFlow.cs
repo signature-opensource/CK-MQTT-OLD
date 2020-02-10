@@ -1,54 +1,55 @@
-using System.Diagnostics;
 using CK.MQTT.Sdk.Packets;
 using CK.MQTT.Sdk.Storage;
+using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace CK.MQTT.Sdk.Flows
 {
-	internal class DisconnectFlow : IProtocolFlow
-	{
-		static readonly ITracer tracer = Tracer.Get<DisconnectFlow> ();
+    internal class DisconnectFlow : IProtocolFlow
+    {
+        static readonly ITracer _tracer = Tracer.Get<DisconnectFlow>();
 
-		readonly IConnectionProvider connectionProvider;
-		readonly IRepository<ClientSession> sessionRepository;
-		readonly IRepository<ConnectionWill> willRepository;
+        readonly IConnectionProvider _connectionProvider;
+        readonly IRepository<ClientSession> _sessionRepository;
+        readonly IRepository<ConnectionWill> _willRepository;
 
-		public DisconnectFlow (IConnectionProvider connectionProvider,
-			IRepository<ClientSession> sessionRepository,
-			IRepository<ConnectionWill> willRepository)
-		{
-			this.connectionProvider = connectionProvider;
-			this.sessionRepository = sessionRepository;
-			this.willRepository = willRepository;
-		}
+        public DisconnectFlow( IConnectionProvider connectionProvider,
+            IRepository<ClientSession> sessionRepository,
+            IRepository<ConnectionWill> willRepository )
+        {
+            _connectionProvider = connectionProvider;
+            _sessionRepository = sessionRepository;
+            _willRepository = willRepository;
+        }
 
-		public async Task ExecuteAsync (string clientId, IPacket input, IMqttChannel<IPacket> channel)
-		{
-			if (input.Type != MqttPacketType.Disconnect) {
-				return;
-			}
+        public async Task ExecuteAsync( string clientId, IPacket input, IMqttChannel<IPacket> channel )
+        {
+            if( input.Type != MqttPacketType.Disconnect ) return;
 
-			await Task.Run (() => {
-				var disconnect = input as Disconnect;
+            await Task.Run( () =>
+            {
+                Disconnect disconnect = input as Disconnect;
 
-				tracer.Info (ServerProperties.Resources.GetString("DisconnectFlow_Disconnecting"), clientId);
+                _tracer.Info( ServerProperties.Resources.GetString( "DisconnectFlow_Disconnecting" ), clientId );
 
-				willRepository.Delete (clientId);
+                _willRepository.Delete( clientId );
 
-				var session = sessionRepository.Read (clientId);
+                ClientSession session = _sessionRepository.Read( clientId );
 
-				if (session == null) {
-					throw new MqttException (string.Format (ServerProperties.Resources.GetString("SessionRepository_ClientSessionNotFound"), clientId));
-				}
+                if( session == null )
+                {
+                    throw new MqttException( string.Format( ServerProperties.Resources.GetString( "SessionRepository_ClientSessionNotFound" ), clientId ) );
+                }
 
-				if (session.Clean) {
-					sessionRepository.Delete (session.Id);
+                if( session.Clean )
+                {
+                    _sessionRepository.Delete( session.Id );
 
-					tracer.Info (ServerProperties.Resources.GetString("Server_DeletedSessionOnDisconnect"), clientId);
-				}
+                    _tracer.Info( ServerProperties.Resources.GetString( "Server_DeletedSessionOnDisconnect" ), clientId );
+                }
 
-				connectionProvider.RemoveConnection (clientId);
-			});
-		}
-	}
+                _connectionProvider.RemoveConnection( clientId );
+            } );
+        }
+    }
 }

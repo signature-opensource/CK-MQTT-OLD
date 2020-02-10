@@ -51,7 +51,7 @@ namespace CodeCake.Abstractions
                 _feeds = new List<ArtifactFeed>();
                 if( GlobalInfo.LocalFeedPath != null )
                 {
-                    foreach( var f in GetLocalFeeds() )
+                    foreach( ArtifactFeed f in GetLocalFeeds() )
                     {
                         GlobalInfo.Cake.Information( $"Adding local feed {f.Name}." );
                         if( f.ArtifactType != this )
@@ -87,7 +87,7 @@ namespace CodeCake.Abstractions
             if( _artifacts == null || reset )
             {
                 _artifacts = new List<ILocalArtifact>();
-                foreach( var a in GetLocalArtifacts() )
+                foreach( ILocalArtifact a in GetLocalArtifacts() )
                 {
                     if( a.ArtifactInstance.Artifact.Type != _typeName )
                     {
@@ -108,9 +108,9 @@ namespace CodeCake.Abstractions
             if( _pushes == null || reset )
             {
                 _pushes = new List<ArtifactPush>();
-                var locals = GetArtifacts();
-                var tasks = GetTargetFeeds().Select( f => f.CreatePushListAsync( locals ) ).ToArray();
-                foreach( var p in await Task.WhenAll( tasks ) )
+                IList<ILocalArtifact> locals = GetArtifacts();
+                Task<IEnumerable<ArtifactPush>>[] tasks = GetTargetFeeds().Select( f => f.CreatePushListAsync( locals ) ).ToArray();
+                foreach( IEnumerable<ArtifactPush> p in await Task.WhenAll( tasks ) )
                 {
                     _pushes.AddRange( p );
                 }
@@ -126,7 +126,7 @@ namespace CodeCake.Abstractions
         public async Task PushAsync( IEnumerable<ArtifactPush> pushes = null )
         {
             if( pushes == null ) pushes = await GetPushListAsync();
-            var tasks = pushes.GroupBy( p => p.Feed ).Select( g => g.Key.PushAsync( g ) ).ToArray();
+            Task[] tasks = pushes.GroupBy( p => p.Feed ).Select( g => g.Key.PushAsync( g ) ).ToArray();
             await Task.WhenAll( tasks );
         }
 

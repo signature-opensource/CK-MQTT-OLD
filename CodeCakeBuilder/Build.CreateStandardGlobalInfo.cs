@@ -14,7 +14,7 @@ namespace CodeCake
         /// <returns>A new info object.</returns>
         StandardGlobalInfo CreateStandardGlobalInfo( SimpleRepositoryInfo gitInfo )
         {
-            var result = new StandardGlobalInfo( Cake, gitInfo );
+            StandardGlobalInfo result = new StandardGlobalInfo( Cake, gitInfo );
             // By default:
             if( !gitInfo.IsValid )
             {
@@ -43,9 +43,9 @@ namespace CodeCake
             else
             {
                 // gitInfo is valid: it is either ci or a release build. 
-                var v = gitInfo.Info.FinalVersion;
+                CSemVer.SVersion v = gitInfo.Info.FinalVersion;
                 // If a /LocalFeed/ directory exists above, we publish the packages in it.
-                var localFeedRoot = Cake.FindSiblingDirectoryAbove( Cake.Environment.WorkingDirectory.FullPath, "LocalFeed" );
+                string localFeedRoot = Cake.FindSiblingDirectoryAbove( Cake.Environment.WorkingDirectory.FullPath, "LocalFeed" );
                 if( localFeedRoot != null )
                 {
                     if( v.AsCSVersion == null )

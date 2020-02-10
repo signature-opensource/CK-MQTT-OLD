@@ -23,7 +23,7 @@ namespace CK.MQTT.Ssl
             _configuration = configuration;
             _listener = new Lazy<IListener<TChannel>>( () =>
             {
-                var tcpListener = listenerFactory( _configuration);
+                IListener<TChannel> tcpListener = listenerFactory( _configuration );
 
                 try
                 {
@@ -50,7 +50,7 @@ namespace CK.MQTT.Ssl
             return Observable
                 .FromAsync( _listener.Value.AcceptClientAsync )
                 .Repeat()
-                .Select( client => (IMqttChannel<byte[]>) client);
+                .Select( client => (IMqttChannel<byte[]>)client );
         }
 
         public void Dispose()

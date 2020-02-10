@@ -25,15 +25,15 @@ namespace CK.MQTT
         /// </summary>
         event EventHandler<MqttEndpointDisconnected> Stopped;
 
-		/// <summary>
-		/// Event raised when a client has successfully authenticated and connected to the server.
-		/// </summary>
-		event EventHandler<string> ClientConnected;
+        /// <summary>
+        /// Event raised when a client has successfully authenticated and connected to the server.
+        /// </summary>
+        event EventHandler<string> ClientConnected;
 
-		/// <summary>
-		/// Event raised when a client has been disconnected from the server.
-		/// </summary>
-		event EventHandler<string> ClientDisconnected;
+        /// <summary>
+        /// Event raised when a client has been disconnected from the server.
+        /// </summary>
+        event EventHandler<string> ClientDisconnected;
 
         /// <summary>
         /// Gets the current number of active connections to the Server.
@@ -56,7 +56,7 @@ namespace CK.MQTT
         /// Starts the Server and enables it to listen for incoming connections
         /// </summary>
         /// <exception cref="MqttException">MqttException</exception>
-        void Start ();
+        void Start();
 
         /// <summary>
         /// Creates an in process client and establishes the protocol 
@@ -64,11 +64,11 @@ namespace CK.MQTT
         /// See <see cref="IMqttConnectedClient" /> for more details about in process clients 
         /// </summary>
         /// <returns>Returns a connected client ready to use</returns>
-        Task<IMqttConnectedClient> CreateClientAsync ();
+        Task<IMqttConnectedClient> CreateClientAsync();
 
         /// <summary>
         /// Stops the server and disposes it.
         /// </summary>
-        void Stop ();
+        void Stop();
     }
 }

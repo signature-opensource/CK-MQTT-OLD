@@ -1,72 +1,73 @@
-﻿using System.Collections.Generic;
 using CK.MQTT.Sdk.Formatters;
 using CK.MQTT.Sdk.Packets;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace CK.MQTT.Sdk
 {
     internal class PacketChannelFactory : IPacketChannelFactory
-	{
-		readonly IMqttChannelFactory innerChannelFactory;
-		readonly IMqttTopicEvaluator topicEvaluator;
-		readonly MqttConfiguration configuration;
+    {
+        readonly IMqttChannelFactory _innerChannelFactory;
+        readonly IMqttTopicEvaluator _topicEvaluator;
+        readonly MqttConfiguration _configuration;
 
-		public PacketChannelFactory (IMqttChannelFactory innerChannelFactory, 
-			IMqttTopicEvaluator topicEvaluator, 
-			MqttConfiguration configuration)
-			: this (topicEvaluator, configuration)
-		{
-			this.innerChannelFactory = innerChannelFactory;
-		}
+        public PacketChannelFactory( IMqttChannelFactory innerChannelFactory,
+            IMqttTopicEvaluator topicEvaluator,
+            MqttConfiguration configuration )
+            : this( topicEvaluator, configuration )
+        {
+            _innerChannelFactory = innerChannelFactory;
+        }
 
-		public PacketChannelFactory (IMqttTopicEvaluator topicEvaluator,
-			MqttConfiguration configuration)
-		{
-			this.topicEvaluator = topicEvaluator;
-			this.configuration = configuration;
-		}
+        public PacketChannelFactory( IMqttTopicEvaluator topicEvaluator,
+            MqttConfiguration configuration )
+        {
+            _topicEvaluator = topicEvaluator;
+            _configuration = configuration;
+        }
 
-		public async Task<IMqttChannel<IPacket>> CreateAsync ()
-		{
-			if (innerChannelFactory == null) {
-				throw new MqttException (Properties.Resources.GetString("PacketChannelFactory_InnerChannelFactoryNotFound"));
-			}
+        public async Task<IMqttChannel<IPacket>> CreateAsync()
+        {
+            if( _innerChannelFactory == null )
+            {
+                throw new MqttException( Properties.Resources.GetString( "PacketChannelFactory_InnerChannelFactoryNotFound" ) );
+            }
 
-			var binaryChannel = await innerChannelFactory
-                .CreateAsync ()
-                .ConfigureAwait (continueOnCapturedContext: false);
+            IMqttChannel<byte[]> binaryChannel = await _innerChannelFactory
+                .CreateAsync()
+                .ConfigureAwait( continueOnCapturedContext: false );
 
-			return Create (binaryChannel);
-		}
+            return Create( binaryChannel );
+        }
 
-		public IMqttChannel<IPacket> Create (IMqttChannel<byte[]> binaryChannel)
-		{
-			var formatters = GetFormatters();
-			var packetManager = new PacketManager (formatters);
+        public IMqttChannel<IPacket> Create( IMqttChannel<byte[]> binaryChannel )
+        {
+            IEnumerable<IFormatter> formatters = GetFormatters();
+            PacketManager packetManager = new PacketManager( formatters );
 
-			return new PacketChannel (binaryChannel, packetManager, configuration);
-		}
+            return new PacketChannel( binaryChannel, packetManager, _configuration );
+        }
 
-		IEnumerable<IFormatter> GetFormatters ()
-		{
-			var formatters = new List<IFormatter> ();
-
-			formatters.Add (new ConnectFormatter ());
-			formatters.Add (new ConnectAckFormatter ());
-			formatters.Add (new PublishFormatter (topicEvaluator));
-			formatters.Add (new FlowPacketFormatter<PublishAck> (MqttPacketType.PublishAck, id => new PublishAck (id)));
-			formatters.Add (new FlowPacketFormatter<PublishReceived> (MqttPacketType.PublishReceived, id => new PublishReceived (id)));
-			formatters.Add (new FlowPacketFormatter<PublishRelease> (MqttPacketType.PublishRelease, id => new PublishRelease (id)));
-			formatters.Add (new FlowPacketFormatter<PublishComplete> (MqttPacketType.PublishComplete, id => new PublishComplete (id)));
-			formatters.Add (new SubscribeFormatter (topicEvaluator));
-			formatters.Add (new SubscribeAckFormatter ());
-			formatters.Add (new UnsubscribeFormatter ());
-			formatters.Add (new FlowPacketFormatter<UnsubscribeAck> (MqttPacketType.UnsubscribeAck, id => new UnsubscribeAck (id)));
-			formatters.Add (new EmptyPacketFormatter<PingRequest> (MqttPacketType.PingRequest));
-			formatters.Add (new EmptyPacketFormatter<PingResponse> (MqttPacketType.PingResponse));
-			formatters.Add (new EmptyPacketFormatter<Disconnect> (MqttPacketType.Disconnect));
-
-			return formatters;
-		}
-	}
+        IEnumerable<IFormatter> GetFormatters()
+        {
+            List<IFormatter> formatters = new List<IFormatter>
+            {
+                new ConnectFormatter(),
+                new ConnectAckFormatter(),
+                new PublishFormatter( _topicEvaluator ),
+                new FlowPacketFormatter<PublishAck>( MqttPacketType.PublishAck, id => new PublishAck( id ) ),
+                new FlowPacketFormatter<PublishReceived>( MqttPacketType.PublishReceived, id => new PublishReceived( id ) ),
+                new FlowPacketFormatter<PublishRelease>( MqttPacketType.PublishRelease, id => new PublishRelease( id ) ),
+                new FlowPacketFormatter<PublishComplete>( MqttPacketType.PublishComplete, id => new PublishComplete( id ) ),
+                new SubscribeFormatter( _topicEvaluator ),
+                new SubscribeAckFormatter(),
+                new UnsubscribeFormatter(),
+                new FlowPacketFormatter<UnsubscribeAck>( MqttPacketType.UnsubscribeAck, id => new UnsubscribeAck( id ) ),
+                new EmptyPacketFormatter<PingRequest>( MqttPacketType.PingRequest ),
+                new EmptyPacketFormatter<PingResponse>( MqttPacketType.PingResponse ),
+                new EmptyPacketFormatter<Disconnect>( MqttPacketType.Disconnect )
+            };
+            return formatters;
+        }
+    }
 }

@@ -1,105 +1,106 @@
-using Moq;
-using System;
-using System.Collections.Generic;
 using CK.MQTT;
 using CK.MQTT.Sdk;
 using CK.MQTT.Sdk.Flows;
 using CK.MQTT.Sdk.Packets;
 using CK.MQTT.Sdk.Storage;
-using System.Threading.Tasks;
 using FluentAssertions;
+using Moq;
 using NUnit.Framework;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Tests.Flows
 {
-	public class UnsubscribeFlowSpec
-	{
-		[Test]
-		public async Task when_unsubscribing_existing_subscriptions_then_subscriptions_are_deleted_and_ack_is_sent()
-		{
-			var sessionRepository = new Mock<IRepository<ClientSession>> ();
-			var clientId = Guid.NewGuid ().ToString ();
-			var packetId = (ushort)new Random ().Next (0, ushort.MaxValue);
-			var topic = "foo/bar/test";
-			var qos = MqttQualityOfService.AtLeastOnce;
-			var session = new ClientSession(clientId, clean: false) {
-				Subscriptions = new List<ClientSubscription> { 
-						new ClientSubscription { ClientId = clientId, MaximumQualityOfService = qos, TopicFilter = topic } 
-					} 
-			};
-			var updatedSession = default(ClientSession);
+    public class UnsubscribeFlowSpec
+    {
+        [Test]
+        public async Task when_unsubscribing_existing_subscriptions_then_subscriptions_are_deleted_and_ack_is_sent()
+        {
+            Mock<IRepository<ClientSession>> sessionRepository = new Mock<IRepository<ClientSession>>();
+            string clientId = Guid.NewGuid().ToString();
+            ushort packetId = (ushort)new Random().Next( 0, ushort.MaxValue );
+            string topic = "foo/bar/test";
+            MqttQualityOfService qos = MqttQualityOfService.AtLeastOnce;
+            ClientSession session = new ClientSession( clientId, clean: false )
+            {
+                Subscriptions = new List<ClientSubscription> {
+                        new ClientSubscription { ClientId = clientId, MaximumQualityOfService = qos, TopicFilter = topic }
+                    }
+            };
+            ClientSession updatedSession = default;
 
-			sessionRepository.Setup (r => r.Read (It.IsAny<string> ())).Returns (session);
-			sessionRepository.Setup (r => r.Update (It.IsAny<ClientSession> ())).Callback<ClientSession> (s => updatedSession = s);
-			
-			var unsubscribe = new Unsubscribe (packetId, topic);
+            sessionRepository.Setup( r => r.Read( It.IsAny<string>() ) ).Returns( session );
+            sessionRepository.Setup( r => r.Update( It.IsAny<ClientSession>() ) ).Callback<ClientSession>( s => updatedSession = s );
 
-			var channel = new Mock<IMqttChannel<IPacket>> ();
+            Unsubscribe unsubscribe = new Unsubscribe( packetId, topic );
 
-			var response = default(IPacket);
+            Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
 
-			channel.Setup (c => c.SendAsync (It.IsAny<IPacket> ()))
-				.Callback<IPacket> (p => response = p)
-				.Returns(Task.Delay(0));
+            IPacket response = default;
 
-			var connectionProvider = new Mock<IConnectionProvider> ();
+            channel.Setup( c => c.SendAsync( It.IsAny<IPacket>() ) )
+                .Callback<IPacket>( p => response = p )
+                .Returns( Task.Delay( 0 ) );
 
-			connectionProvider
-				.Setup (p => p.GetConnection (It.Is<string> (c => c == clientId)))
-				.Returns (channel.Object);
+            Mock<IConnectionProvider> connectionProvider = new Mock<IConnectionProvider>();
 
-			var flow = new ServerUnsubscribeFlow (sessionRepository.Object);
+            connectionProvider
+                .Setup( p => p.GetConnection( It.Is<string>( c => c == clientId ) ) )
+                .Returns( channel.Object );
 
-			await flow.ExecuteAsync(clientId, unsubscribe, channel.Object)
-				.ConfigureAwait(continueOnCapturedContext: false);
+            ServerUnsubscribeFlow flow = new ServerUnsubscribeFlow( sessionRepository.Object );
 
-			Assert.NotNull (response);
-			0.Should().Be(updatedSession.Subscriptions.Count);
+            await flow.ExecuteAsync( clientId, unsubscribe, channel.Object )
+                .ConfigureAwait( continueOnCapturedContext: false );
 
-			var unsubscribeAck = response as UnsubscribeAck;
+            Assert.NotNull( response );
+            0.Should().Be( updatedSession.Subscriptions.Count );
 
-			Assert.NotNull (unsubscribeAck);
-			packetId.Should().Be(unsubscribeAck.PacketId);
-		}
+            UnsubscribeAck unsubscribeAck = response as UnsubscribeAck;
 
-		[Test]
-		public async Task when_unsubscribing_not_existing_subscriptions_then_ack_is_sent()
-		{
-			var sessionRepository = new Mock<IRepository<ClientSession>> ();
-			var clientId = Guid.NewGuid ().ToString ();
-			var packetId = (ushort)new Random ().Next (0, ushort.MaxValue);
-			var session = new ClientSession(clientId, clean: false);
+            Assert.NotNull( unsubscribeAck );
+            packetId.Should().Be( unsubscribeAck.PacketId );
+        }
 
-			sessionRepository.Setup (r => r.Read (It.IsAny<string> ())).Returns (session);
+        [Test]
+        public async Task when_unsubscribing_not_existing_subscriptions_then_ack_is_sent()
+        {
+            Mock<IRepository<ClientSession>> sessionRepository = new Mock<IRepository<ClientSession>>();
+            string clientId = Guid.NewGuid().ToString();
+            ushort packetId = (ushort)new Random().Next( 0, ushort.MaxValue );
+            ClientSession session = new ClientSession( clientId, clean: false );
 
-			var unsubscribe = new Unsubscribe (packetId, "foo/bar");
+            sessionRepository.Setup( r => r.Read( It.IsAny<string>() ) ).Returns( session );
 
-			var channel = new Mock<IMqttChannel<IPacket>> ();
+            Unsubscribe unsubscribe = new Unsubscribe( packetId, "foo/bar" );
 
-			var response = default(IPacket);
+            Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
 
-			channel.Setup (c => c.SendAsync (It.IsAny<IPacket> ()))
-				.Callback<IPacket> (p => response = p)
-				.Returns(Task.Delay(0));
+            IPacket response = default;
 
-			var connectionProvider = new Mock<IConnectionProvider> ();
+            channel.Setup( c => c.SendAsync( It.IsAny<IPacket>() ) )
+                .Callback<IPacket>( p => response = p )
+                .Returns( Task.Delay( 0 ) );
 
-			connectionProvider
-				.Setup (p => p.GetConnection (It.Is<string> (c => c == clientId)))
-				.Returns (channel.Object);
+            Mock<IConnectionProvider> connectionProvider = new Mock<IConnectionProvider>();
 
-			var flow = new ServerUnsubscribeFlow (sessionRepository.Object);
+            connectionProvider
+                .Setup( p => p.GetConnection( It.Is<string>( c => c == clientId ) ) )
+                .Returns( channel.Object );
 
-			await flow.ExecuteAsync(clientId, unsubscribe, channel.Object)
-				.ConfigureAwait(continueOnCapturedContext: false);
+            ServerUnsubscribeFlow flow = new ServerUnsubscribeFlow( sessionRepository.Object );
 
-			sessionRepository.Verify (r => r.Delete (It.IsAny<string> ()), Times.Never);
-			Assert.NotNull (response);
+            await flow.ExecuteAsync( clientId, unsubscribe, channel.Object )
+                .ConfigureAwait( continueOnCapturedContext: false );
 
-			var unsubscribeAck = response as UnsubscribeAck;
+            sessionRepository.Verify( r => r.Delete( It.IsAny<string>() ), Times.Never );
+            Assert.NotNull( response );
 
-			Assert.NotNull (unsubscribeAck);
-			packetId.Should().Be(unsubscribeAck.PacketId);
-		}
-	}
+            UnsubscribeAck unsubscribeAck = response as UnsubscribeAck;
+
+            Assert.NotNull( unsubscribeAck );
+            packetId.Should().Be( unsubscribeAck.PacketId );
+        }
+    }
 }

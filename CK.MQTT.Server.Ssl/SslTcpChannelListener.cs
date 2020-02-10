@@ -2,8 +2,6 @@ using CK.MQTT.Sdk;
 using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
-using System.Security.Authentication;
-using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 
 namespace CK.MQTT.Ssl
@@ -26,7 +24,7 @@ namespace CK.MQTT.Ssl
         public async Task<GenericChannel> AcceptClientAsync()
         {
             TcpClient client = await _listener.AcceptTcpClientAsync();
-            var ssl = new SslStream(
+            SslStream ssl = new SslStream(
                 client.GetStream(),
                 false,
                 _sslConfig.RemoteCertificateValidationCallback,
@@ -47,6 +45,6 @@ namespace CK.MQTT.Ssl
         public void Stop() => _listener.Stop();
 
 
-        
+
     }
 }

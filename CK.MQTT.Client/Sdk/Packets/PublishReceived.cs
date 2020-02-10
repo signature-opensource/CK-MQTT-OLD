@@ -1,58 +1,45 @@
-﻿using System;
+using System;
 
 namespace CK.MQTT.Sdk.Packets
 {
-	internal class PublishReceived : IFlowPacket, IEquatable<PublishReceived>
-	{
-		public PublishReceived (ushort packetId)
-		{
-			PacketId = packetId;
-		}
+    internal class PublishReceived : IFlowPacket, IEquatable<PublishReceived>
+    {
+        public PublishReceived( ushort packetId )
+        {
+            PacketId = packetId;
+        }
 
-		public MqttPacketType Type { get { return MqttPacketType.PublishReceived; } }
+        public MqttPacketType Type => MqttPacketType.PublishReceived;
 
-		public ushort PacketId { get; }
+        public ushort PacketId { get; }
 
-		public bool Equals (PublishReceived other)
-		{
-			if (other == null)
-				return false;
+        public bool Equals( PublishReceived other )
+        {
+            return other == null ? false : PacketId == other.PacketId;
+        }
 
-			return PacketId == other.PacketId;
-		}
+        public override bool Equals( object obj )
+        {
+            if( obj == null ) return false;
+            if( !(obj is PublishReceived publishReceived) ) return false;
 
-		public override bool Equals (object obj)
-		{
-			if (obj == null)
-				return false;
+            return Equals( publishReceived );
+        }
 
-			var publishReceived = obj as PublishReceived;
+        public static bool operator ==( PublishReceived publishReceived, PublishReceived other )
+        {
+            if( publishReceived is null || other is null ) return Equals( publishReceived, other );
 
-			if (publishReceived == null)
-				return false;
+            return publishReceived.Equals( other );
+        }
 
-			return Equals (publishReceived);
-		}
+        public static bool operator !=( PublishReceived publishReceived, PublishReceived other )
+        {
+            if( publishReceived is null || other is null ) return !Equals( publishReceived, other );
 
-		public static bool operator == (PublishReceived publishReceived, PublishReceived other)
-		{
-			if ((object)publishReceived == null || (object)other == null)
-				return Object.Equals (publishReceived, other);
+            return !publishReceived.Equals( other );
+        }
 
-			return publishReceived.Equals (other);
-		}
-
-		public static bool operator != (PublishReceived publishReceived, PublishReceived other)
-		{
-			if ((object)publishReceived == null || (object)other == null)
-				return !Object.Equals (publishReceived, other);
-
-			return !publishReceived.Equals (other);
-		}
-
-		public override int GetHashCode ()
-		{
-			return PacketId.GetHashCode ();
-		}
-	}
+        public override int GetHashCode() => PacketId.GetHashCode();
+    }
 }

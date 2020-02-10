@@ -1,101 +1,101 @@
+using CK.MQTT;
+using CK.MQTT.Sdk;
+using CK.MQTT.Sdk.Formatters;
+using CK.MQTT.Sdk.Packets;
+using FluentAssertions;
+using Moq;
+using NUnit.Framework;
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using CK.MQTT;
-using CK.MQTT.Sdk.Formatters;
-using CK.MQTT.Sdk.Packets;
-using Moq;
-using CK.MQTT.Sdk;
-using FluentAssertions;
-using NUnit.Framework;
 
 namespace Tests.Formatters
 {
-	public class SubscribeFormatterSpec
-	{
-		[Theory]
-		[TestCase("Files/Binaries/Subscribe_SingleTopic.packet", "Files/Packets/Subscribe_SingleTopic.json")]
-		[TestCase("Files/Binaries/Subscribe_MultiTopic.packet", "Files/Packets/Subscribe_MultiTopic.json")]
-		public async Task when_reading_subscribe_packet_then_succeeds(string packetPath, string jsonPath)
-		{
-			packetPath = Path.Combine (Environment.CurrentDirectory, packetPath);
-			jsonPath = Path.Combine (Environment.CurrentDirectory, jsonPath);
+    public class SubscribeFormatterSpec
+    {
+        [Theory]
+        [TestCase( "Files/Binaries/Subscribe_SingleTopic.packet", "Files/Packets/Subscribe_SingleTopic.json" )]
+        [TestCase( "Files/Binaries/Subscribe_MultiTopic.packet", "Files/Packets/Subscribe_MultiTopic.json" )]
+        public async Task when_reading_subscribe_packet_then_succeeds( string packetPath, string jsonPath )
+        {
+            packetPath = Path.Combine( Environment.CurrentDirectory, packetPath );
+            jsonPath = Path.Combine( Environment.CurrentDirectory, jsonPath );
 
-			var expectedSubscribe = Packet.ReadPacket<Subscribe> (jsonPath);
-			var topicEvaluator = Mock.Of<IMqttTopicEvaluator> (e => e.IsValidTopicFilter(It.IsAny<string>()) == true);
-			var formatter = new SubscribeFormatter (topicEvaluator);
-			var packet = Packet.ReadAllBytes (packetPath);
+            Subscribe expectedSubscribe = Packet.ReadPacket<Subscribe>( jsonPath );
+            IMqttTopicEvaluator topicEvaluator = Mock.Of<IMqttTopicEvaluator>( e => e.IsValidTopicFilter( It.IsAny<string>() ) == true );
+            SubscribeFormatter formatter = new SubscribeFormatter( topicEvaluator );
+            byte[] packet = Packet.ReadAllBytes( packetPath );
 
-			var result = await formatter.FormatAsync (packet)
-				.ConfigureAwait(continueOnCapturedContext: false);
+            IPacket result = await formatter.FormatAsync( packet )
+                .ConfigureAwait( continueOnCapturedContext: false );
 
-			expectedSubscribe.Should().Be(result);
-		}
+            expectedSubscribe.Should().Be( result );
+        }
 
-		[Theory]
-		[TestCase("Files/Binaries/Subscribe_Invalid_HeaderFlag.packet")]
-		public void when_reading_invalid_subscribe_packet_then_fails(string packetPath)
-		{
-			packetPath = Path.Combine (Environment.CurrentDirectory, packetPath);
+        [Theory]
+        [TestCase( "Files/Binaries/Subscribe_Invalid_HeaderFlag.packet" )]
+        public void when_reading_invalid_subscribe_packet_then_fails( string packetPath )
+        {
+            packetPath = Path.Combine( Environment.CurrentDirectory, packetPath );
 
-			var topicEvaluator = Mock.Of<IMqttTopicEvaluator> (e => e.IsValidTopicFilter(It.IsAny<string>()) == true);
-			var formatter = new SubscribeFormatter (topicEvaluator);
-			var packet = Packet.ReadAllBytes (packetPath);
-			
-			var ex = Assert.Throws<AggregateException> (() => formatter.FormatAsync (packet).Wait());
+            IMqttTopicEvaluator topicEvaluator = Mock.Of<IMqttTopicEvaluator>( e => e.IsValidTopicFilter( It.IsAny<string>() ) == true );
+            SubscribeFormatter formatter = new SubscribeFormatter( topicEvaluator );
+            byte[] packet = Packet.ReadAllBytes( packetPath );
 
-			Assert.True (ex.InnerException is MqttException);
-		}
+            AggregateException ex = Assert.Throws<AggregateException>( () => formatter.FormatAsync( packet ).Wait() );
 
-		[Theory]
-		[TestCase("Files/Binaries/Subscribe_Invalid_TopicFilterQosPair.packet")]
-		[TestCase("Files/Binaries/Subscribe_Invalid_TopicFilterQosPair2.packet")]
-		[TestCase("Files/Binaries/Subscribe_Invalid_TopicFilterQos.packet")]
-		public void when_reading_invalid_topic_filter_in_subscribe_packet_then_fails(string packetPath)
-		{
-			packetPath = Path.Combine (Environment.CurrentDirectory, packetPath);
+            Assert.True( ex.InnerException is MqttException );
+        }
 
-			var topicEvaluator = Mock.Of<IMqttTopicEvaluator> (e => e.IsValidTopicFilter(It.IsAny<string>()) == true);
-			var formatter = new SubscribeFormatter (topicEvaluator);
-			var packet = Packet.ReadAllBytes (packetPath);
-			
-			var ex = Assert.Throws<AggregateException> (() => formatter.FormatAsync (packet).Wait());
+        [Theory]
+        [TestCase( "Files/Binaries/Subscribe_Invalid_TopicFilterQosPair.packet" )]
+        [TestCase( "Files/Binaries/Subscribe_Invalid_TopicFilterQosPair2.packet" )]
+        [TestCase( "Files/Binaries/Subscribe_Invalid_TopicFilterQos.packet" )]
+        public void when_reading_invalid_topic_filter_in_subscribe_packet_then_fails( string packetPath )
+        {
+            packetPath = Path.Combine( Environment.CurrentDirectory, packetPath );
 
-			Assert.True (ex.InnerException is MqttProtocolViolationException);
-		}
+            IMqttTopicEvaluator topicEvaluator = Mock.Of<IMqttTopicEvaluator>( e => e.IsValidTopicFilter( It.IsAny<string>() ) == true );
+            SubscribeFormatter formatter = new SubscribeFormatter( topicEvaluator );
+            byte[] packet = Packet.ReadAllBytes( packetPath );
 
-		[Theory]
-		[TestCase("Files/Packets/Subscribe_SingleTopic.json", "Files/Binaries/Subscribe_SingleTopic.packet")]
-		[TestCase("Files/Packets/Subscribe_MultiTopic.json", "Files/Binaries/Subscribe_MultiTopic.packet")]
-		public async Task when_writing_subscribe_packet_then_succeeds(string jsonPath, string packetPath)
-		{
-			jsonPath = Path.Combine (Environment.CurrentDirectory, jsonPath);
-			packetPath = Path.Combine (Environment.CurrentDirectory, packetPath);
+            AggregateException ex = Assert.Throws<AggregateException>( () => formatter.FormatAsync( packet ).Wait() );
 
-			var expectedPacket = Packet.ReadAllBytes (packetPath);
-			var topicEvaluator = Mock.Of<IMqttTopicEvaluator> (e => e.IsValidTopicFilter(It.IsAny<string>()) == true);
-			var formatter = new SubscribeFormatter (topicEvaluator);
-			var subscribe = Packet.ReadPacket<Subscribe> (jsonPath);
+            Assert.True( ex.InnerException is MqttProtocolViolationException );
+        }
 
-			var result = await formatter.FormatAsync (subscribe)
-				.ConfigureAwait(continueOnCapturedContext: false);
+        [Theory]
+        [TestCase( "Files/Packets/Subscribe_SingleTopic.json", "Files/Binaries/Subscribe_SingleTopic.packet" )]
+        [TestCase( "Files/Packets/Subscribe_MultiTopic.json", "Files/Binaries/Subscribe_MultiTopic.packet" )]
+        public async Task when_writing_subscribe_packet_then_succeeds( string jsonPath, string packetPath )
+        {
+            jsonPath = Path.Combine( Environment.CurrentDirectory, jsonPath );
+            packetPath = Path.Combine( Environment.CurrentDirectory, packetPath );
 
-			expectedPacket.Should().BeEquivalentTo( result);
-		}
+            byte[] expectedPacket = Packet.ReadAllBytes( packetPath );
+            IMqttTopicEvaluator topicEvaluator = Mock.Of<IMqttTopicEvaluator>( e => e.IsValidTopicFilter( It.IsAny<string>() ) == true );
+            SubscribeFormatter formatter = new SubscribeFormatter( topicEvaluator );
+            Subscribe subscribe = Packet.ReadPacket<Subscribe>( jsonPath );
 
-		[Theory]
-		[TestCase("Files/Packets/Subscribe_Invalid_EmptyTopicFilters.json")]
-		public void when_writing_invalid_subscribe_packet_then_fails(string jsonPath)
-		{
-			jsonPath = Path.Combine (Environment.CurrentDirectory, jsonPath);
+            byte[] result = await formatter.FormatAsync( subscribe )
+                .ConfigureAwait( continueOnCapturedContext: false );
 
-			var topicEvaluator = Mock.Of<IMqttTopicEvaluator> (e => e.IsValidTopicFilter(It.IsAny<string>()) == true);
-			var formatter = new SubscribeFormatter (topicEvaluator);
-			var subscribe = Packet.ReadPacket<Subscribe> (jsonPath);
+            expectedPacket.Should().BeEquivalentTo( result );
+        }
 
-			var ex = Assert.Throws<AggregateException> (() => formatter.FormatAsync (subscribe).Wait());
+        [Theory]
+        [TestCase( "Files/Packets/Subscribe_Invalid_EmptyTopicFilters.json" )]
+        public void when_writing_invalid_subscribe_packet_then_fails( string jsonPath )
+        {
+            jsonPath = Path.Combine( Environment.CurrentDirectory, jsonPath );
 
-			Assert.True (ex.InnerException is MqttProtocolViolationException);
-		}
-	}
+            IMqttTopicEvaluator topicEvaluator = Mock.Of<IMqttTopicEvaluator>( e => e.IsValidTopicFilter( It.IsAny<string>() ) == true );
+            SubscribeFormatter formatter = new SubscribeFormatter( topicEvaluator );
+            Subscribe subscribe = Packet.ReadPacket<Subscribe>( jsonPath );
+
+            AggregateException ex = Assert.Throws<AggregateException>( () => formatter.FormatAsync( subscribe ).Wait() );
+
+            Assert.True( ex.InnerException is MqttProtocolViolationException );
+        }
+    }
 }

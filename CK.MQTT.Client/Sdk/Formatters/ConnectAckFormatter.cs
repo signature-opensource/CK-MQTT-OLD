@@ -3,69 +3,68 @@ using System;
 
 namespace CK.MQTT.Sdk.Formatters
 {
-	internal class ConnectAckFormatter : Formatter<ConnectAck>
-	{
-		public override MqttPacketType PacketType { get { return Packets.MqttPacketType.ConnectAck; } }
+    internal class ConnectAckFormatter : Formatter<ConnectAck>
+    {
+        public override MqttPacketType PacketType { get { return MqttPacketType.ConnectAck; } }
 
-		protected override ConnectAck Read (byte[] bytes)
-		{
-			ValidateHeaderFlag (bytes, t => t == MqttPacketType.ConnectAck, 0x00);
+        protected override ConnectAck Read( byte[] bytes )
+        {
+            ValidateHeaderFlag( bytes, t => t == MqttPacketType.ConnectAck, 0x00 );
 
-			var remainingLengthBytesLength = 0;
 
-			MqttProtocol.Encoding.DecodeRemainingLength (bytes, out remainingLengthBytesLength);
+            MqttProtocol.Encoding.DecodeRemainingLength( bytes, out int remainingLengthBytesLength );
 
-			var connectAckFlagsIndex = MqttProtocol.PacketTypeLength + remainingLengthBytesLength;
+            int connectAckFlagsIndex = MqttProtocol.PacketTypeLength + remainingLengthBytesLength;
 
-			if (bytes.Byte (connectAckFlagsIndex).Bits (7) != 0x00)
-				throw new MqttException (Properties.Resources.GetString("ConnectAckFormatter_InvalidAckFlags"));
+            if( bytes.Byte( connectAckFlagsIndex ).Bits( 7 ) != 0x00 )
+                throw new MqttException( Properties.Resources.GetString( "ConnectAckFormatter_InvalidAckFlags" ) );
 
-			var sessionPresent = bytes.Byte (connectAckFlagsIndex).IsSet(0);
-			var returnCode = (MqttConnectionStatus)bytes.Byte (connectAckFlagsIndex + 1);
+            bool sessionPresent = bytes.Byte( connectAckFlagsIndex ).IsSet( 0 );
+            MqttConnectionStatus returnCode = (MqttConnectionStatus)bytes.Byte( connectAckFlagsIndex + 1 );
 
-			if (returnCode != MqttConnectionStatus.Accepted && sessionPresent)
-				throw new MqttException (Properties.Resources.GetString("ConnectAckFormatter_InvalidSessionPresentForErrorReturnCode"));
+            if( returnCode != MqttConnectionStatus.Accepted && sessionPresent )
+                throw new MqttException( Properties.Resources.GetString( "ConnectAckFormatter_InvalidSessionPresentForErrorReturnCode" ) );
 
-			var connectAck = new ConnectAck(returnCode, sessionPresent);
+            ConnectAck connectAck = new ConnectAck( returnCode, sessionPresent );
 
-			return connectAck;
-		}
+            return connectAck;
+        }
 
-		protected override byte[] Write (ConnectAck packet)
-		{
-			var variableHeader = GetVariableHeader (packet);
-			var remainingLength = MqttProtocol.Encoding.EncodeRemainingLength (variableHeader.Length);
-			var fixedHeader = GetFixedHeader (remainingLength);
-			var bytes = new byte[fixedHeader.Length + variableHeader.Length];
+        protected override byte[] Write( ConnectAck packet )
+        {
+            byte[] variableHeader = GetVariableHeader( packet );
+            byte[] remainingLength = MqttProtocol.Encoding.EncodeRemainingLength( variableHeader.Length );
+            byte[] fixedHeader = GetFixedHeader( remainingLength );
+            byte[] bytes = new byte[fixedHeader.Length + variableHeader.Length];
 
-			fixedHeader.CopyTo (bytes, 0);
-			variableHeader.CopyTo (bytes, fixedHeader.Length);
+            fixedHeader.CopyTo( bytes, 0 );
+            variableHeader.CopyTo( bytes, fixedHeader.Length );
 
-			return bytes;
-		}
+            return bytes;
+        }
 
-		byte[] GetFixedHeader (byte[] remainingLength)
-		{
-			var flags = 0x00;
-			var type = Convert.ToInt32(MqttPacketType.ConnectAck) << 4;
-			var fixedHeaderByte1 = Convert.ToByte(flags | type);
-			var fixedHeader = new byte[remainingLength.Length + 1];
+        byte[] GetFixedHeader( byte[] remainingLength )
+        {
+            int flags = 0x00;
+            int type = Convert.ToInt32( MqttPacketType.ConnectAck ) << 4;
+            byte fixedHeaderByte1 = Convert.ToByte( flags | type );
+            byte[] fixedHeader = new byte[remainingLength.Length + 1];
 
-			fixedHeader[0] = fixedHeaderByte1;
-			remainingLength.CopyTo (fixedHeader, 1);
+            fixedHeader[0] = fixedHeaderByte1;
+            remainingLength.CopyTo( fixedHeader, 1 );
 
-			return fixedHeader;
-		}
+            return fixedHeader;
+        }
 
-		byte[] GetVariableHeader (ConnectAck packet)
-		{
-			if (packet.Status != MqttConnectionStatus.Accepted && packet.SessionPresent)
-				throw new MqttException (Properties.Resources.GetString("ConnectAckFormatter_InvalidSessionPresentForErrorReturnCode"));
+        byte[] GetVariableHeader( ConnectAck packet )
+        {
+            if( packet.Status != MqttConnectionStatus.Accepted && packet.SessionPresent )
+                throw new MqttException( Properties.Resources.GetString( "ConnectAckFormatter_InvalidSessionPresentForErrorReturnCode" ) );
 
-			var connectAckFlagsByte = Convert.ToByte(packet.SessionPresent);
-			var returnCodeByte = Convert.ToByte (packet.Status);
+            byte connectAckFlagsByte = Convert.ToByte( packet.SessionPresent );
+            byte returnCodeByte = Convert.ToByte( packet.Status );
 
-			return new[] { connectAckFlagsByte, returnCodeByte };
-		}
-	}
+            return new[] { connectAckFlagsByte, returnCodeByte };
+        }
+    }
 }

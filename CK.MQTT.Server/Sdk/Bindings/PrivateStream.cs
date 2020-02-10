@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 
@@ -12,50 +12,46 @@ namespace CK.MQTT.Sdk.Bindings
 
     internal class PrivateStream : IDisposable
     {
-        bool disposed;
+        bool _disposed;
         readonly ReplaySubject<Tuple<byte[], EndpointIdentifier>> payloadSequence;
 
-        public PrivateStream (MqttConfiguration configuration)
+        public PrivateStream( MqttConfiguration configuration )
         {
-            payloadSequence = new ReplaySubject<Tuple<byte[], EndpointIdentifier>> (window: TimeSpan.FromSeconds (configuration.WaitTimeoutSecs));
+            payloadSequence = new ReplaySubject<Tuple<byte[], EndpointIdentifier>>( window: TimeSpan.FromSeconds( configuration.WaitTimeoutSecs ) );
         }
 
         public bool IsDisposed => payloadSequence.IsDisposed;
 
-        public IObservable<byte[]> Receive (EndpointIdentifier identifier)
+        public IObservable<byte[]> Receive( EndpointIdentifier identifier )
         {
-            if (disposed) {
-                throw new ObjectDisposedException (nameof (PrivateStream));
-            }
+            if( _disposed ) throw new ObjectDisposedException( nameof( PrivateStream ) );
 
             return payloadSequence
-                .Where (t => t.Item2 == identifier)
-                .Select (t => t.Item1);
+                .Where( t => t.Item2 == identifier )
+                .Select( t => t.Item1 );
         }
 
-        public void Send (byte[] payload, EndpointIdentifier identifier)
+        public void Send( byte[] payload, EndpointIdentifier identifier )
         {
-            if (disposed) {
-                throw new ObjectDisposedException (nameof (PrivateStream));
-            }
-
-            payloadSequence.OnNext (Tuple.Create (payload, identifier));
+            if( _disposed ) throw new ObjectDisposedException( nameof( PrivateStream ) );
+            payloadSequence.OnNext( Tuple.Create( payload, identifier ) );
         }
 
-        public void Dispose ()
+        public void Dispose()
         {
-            Dispose (disposing: true);
-            GC.SuppressFinalize (this);
+            Dispose( disposing: true );
+            GC.SuppressFinalize( this );
         }
 
-        protected virtual void Dispose (bool disposing)
+        protected virtual void Dispose( bool disposing )
         {
-            if (disposed) return;
+            if( _disposed ) return;
 
-            if (disposing) {
-                payloadSequence.OnCompleted ();
-                payloadSequence.Dispose ();
-                disposed = true;
+            if( disposing )
+            {
+                payloadSequence.OnCompleted();
+                payloadSequence.Dispose();
+                _disposed = true;
             }
         }
     }

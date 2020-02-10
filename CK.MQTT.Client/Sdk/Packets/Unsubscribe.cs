@@ -1,64 +1,51 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace CK.MQTT.Sdk.Packets
 {
-	internal class Unsubscribe : IPacket, IEquatable<Unsubscribe>
-	{
-		public Unsubscribe (ushort packetId, params string[] topics)
-		{
-			PacketId = packetId;
-			Topics = topics;
-		}
+    internal class Unsubscribe : IPacket, IEquatable<Unsubscribe>
+    {
+        public Unsubscribe( ushort packetId, params string[] topics )
+        {
+            PacketId = packetId;
+            Topics = topics;
+        }
 
-		public MqttPacketType Type { get { return MqttPacketType.Unsubscribe; } }
+        public MqttPacketType Type => MqttPacketType.Unsubscribe;
 
-		public ushort PacketId { get; }
+        public ushort PacketId { get; }
 
-		public IEnumerable<string> Topics { get; }
+        public IEnumerable<string> Topics { get; }
 
-		public bool Equals (Unsubscribe other)
-		{
-			if (other == null)
-				return false;
+        public bool Equals( Unsubscribe other )
+        {
+            if( other == null ) return false;
 
-			return PacketId == other.PacketId &&
-				Topics.SequenceEqual (other.Topics);
-		}
+            return PacketId == other.PacketId &&
+                Topics.SequenceEqual( other.Topics );
+        }
 
-		public override bool Equals (object obj)
-		{
-			if (obj == null)
-				return false;
+        public override bool Equals( object obj )
+        {
+            if( obj == null ) return false;
+            if( !(obj is Unsubscribe unsubscribe) ) return false;
 
-			var unsubscribe = obj as Unsubscribe;
+            return Equals( unsubscribe );
+        }
 
-			if (unsubscribe == null)
-				return false;
+        public static bool operator ==( Unsubscribe unsubscribe, Unsubscribe other )
+        {
+            if( unsubscribe is null || other is null ) return Equals( unsubscribe, other );
+            return unsubscribe.Equals( other );
+        }
 
-			return Equals (unsubscribe);
-		}
+        public static bool operator !=( Unsubscribe unsubscribe, Unsubscribe other )
+        {
+            if( unsubscribe is null || other is null ) return !Equals( unsubscribe, other );
+            return !unsubscribe.Equals( other );
+        }
 
-		public static bool operator == (Unsubscribe unsubscribe, Unsubscribe other)
-		{
-			if ((object)unsubscribe == null || (object)other == null)
-				return Object.Equals (unsubscribe, other);
-
-			return unsubscribe.Equals (other);
-		}
-
-		public static bool operator != (Unsubscribe unsubscribe, Unsubscribe other)
-		{
-			if ((object)unsubscribe == null || (object)other == null)
-				return !Object.Equals (unsubscribe, other);
-
-			return !unsubscribe.Equals (other);
-		}
-
-		public override int GetHashCode ()
-		{
-			return PacketId.GetHashCode () + Topics.GetHashCode ();
-		}
-	}
+        public override int GetHashCode() => PacketId.GetHashCode() + Topics.GetHashCode();
+    }
 }

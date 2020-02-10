@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
@@ -6,58 +6,64 @@ using System.Reactive.Linq;
 
 namespace CK.MQTT.Sdk.Bindings
 {
-	internal class TcpChannelListener : IMqttChannelListener
-	{
-		static readonly ITracer tracer = Tracer.Get<TcpChannelListener> ();
+    internal class TcpChannelListener : IMqttChannelListener
+    {
+        static readonly ITracer _tracer = Tracer.Get<TcpChannelListener>();
 
-		readonly MqttConfiguration configuration;
-		readonly Lazy<TcpListener> listener;
-		bool disposed;
+        readonly MqttConfiguration _configuration;
+        readonly Lazy<TcpListener> _listener;
+        bool _disposed;
 
-		public TcpChannelListener (MqttConfiguration configuration)
-		{
-			this.configuration = configuration;
-			listener = new Lazy<TcpListener> (() => {
-				var tcpListener = new TcpListener (IPAddress.Any, this.configuration.Port);
+        public TcpChannelListener( MqttConfiguration configuration )
+        {
+            _configuration = configuration;
+            _listener = new Lazy<TcpListener>( () =>
+            {
+                TcpListener tcpListener = new TcpListener( IPAddress.Any, _configuration.Port );
 
-				try {
-					tcpListener.Start ();
-				} catch (SocketException socketEx) {
-					tracer.Error (socketEx, ServerProperties.Resources.GetString("TcpChannelProvider_TcpListener_Failed"));
+                try
+                {
+                    tcpListener.Start();
+                }
+                catch( SocketException socketEx )
+                {
+                    _tracer.Error( socketEx, ServerProperties.Resources.GetString( "TcpChannelProvider_TcpListener_Failed" ) );
 
-					throw new MqttException (ServerProperties.Resources.GetString("TcpChannelProvider_TcpListener_Failed"), socketEx);
-				}
+                    throw new MqttException( ServerProperties.Resources.GetString( "TcpChannelProvider_TcpListener_Failed" ), socketEx );
+                }
 
-				return tcpListener;
-			});
-		}
+                return tcpListener;
+            } );
+        }
 
-        public IObservable<IMqttChannel<byte[]>> GetChannelStream ()
-		{
-			if (disposed) {
-				throw new ObjectDisposedException (GetType ().FullName);
-			}
+        public IObservable<IMqttChannel<byte[]>> GetChannelStream()
+        {
+            if( _disposed )
+            {
+                throw new ObjectDisposedException( GetType().FullName );
+            }
 
-			return Observable
-				.FromAsync (listener.Value.AcceptTcpClientAsync)
-				.Repeat ()
-				.Select (client => new TcpChannel (client, new PacketBuffer (), configuration));
-		}
+            return Observable
+                .FromAsync( _listener.Value.AcceptTcpClientAsync )
+                .Repeat()
+                .Select( client => new TcpChannel( client, new PacketBuffer(), _configuration ) );
+        }
 
-		public void Dispose ()
-		{
-			Dispose (true);
-			GC.SuppressFinalize (this);
-		}
+        public void Dispose()
+        {
+            Dispose( true );
+            GC.SuppressFinalize( this );
+        }
 
-		protected virtual void Dispose (bool disposing)
-		{
-			if (disposed) return;
+        protected virtual void Dispose( bool disposing )
+        {
+            if( _disposed ) return;
 
-			if (disposing) {
-				listener.Value.Stop ();
-				disposed = true;
-			}
-		}
-	}
+            if( disposing )
+            {
+                _listener.Value.Stop();
+                _disposed = true;
+            }
+        }
+    }
 }

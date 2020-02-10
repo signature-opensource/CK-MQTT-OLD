@@ -16,12 +16,12 @@ namespace CK.MQTT.SslTcp.Tests
         {
             get
             {
-                var config = new SslTcpConfig()
+                SslTcpConfig config = new SslTcpConfig()
                 {
                     AddressFamily = AddressFamily.InterNetwork,
                 };
                 X509Certificate2Collection collection = new X509Certificate2Collection();
-                var certLocation = TestHelper.TestProjectFolder.AppendPart( "localhost.pfx" );
+                Text.NormalizedPath certLocation = TestHelper.TestProjectFolder.AppendPart( "localhost.pfx" );
                 collection.Import( certLocation );
                 X509Certificate2 certificate = null;
                 foreach( X509Certificate2 singleHack in collection )
@@ -30,7 +30,7 @@ namespace CK.MQTT.SslTcp.Tests
                     break;
                 }
                 if( certificate == null ) throw new InvalidOperationException();
-                var sslServerConfig = new ServerSslConfig
+                ServerSslConfig sslServerConfig = new ServerSslConfig
                 {
                     ServerCertificate = certificate,
                     SslProtocols = SslProtocols.Tls12

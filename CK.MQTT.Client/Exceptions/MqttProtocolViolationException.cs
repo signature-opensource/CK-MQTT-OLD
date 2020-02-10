@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.Serialization;
 
 namespace CK.MQTT
@@ -7,23 +7,23 @@ namespace CK.MQTT
     /// The exception thrown when a protocol violation is caused
     /// </summary>
 	[DataContract]
-	public class MqttProtocolViolationException : MqttException
-	{
+    public class MqttProtocolViolationException : MqttException
+    {
         /// <summary>
         /// Initializes a new instance of the <see cref="MqttProtocolViolationException" /> class
         /// </summary>
-		public MqttProtocolViolationException ()
-		{
-		}
+		public MqttProtocolViolationException()
+        {
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MqttProtocolViolationException" /> class,
         /// using the specified error message
         /// </summary>
         /// <param name="message">The error message that explains the reason for the exception</param>
-		public MqttProtocolViolationException (string message) : base (message)
-		{
-		}
+		public MqttProtocolViolationException( string message ) : base( message )
+        {
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MqttProtocolViolationException" /> class,
@@ -32,8 +32,8 @@ namespace CK.MQTT
         /// </summary>
         /// <param name="message">The error message that explains the reason for the exception</param>
         /// <param name="innerException">The exception that is the cause of the current exception</param>
-		public MqttProtocolViolationException (string message, Exception innerException) : base (message, innerException)
-		{
-		}
-	}
+		public MqttProtocolViolationException( string message, Exception innerException ) : base( message, innerException )
+        {
+        }
+    }
 }

@@ -147,9 +147,9 @@ namespace CodeCake
             if( _artifactPushes == null || reset )
             {
                 _artifactPushes = new List<ArtifactPush>();
-                var tasks = ArtifactTypes.Select( f => f.GetPushListAsync() ).ToArray();
+                Task<IList<ArtifactPush>>[] tasks = ArtifactTypes.Select( f => f.GetPushListAsync() ).ToArray();
                 Task.WaitAll( tasks );
-                foreach( var p in tasks.Select( t => t.Result ) )
+                foreach( IList<ArtifactPush> p in tasks.Select( t => t.Result ) )
                 {
                     _artifactPushes.AddRange( p );
                 }
@@ -202,7 +202,7 @@ namespace CodeCake
         public void PushArtifacts( IEnumerable<ArtifactPush> pushes = null )
         {
             if( pushes == null ) pushes = GetArtifactPushList();
-            var tasks = ArtifactTypes.Select( t => t.PushAsync( pushes.Where( a => a.Feed.ArtifactType == t ) ) ).ToArray();
+            Task[] tasks = ArtifactTypes.Select( t => t.PushAsync( pushes.Where( a => a.Feed.ArtifactType == t ) ) ).ToArray();
             Task.WaitAll( tasks );
         }
 

@@ -1,233 +1,243 @@
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using CK.MQTT.Sdk.Bindings;
 using CK.MQTT.Sdk.Flows;
 using CK.MQTT.Sdk.Packets;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading.Tasks;
-using System;
 
 namespace CK.MQTT.Sdk
 {
     internal class MqttServerImpl : IMqttServer
-	{
-        static readonly ITracer tracer = Tracer.Get<MqttServerImpl>();
+    {
+        static readonly ITracer _tracer = Tracer.Get<MqttServerImpl>();
 
-        bool started;
-        bool disposed;
-		IDisposable channelSubscription;
-		IDisposable streamSubscription;
+        bool _started;
+        bool _disposed;
+        IDisposable _channelSubscription;
+        IDisposable _streamSubscription;
 
-        readonly IEnumerable<IMqttChannelListener> binaryChannelListeners;
-		readonly IPacketChannelFactory channelFactory;
-		readonly IProtocolFlowProvider flowProvider;
-		readonly IConnectionProvider connectionProvider;
-        readonly ISubject<MqttUndeliveredMessage> undeliveredMessagesListener;
-        readonly MqttConfiguration configuration;
-        readonly ISubject<PrivateStream> privateStreamListener;
-        readonly IList<IMqttChannel<IPacket>> channels = new List<IMqttChannel<IPacket>>();
+        readonly IEnumerable<IMqttChannelListener> _binaryChannelListeners;
+        readonly IPacketChannelFactory _channelFactory;
+        readonly IProtocolFlowProvider _flowProvider;
+        readonly IConnectionProvider _connectionProvider;
+        readonly ISubject<MqttUndeliveredMessage> _undeliveredMessagesListener;
+        readonly MqttConfiguration _configuration;
+        readonly ISubject<PrivateStream> _privateStreamListener;
+        readonly IList<IMqttChannel<IPacket>> _channels = new List<IMqttChannel<IPacket>>();
 
-        internal MqttServerImpl (IMqttChannelListener binaryChannelListener,
+        internal MqttServerImpl( IMqttChannelListener binaryChannelListener,
             IPacketChannelFactory channelFactory,
             IProtocolFlowProvider flowProvider,
             IConnectionProvider connectionProvider,
             ISubject<MqttUndeliveredMessage> undeliveredMessagesListener,
-            MqttConfiguration configuration)
-		{
-            privateStreamListener = new Subject<PrivateStream> ();
-            binaryChannelListeners = new[] { new PrivateChannelListener (privateStreamListener, configuration), binaryChannelListener };
-            this.channelFactory = channelFactory;
-            this.flowProvider = flowProvider;
-            this.connectionProvider = new NotifyingConnectionProvider(this, connectionProvider);
-            this.undeliveredMessagesListener = undeliveredMessagesListener;
-            this.configuration = configuration;
+            MqttConfiguration configuration )
+        {
+            _privateStreamListener = new Subject<PrivateStream>();
+            _binaryChannelListeners = new[] { new PrivateChannelListener( _privateStreamListener, configuration ), binaryChannelListener };
+            _channelFactory = channelFactory;
+            _flowProvider = flowProvider;
+            _connectionProvider = new NotifyingConnectionProvider( this, connectionProvider );
+            _undeliveredMessagesListener = undeliveredMessagesListener;
+            _configuration = configuration;
         }
 
-        public event EventHandler<MqttUndeliveredMessage> MessageUndelivered = (sender, args) => { };
+        public event EventHandler<MqttUndeliveredMessage> MessageUndelivered = ( sender, args ) => { };
 
-		public event EventHandler<MqttEndpointDisconnected> Stopped = (sender, args) => { };
+        public event EventHandler<MqttEndpointDisconnected> Stopped = ( sender, args ) => { };
 
-		public event EventHandler<string> ClientConnected;
+        public event EventHandler<string> ClientConnected;
 
-		public event EventHandler<string> ClientDisconnected;
+        public event EventHandler<string> ClientDisconnected;
 
-		public int ActiveConnections { get { return channels.Where (c => c.IsConnected).Count (); } }
+        public int ActiveConnections { get { return _channels.Where( c => c.IsConnected ).Count(); } }
 
-		public IEnumerable<string> ActiveClients { get { return connectionProvider.ActiveClients; } }
+        public IEnumerable<string> ActiveClients { get { return _connectionProvider.ActiveClients; } }
 
-		public void Start ()
-		{
-            if (disposed)
-                throw new ObjectDisposedException (nameof ( MqttServerImpl ) );
+        public void Start()
+        {
+            if( _disposed )
+                throw new ObjectDisposedException( nameof( MqttServerImpl ) );
 
-            var channelStreams = binaryChannelListeners.Select (listener => listener.GetChannelStream ());
+            IEnumerable<IObservable<IMqttChannel<byte[]>>> channelStreams = _binaryChannelListeners.Select( listener => listener.GetChannelStream() );
 
-            channelSubscription = Observable
-                .Merge (channelStreams)
-                .Subscribe (
-                    binaryChannel => ProcessChannel (binaryChannel),
-                    ex => { tracer.Error (ex); },
+            _channelSubscription = Observable
+                .Merge( channelStreams )
+                .Subscribe(
+                    binaryChannel => ProcessChannel( binaryChannel ),
+                    ex => { _tracer.Error( ex ); },
                     () => { }
                 );
 
-			streamSubscription = undeliveredMessagesListener
-                .Subscribe (e => {
-				    MessageUndelivered (this, e);
-			    });
+            _streamSubscription = _undeliveredMessagesListener
+                .Subscribe( e =>
+                {
+                    MessageUndelivered( this, e );
+                } );
 
-            started = true;
+            _started = true;
         }
 
-        public async Task<IMqttConnectedClient> CreateClientAsync ()
+        public async Task<IMqttConnectedClient> CreateClientAsync()
         {
-            if (disposed)
-                throw new ObjectDisposedException (nameof (MqttServerImpl));
+            if( _disposed )
+                throw new ObjectDisposedException( nameof( MqttServerImpl ) );
 
-            if (!started)
-                throw new InvalidOperationException (ServerProperties.Resources.GetString("Server_NotStartedError"));
+            if( !_started )
+                throw new InvalidOperationException( ServerProperties.Resources.GetString( "Server_NotStartedError" ) );
 
-            var factory = new MqttConnectedClientFactory (privateStreamListener);
-            var client = await factory
-                .CreateClientAsync (configuration)
-                .ConfigureAwait (continueOnCapturedContext: false);
-            var clientId = GetPrivateClientId ();
+            MqttConnectedClientFactory factory = new MqttConnectedClientFactory( _privateStreamListener );
+            IMqttConnectedClient client = await factory
+                .CreateClientAsync( _configuration )
+                .ConfigureAwait( continueOnCapturedContext: false );
+            string clientId = GetPrivateClientId();
 
             await client
-                .ConnectAsync (new MqttClientCredentials (clientId))
-                .ConfigureAwait (continueOnCapturedContext: false);
+                .ConnectAsync( new MqttClientCredentials( clientId ) )
+                .ConfigureAwait( continueOnCapturedContext: false );
 
-            connectionProvider.RegisterPrivateClient (clientId);
+            _connectionProvider.RegisterPrivateClient( clientId );
 
             return client;
         }
 
-        public void Stop ()
-		{
-            Dispose (disposing: true);
-            GC.SuppressFinalize (this);
+        public void Stop()
+        {
+            Dispose( disposing: true );
+            GC.SuppressFinalize( this );
         }
 
-		void IDisposable.Dispose ()
-		{
-			Stop ();
-		}
+        void IDisposable.Dispose()
+        {
+            Stop();
+        }
 
-		protected virtual void Dispose (bool disposing)
-		{
-			if (disposed) return;
+        protected virtual void Dispose( bool disposing )
+        {
+            if( _disposed ) return;
 
-			if (disposing) {
+            if( disposing )
+            {
                 try
                 {
-                    tracer.Info (ServerProperties.Resources.GetString("Mqtt_Disposing"), GetType ().FullName);
+                    _tracer.Info( ServerProperties.Resources.GetString( "Mqtt_Disposing" ), GetType().FullName );
 
-                    streamSubscription?.Dispose ();
+                    _streamSubscription?.Dispose();
 
-                    foreach (var channel in channels)
+                    foreach( IMqttChannel<IPacket> channel in _channels )
                     {
-                        channel.Dispose ();
+                        channel.Dispose();
                     }
 
-                    channels.Clear ();
+                    _channels.Clear();
 
-                    channelSubscription?.Dispose ();
+                    _channelSubscription?.Dispose();
 
-                    foreach (var binaryChannelProvider in binaryChannelListeners) {
+                    foreach( IMqttChannelListener binaryChannelProvider in _binaryChannelListeners )
+                    {
                         binaryChannelProvider?.Dispose();
                     }
 
-                    Stopped (this, new MqttEndpointDisconnected (DisconnectedReason.SelfDisconnected));
-                } catch (Exception ex) {
-                    tracer.Error (ex);
-                    Stopped (this, new MqttEndpointDisconnected (DisconnectedReason.Error, ex.Message));
-                } finally {
-                    started = false;
-                    disposed = true;
+                    Stopped( this, new MqttEndpointDisconnected( DisconnectedReason.SelfDisconnected ) );
                 }
-			}
-		}
+                catch( Exception ex )
+                {
+                    _tracer.Error( ex );
+                    Stopped( this, new MqttEndpointDisconnected( DisconnectedReason.Error, ex.Message ) );
+                }
+                finally
+                {
+                    _started = false;
+                    _disposed = true;
+                }
+            }
+        }
 
-		void ProcessChannel (IMqttChannel<byte[]> binaryChannel)
-		{
-			tracer.Verbose (ServerProperties.Resources.GetString("Server_NewSocketAccepted"));
+        void ProcessChannel( IMqttChannel<byte[]> binaryChannel )
+        {
+            _tracer.Verbose( ServerProperties.Resources.GetString( "Server_NewSocketAccepted" ) );
 
-			var packetChannel = channelFactory.Create (binaryChannel);
-			var packetListener = new ServerPacketListener (packetChannel, connectionProvider, flowProvider, configuration);
+            IMqttChannel<IPacket> packetChannel = _channelFactory.Create( binaryChannel );
+            ServerPacketListener packetListener = new ServerPacketListener( packetChannel, _connectionProvider, _flowProvider, _configuration );
 
-			packetListener.Listen ();
-			packetListener
+            packetListener.Listen();
+            packetListener
                 .PacketStream
-                .Subscribe (_ => { }, ex => {
-				        tracer.Error (ex, ServerProperties.Resources.GetString("Server_PacketsObservableError"));
-				        packetChannel.Dispose ();
-				        packetListener.Dispose ();
-			        }, () => {
-				        tracer.Warn (ServerProperties.Resources.GetString("Server_PacketsObservableCompleted"));
-				        packetChannel.Dispose ();
-				        packetListener.Dispose ();
-			        }
+                .Subscribe( _ => { }, ex =>
+                {
+                    _tracer.Error( ex, ServerProperties.Resources.GetString( "Server_PacketsObservableError" ) );
+                    packetChannel.Dispose();
+                    packetListener.Dispose();
+                }, () =>
+                {
+                    _tracer.Warn( ServerProperties.Resources.GetString( "Server_PacketsObservableCompleted" ) );
+                    packetChannel.Dispose();
+                    packetListener.Dispose();
+                }
                 );
 
-			channels.Add (packetChannel);
-		}
+            _channels.Add( packetChannel );
+        }
 
-        string GetPrivateClientId ()
+        string GetPrivateClientId()
         {
-			var clientId = MqttClient.GetPrivateClientId ();
+            string clientId = MqttClient.GetPrivateClientId();
 
-            if (connectionProvider.PrivateClients.Contains (clientId)) {
-                return GetPrivateClientId ();
+            if( _connectionProvider.PrivateClients.Contains( clientId ) )
+            {
+                return GetPrivateClientId();
             }
 
             return clientId;
         }
 
-		void RaiseClientConnected(string clientId)
-		{
-			ClientConnected?.Invoke(this, clientId);
-		}
+        void RaiseClientConnected( string clientId )
+        {
+            ClientConnected?.Invoke( this, clientId );
+        }
 
-		void RaiseClientDisconnected(string clientId)
-		{
-			ClientDisconnected?.Invoke(this, clientId);
-		}
-
-
-		class NotifyingConnectionProvider : IConnectionProvider
-		{
-			IConnectionProvider connections;
-			MqttServerImpl server;
+        void RaiseClientDisconnected( string clientId )
+        {
+            ClientDisconnected?.Invoke( this, clientId );
+        }
 
 
-			public NotifyingConnectionProvider(MqttServerImpl server, IConnectionProvider connections)
-			{
-				this.server = server;
-				this.connections = connections;
-			}
+        class NotifyingConnectionProvider : IConnectionProvider
+        {
+            readonly IConnectionProvider _connections;
+            readonly MqttServerImpl _server;
 
-			public void AddConnection(string clientId, IMqttChannel<IPacket> connection)
-			{
-				connections.AddConnection(clientId, connection);
-				server.RaiseClientConnected(clientId);
-			}
 
-			public void RemoveConnection(string clientId)
-			{
-				connections.RemoveConnection(clientId);
-				server.RaiseClientDisconnected(clientId);
-			}
+            public NotifyingConnectionProvider( MqttServerImpl server, IConnectionProvider connections )
+            {
+                _server = server;
+                _connections = connections;
+            }
 
-			public IEnumerable<string> ActiveClients => connections.ActiveClients;
+            public void AddConnection( string clientId, IMqttChannel<IPacket> connection )
+            {
+                _connections.AddConnection( clientId, connection );
+                _server.RaiseClientConnected( clientId );
+            }
 
-			public int Connections => connections.Connections;
+            public void RemoveConnection( string clientId )
+            {
+                _connections.RemoveConnection( clientId );
+                _server.RaiseClientDisconnected( clientId );
+            }
 
-			public IEnumerable<string> PrivateClients => connections.PrivateClients;
+            public IEnumerable<string> ActiveClients => _connections.ActiveClients;
 
-			public IMqttChannel<IPacket> GetConnection(string clientId) => connections.GetConnection(clientId);
+            public int Connections => _connections.Connections;
 
-			public void RegisterPrivateClient(string clientId) => connections.RegisterPrivateClient(clientId);
-		}
+            public IEnumerable<string> PrivateClients => _connections.PrivateClients;
+
+            public IMqttChannel<IPacket> GetConnection( string clientId ) => _connections.GetConnection( clientId );
+
+            public void RegisterPrivateClient( string clientId ) => _connections.RegisterPrivateClient( clientId );
+        }
     }
 }

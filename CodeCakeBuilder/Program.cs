@@ -23,7 +23,7 @@ namespace CodeCake
             string solutionDirectory = args.Contains( SolutionDirectoryIsCurrentDirectoryParameter, StringComparer.OrdinalIgnoreCase )
                                         ? Environment.CurrentDirectory
                                         : null;
-            var app = new CodeCakeApplication( solutionDirectory );
+            CodeCakeApplication app = new CodeCakeApplication( solutionDirectory );
             RunResult result = app.Run( args.Where( a => !StringComparer.OrdinalIgnoreCase.Equals( a, SolutionDirectoryIsCurrentDirectoryParameter ) ) );
             if( result.InteractiveMode == InteractiveMode.Interactive )
             {

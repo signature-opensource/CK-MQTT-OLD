@@ -1,21 +1,21 @@
-﻿using System.Reactive.Subjects;
+using System.Reactive.Subjects;
 
 namespace CK.MQTT.Sdk.Bindings
 {
     internal class PrivateBinding : IMqttBinding
     {
-        readonly ISubject<PrivateStream> privateStreamListener;
-        readonly EndpointIdentifier identifier;
+        readonly ISubject<PrivateStream> _privateStreamListener;
+        readonly EndpointIdentifier _identifier;
 
-        public PrivateBinding (ISubject<PrivateStream> privateStreamListener, EndpointIdentifier identifier)
+        public PrivateBinding( ISubject<PrivateStream> privateStreamListener, EndpointIdentifier identifier )
         {
-            this.privateStreamListener = privateStreamListener;
-            this.identifier = identifier;
+            _privateStreamListener = privateStreamListener;
+            _identifier = identifier;
         }
 
-        public IMqttChannelFactory GetChannelFactory (string hostAddress, MqttConfiguration configuration)
+        public IMqttChannelFactory GetChannelFactory( string hostAddress, MqttConfiguration configuration )
         {
-            return new PrivateChannelFactory (privateStreamListener, identifier, configuration);
+            return new PrivateChannelFactory( _privateStreamListener, _identifier, configuration );
         }
     }
 }
