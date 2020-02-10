@@ -2,17 +2,17 @@
 
 namespace CK.MQTT.Sdk.Storage
 {
-	internal interface IRepository<T>
-		 where T : IStorageObject
-	{
-		IEnumerable<T> ReadAll ();
+    internal interface IRepository<T>
+         where T : IStorageObject
+    {
+        IEnumerable<T> ReadAll();
 
-		T Read (string id);
+        T Read( string id );
 
-		void Create (T element);
+        void Create( T element );
 
-		void Update (T element);
+        void Update( T element );
 
-		void Delete (string id);
-	}
+        void Delete( string id );
+    }
 }

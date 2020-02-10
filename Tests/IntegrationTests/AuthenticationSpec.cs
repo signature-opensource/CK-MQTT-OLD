@@ -1,27 +1,27 @@
-using System;
-using System.Threading.Tasks;
-using IntegrationTests.Context;
 using CK.MQTT;
 using FluentAssertions;
+using IntegrationTests.Context;
 using NUnit.Framework;
+using System;
+using System.Threading.Tasks;
 
 namespace IntegrationTests
 {
 
     public abstract class AuthenticationSpec : IntegrationContext
     {
-         protected AuthenticationSpec() : base(authenticationProvider: new TestAuthenticationProvider( expectedUsername: "foo", expectedPassword: "foo123" ) )
+        protected AuthenticationSpec() : base( authenticationProvider: new TestAuthenticationProvider( expectedUsername: "foo", expectedPassword: "foo123" ) )
         {
         }
 
         [Test]
         public async Task when_client_connects_with_invalid_credentials_and_authentication_is_supported_then_connection_is_closed()
         {
-            var username = "foo";
-            var password = "foo123456";
-            var client = await GetClientAsync();
+            string username = "foo";
+            string password = "foo123456";
+            IMqttClient client = await GetClientAsync();
 
-            var aggregateEx = Assert.Throws<AggregateException>( () => client.ConnectAsync( new MqttClientCredentials( MqttTestHelper.GetClientId(), username, password ) ).Wait() );
+            AggregateException aggregateEx = Assert.Throws<AggregateException>( () => client.ConnectAsync( new MqttClientCredentials( MqttTestHelper.GetClientId(), username, password ) ).Wait() );
 
             Assert.NotNull( aggregateEx.InnerException );
             Assert.True( aggregateEx.InnerException is MqttClientException );
@@ -34,9 +34,9 @@ namespace IntegrationTests
         [Test]
         public async Task when_client_connects_with_valid_credentials_and_authentication_is_supported_then_connection_succeeds()
         {
-            var username = "foo";
-            var password = "foo123";
-            var client = await GetClientAsync();
+            string username = "foo";
+            string password = "foo123";
+            IMqttClient client = await GetClientAsync();
 
             await client.ConnectAsync( new MqttClientCredentials( MqttTestHelper.GetClientId(), username, password ) );
 

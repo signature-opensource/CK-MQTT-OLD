@@ -1,101 +1,110 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace CK.MQTT.Sdk
 {
-	public class PacketBuffer : IPacketBuffer
-	{
-		bool packetReadStarted;
-		bool packetRemainingLengthReadCompleted;
-		int packetRemainingLength = 0;
-		bool isPacketReady;
+    public class PacketBuffer : IPacketBuffer
+    {
+        bool _packetReadStarted;
+        bool _packetRemainingLengthReadCompleted;
+        int _packetRemainingLength = 0;
+        bool _isPacketReady;
 
-		readonly object bufferLock = new object ();
-		readonly IList<byte> mainBuffer;
-		readonly IList<byte> pendingBuffer;
+        readonly object _bufferLock = new object();
+        readonly IList<byte> _mainBuffer;
+        readonly IList<byte> _pendingBuffer;
 
-		public PacketBuffer ()
-		{
-			mainBuffer = new List<byte> ();
-			pendingBuffer = new List<byte> ();
-		}
+        public PacketBuffer()
+        {
+            _mainBuffer = new List<byte>();
+            _pendingBuffer = new List<byte>();
+        }
 
-		public bool TryGetPackets (IEnumerable<byte> sequence, out IEnumerable<byte[]> packets)
-		{
-			var result =  new List<byte[]>();
+        public bool TryGetPackets( IEnumerable<byte> sequence, out IEnumerable<byte[]> packets )
+        {
+            List<byte[]> result = new List<byte[]>();
 
-			lock (bufferLock) {
-				Buffer (sequence);
+            lock( _bufferLock )
+            {
+                Buffer( sequence );
 
-				while (isPacketReady) {
-					var packet = mainBuffer.ToArray ();
+                while( _isPacketReady )
+                {
+                    byte[] packet = _mainBuffer.ToArray();
 
-					result.Add (packet);
-					Reset ();
-				}
+                    result.Add( packet );
+                    Reset();
+                }
 
-				packets = result;
-			}
+                packets = result;
+            }
 
-			return result.Any ();
-		}
+            return result.Any();
+        }
 
-		void Buffer (IEnumerable<byte> sequence)
-		{
-			foreach (var @byte in sequence) {
-				Buffer (@byte);
-			}
-		}
+        void Buffer( IEnumerable<byte> sequence )
+        {
+            foreach( byte @byte in sequence )
+            {
+                Buffer( @byte );
+            }
+        }
 
-		void Buffer (byte @byte)
-		{
-			if (isPacketReady) {
-				pendingBuffer.Add (@byte);
-				return;
-			}
+        void Buffer( byte @byte )
+        {
+            if( _isPacketReady )
+            {
+                _pendingBuffer.Add( @byte );
+                return;
+            }
 
-			mainBuffer.Add (@byte);
+            _mainBuffer.Add( @byte );
 
-			if (!packetReadStarted) {
-				packetReadStarted = true;
-				return;
-			}
+            if( !_packetReadStarted )
+            {
+                _packetReadStarted = true;
+                return;
+            }
 
-			if (!packetRemainingLengthReadCompleted) {
-				if ((@byte & 128) == 0) {
-					var bytesLenght = default (int);
+            if( !_packetRemainingLengthReadCompleted )
+            {
+                if( (@byte & 128) == 0 )
+                {
+                    _packetRemainingLength = MqttProtocol.Encoding.DecodeRemainingLength( _mainBuffer.ToArray(), out _ );
+                    _packetRemainingLengthReadCompleted = true;
 
-					packetRemainingLength = MqttProtocol.Encoding.DecodeRemainingLength (mainBuffer.ToArray (), out bytesLenght);
-					packetRemainingLengthReadCompleted = true;
+                    if( _packetRemainingLength == 0 )
+                        _isPacketReady = true;
+                }
 
-					if (packetRemainingLength == 0)
-						isPacketReady = true;
-				}
+                return;
+            }
 
-				return;
-			}
+            if( _packetRemainingLength == 1 )
+            {
+                _isPacketReady = true;
+            }
+            else
+            {
+                _packetRemainingLength--;
+            }
+        }
 
-			if (packetRemainingLength == 1) {
-				isPacketReady = true;
-			} else {
-				packetRemainingLength--;
-			}
-		}
+        void Reset()
+        {
+            _mainBuffer.Clear();
+            _packetReadStarted = false;
+            _packetRemainingLengthReadCompleted = false;
+            _packetRemainingLength = 0;
+            _isPacketReady = false;
 
-		void Reset ()
-		{
-			mainBuffer.Clear ();
-			packetReadStarted = false;
-			packetRemainingLengthReadCompleted = false;
-			packetRemainingLength = 0;
-			isPacketReady = false;
+            if( _pendingBuffer.Any() )
+            {
+                byte[] pendingSequence = _pendingBuffer.ToArray();
 
-			if (pendingBuffer.Any ()) {
-				var pendingSequence = pendingBuffer.ToArray ();
-
-				pendingBuffer.Clear ();
-				Buffer (pendingSequence);
-			}
-		}
-	}
+                _pendingBuffer.Clear();
+                Buffer( pendingSequence );
+            }
+        }
+    }
 }

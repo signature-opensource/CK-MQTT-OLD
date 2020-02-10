@@ -1,482 +1,468 @@
-using System.Diagnostics;
-using System.Linq;
 using CK.MQTT.Sdk.Flows;
 using CK.MQTT.Sdk.Packets;
 using CK.MQTT.Sdk.Storage;
+using System;
+using System.Diagnostics;
+using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading.Tasks;
-using System;
 
 namespace CK.MQTT.Sdk
 {
-	internal class MqttClientImpl : IMqttClient
-	{
-		static readonly ITracer tracer = Tracer.Get<MqttClientImpl>();
-
-		bool disposed;
-		bool isProtocolConnected;
-		IPacketListener packetListener;
-		IDisposable packetsSubscription;
-		Subject<MqttApplicationMessage> receiver;
-
-		readonly IPacketChannelFactory channelFactory;
-		readonly IProtocolFlowProvider flowProvider;
-		readonly IRepository<ClientSession> sessionRepository;
-		readonly IPacketIdProvider packetIdProvider;
-		readonly MqttConfiguration configuration;
-		readonly TaskRunner clientSender;
-
-		internal MqttClientImpl(IPacketChannelFactory channelFactory,
-			IProtocolFlowProvider flowProvider,
-			IRepositoryProvider repositoryProvider,
-			IPacketIdProvider packetIdProvider,
-			MqttConfiguration configuration)
-		{
-			receiver = new Subject<MqttApplicationMessage>();
-			this.channelFactory = channelFactory;
-			this.flowProvider = flowProvider;
-			sessionRepository = repositoryProvider.GetRepository<ClientSession>();
-			this.packetIdProvider = packetIdProvider;
-			this.configuration = configuration;
-			clientSender = TaskRunner.Get();
-		}
-
-		public event EventHandler<MqttEndpointDisconnected> Disconnected = (sender, args) => { };
-
-		public string Id { get; private set; }
-
-		public bool IsConnected
-		{
-			get
-			{
-				CheckUnderlyingConnection();
-
-				return isProtocolConnected && Channel.IsConnected;
-			}
-			private set
-			{
-				isProtocolConnected = value;
-			}
-		}
-
-		public IObservable<MqttApplicationMessage> MessageStream { get { return receiver; } }
-
-		internal IMqttChannel<IPacket> Channel { get; private set; }
-
-		public async Task<SessionState> ConnectAsync(MqttClientCredentials credentials, MqttLastWill will = null, bool cleanSession = false)
-		{
-			if (disposed)
-			{
-				throw new ObjectDisposedException(GetType().FullName);
-			}
-
-			try
-			{
-				if (IsConnected)
-				{
-					throw new MqttClientException(string.Format(Properties.Resources.GetString("Client_AlreadyConnected"), Id));
-				}
-
-				if (string.IsNullOrEmpty(credentials.ClientId) && !cleanSession)
-				{
-					throw new MqttClientException(Properties.Resources.GetString("Client_AnonymousClientWithoutCleanSession"));
-				}
-
-				Id = string.IsNullOrEmpty(credentials.ClientId) ?
-					MqttClient.GetAnonymousClientId() :
-					credentials.ClientId;
-
-				OpenClientSession(cleanSession);
-
-				await InitializeChannelAsync().ConfigureAwait(continueOnCapturedContext: false);
-
-				var connect = new Connect(Id, cleanSession)
-				{
-					UserName = credentials.UserName,
-					Password = credentials.Password,
-					Will = will,
-					KeepAlive = configuration.KeepAliveSecs
-				};
-
-				await SendPacketAsync(connect)
-					.ConfigureAwait(continueOnCapturedContext: false);
-
-				var connectTimeout = TimeSpan.FromSeconds(configuration.WaitTimeoutSecs);
-				var ack = await packetListener
-					.PacketStream
-					.ObserveOn(NewThreadScheduler.Default)
-					.OfType<ConnectAck>()
-					.FirstOrDefaultAsync()
-					.Timeout(connectTimeout);
-
-				if (ack == null)
-				{
-					var message = string.Format(Properties.Resources.GetString("Client_ConnectionDisconnected"), Id);
-
-					throw new MqttClientException(message);
-				}
-
-				if (ack.Status != MqttConnectionStatus.Accepted)
-				{
-					throw new MqttConnectionException(ack.Status);
-				}
-
-				IsConnected = true;
-
-				return ack.SessionPresent ? SessionState.SessionPresent : SessionState.CleanSession;
-			}
-			catch (TimeoutException timeEx)
-			{
-				Close(timeEx);
-				throw new MqttClientException(string.Format(Properties.Resources.GetString("Client_ConnectionTimeout"), Id), timeEx);
-			}
-			catch (MqttConnectionException connectionEx)
-			{
-				Close(connectionEx);
-
-				var message = string.Format(Properties.Resources.GetString("Client_ConnectNotAccepted"), Id, connectionEx.ReturnCode);
-
-				throw new MqttClientException(message, connectionEx);
-			}
-			catch (MqttClientException clientEx)
-			{
-				Close(clientEx);
-				throw;
-			}
-			catch (Exception ex)
-			{
-				Close(ex);
-				throw new MqttClientException(string.Format(Properties.Resources.GetString("Client_ConnectionError"), Id), ex);
-			}
-		}
-
-		public Task<SessionState> ConnectAsync(MqttLastWill will = null) =>
-			ConnectAsync(new MqttClientCredentials(), will, cleanSession: true);
-
-		public async Task SubscribeAsync(string topicFilter, MqttQualityOfService qos)
-		{
-			if (disposed)
-			{
-				throw new ObjectDisposedException(GetType().FullName);
-			}
-
-			try
-			{
-				var packetId = packetIdProvider.GetPacketId();
-				var subscribe = new Subscribe(packetId, new Subscription(topicFilter, qos));
-
-				var ack = default(SubscribeAck);
-				var subscribeTimeout = TimeSpan.FromSeconds(configuration.WaitTimeoutSecs);
-
-				await SendPacketAsync(subscribe)
-					.ConfigureAwait(continueOnCapturedContext: false);
-
-				ack = await packetListener
-					.PacketStream
-					.ObserveOn(NewThreadScheduler.Default)
-					.OfType<SubscribeAck>()
-					.FirstOrDefaultAsync(x => x.PacketId == packetId)
-					.Timeout(subscribeTimeout);
-
-				if (ack == null)
-				{
-					var message = string.Format(Properties.Resources.GetString("Client_SubscriptionDisconnected"), Id, topicFilter);
-
-					tracer.Error(message);
-
-					throw new MqttClientException(message);
-				}
-
-				if (ack.ReturnCodes.FirstOrDefault() == SubscribeReturnCode.Failure)
-				{
-					var message = string.Format(Properties.Resources.GetString("Client_SubscriptionRejected"), Id, topicFilter);
-
-					tracer.Error(message);
-
-					throw new MqttClientException(message);
-				}
-			}
-			catch (TimeoutException timeEx)
-			{
-				Close(timeEx);
-
-				var message = string.Format(Properties.Resources.GetString("Client_SubscribeTimeout"), Id, topicFilter);
-
-				throw new MqttClientException(message, timeEx);
-			}
-			catch (MqttClientException clientEx)
-			{
-				Close(clientEx);
-				throw;
-			}
-			catch (Exception ex)
-			{
-				Close(ex);
-
-				var message = string.Format(Properties.Resources.GetString("Client_SubscribeError"), Id, topicFilter);
-
-				throw new MqttClientException(message, ex);
-			}
-		}
-
-		public async Task PublishAsync(MqttApplicationMessage message, MqttQualityOfService qos, bool retain = false)
-		{
-			if (disposed)
-			{
-				throw new ObjectDisposedException(GetType().FullName);
-			}
-
-			try
-			{
-				ushort? packetId = qos == MqttQualityOfService.AtMostOnce ? null : (ushort?)packetIdProvider.GetPacketId();
-				var publish = new Publish(message.Topic, qos, retain, duplicated: false, packetId: packetId)
-				{
-					Payload = message.Payload
-				};
-
-				var senderFlow = flowProvider.GetFlow<PublishSenderFlow>();
-
-				await clientSender.Run(async () =>
-				{
-					await senderFlow.SendPublishAsync(Id, publish, Channel)
-						.ConfigureAwait(continueOnCapturedContext: false);
-				}).ConfigureAwait(continueOnCapturedContext: false);
-			}
-			catch (Exception ex)
-			{
-				Close(ex);
-				throw;
-			}
-		}
-
-		public async Task UnsubscribeAsync(params string[] topics)
-		{
-			if (disposed)
-			{
-				throw new ObjectDisposedException(GetType().FullName);
-			}
-
-			try
-			{
-				topics = topics ?? new string[] { };
-
-				var packetId = packetIdProvider.GetPacketId();
-				var unsubscribe = new Unsubscribe(packetId, topics);
-
-				var ack = default(UnsubscribeAck);
-				var unsubscribeTimeout = TimeSpan.FromSeconds(configuration.WaitTimeoutSecs);
-
-				await SendPacketAsync(unsubscribe)
-					.ConfigureAwait(continueOnCapturedContext: false);
-
-				ack = await packetListener
-					.PacketStream
-					.ObserveOn(NewThreadScheduler.Default)
-					.OfType<UnsubscribeAck>()
-					.FirstOrDefaultAsync(x => x.PacketId == packetId)
-					.Timeout(unsubscribeTimeout);
-
-				if (ack == null)
-				{
-					var message = string.Format(Properties.Resources.GetString("Client_UnsubscribeDisconnected"), Id, string.Join(", ", topics));
-
-					tracer.Error(message);
-
-					throw new MqttClientException(message);
-				}
-			}
-			catch (TimeoutException timeEx)
-			{
-				Close(timeEx);
-
-				var message = string.Format(Properties.Resources.GetString("Client_UnsubscribeTimeout"), Id, string.Join(", ", topics));
-
-				tracer.Error(message);
-
-				throw new MqttClientException(message, timeEx);
-			}
-			catch (MqttClientException clientEx)
-			{
-				Close(clientEx);
-				throw;
-			}
-			catch (Exception ex)
-			{
-				Close(ex);
-
-				var message = string.Format(Properties.Resources.GetString("Client_UnsubscribeError"), Id, string.Join(", ", topics));
-
-				tracer.Error(message);
-
-				throw new MqttClientException(message, ex);
-			}
-		}
-
-		public async Task DisconnectAsync()
-		{
-			try
-			{
-				if (!IsConnected)
-				{
-					throw new MqttClientException(Properties.Resources.GetString("Client_AlreadyDisconnected"));
-				}
-
-				packetsSubscription?.Dispose();
-
-				await SendPacketAsync(new Disconnect())
-					.ConfigureAwait(continueOnCapturedContext: false);
-
-				await packetListener
-					.PacketStream
-					.LastOrDefaultAsync();
-
-				Close(DisconnectedReason.SelfDisconnected);
-			}
-			catch (Exception ex)
-			{
-				Close(ex);
-			}
-		}
-
-		void IDisposable.Dispose()
-		{
-			DisposeAsync(disposing: true).Wait();
-			GC.SuppressFinalize(this);
-		}
-
-		protected virtual async Task DisposeAsync(bool disposing)
-		{
-			if (disposed) return;
-
-			if (disposing)
-			{
-				if (IsConnected)
-				{
-					await DisconnectAsync().ConfigureAwait(continueOnCapturedContext: false);
-				}
-
-				(clientSender as IDisposable)?.Dispose();
-				disposed = true;
-			}
-		}
-
-		void Close(Exception ex)
-		{
-			tracer.Error(ex);
-			Close(DisconnectedReason.Error, ex.Message);
-		}
-
-		void Close(DisconnectedReason reason, string message = null)
-		{
-			tracer.Info(Properties.Resources.GetString("Client_Closing"), Id, reason);
-
-			CloseClientSession();
-			packetsSubscription?.Dispose();
-			packetListener?.Dispose();
-			ResetReceiver();
-			Channel?.Dispose();
-			IsConnected = false;
-			Id = null;
-
-			Disconnected(this, new MqttEndpointDisconnected(reason, message));
-		}
-
-		async Task InitializeChannelAsync()
-		{
-			Channel = await channelFactory
-				.CreateAsync()
-				.ConfigureAwait(continueOnCapturedContext: false);
-
-			packetListener = new ClientPacketListener(Channel, flowProvider, configuration);
-			packetListener.Listen();
-			ObservePackets();
-		}
-
-		void OpenClientSession(bool cleanSession)
-		{
-			var session = string.IsNullOrEmpty(Id) ? default(ClientSession) : sessionRepository.Read(Id);
-			var sessionPresent = cleanSession ? false : session != null;
-
-			if (cleanSession && session != null)
-			{
-				sessionRepository.Delete(session.Id);
-				session = null;
-
-				tracer.Info(Properties.Resources.GetString("Client_CleanedOldSession"), Id);
-			}
-
-			if (session == null)
-			{
-				session = new ClientSession(Id, cleanSession);
-
-				sessionRepository.Create(session);
-
-				tracer.Info(Properties.Resources.GetString("Client_CreatedSession"), Id);
-			}
-		}
-
-		void CloseClientSession()
-		{
-			var session = string.IsNullOrEmpty(Id) ? default(ClientSession) : sessionRepository.Read(Id);
-
-			if (session == null)
-			{
-				return;
-			}
-
-			if (session.Clean)
-			{
-				sessionRepository.Delete(session.Id);
-
-				tracer.Info(Properties.Resources.GetString("Client_DeletedSessionOnDisconnect"), Id);
-			}
-		}
-
-		async Task SendPacketAsync(IPacket packet)
-		{
-			await clientSender.Run(async () => await Channel.SendAsync(packet).ConfigureAwait(continueOnCapturedContext: false))
-				.ConfigureAwait(continueOnCapturedContext: false);
-		}
-
-		void CheckUnderlyingConnection()
-		{
-			if (isProtocolConnected && !Channel.IsConnected)
-			{
-				Close(DisconnectedReason.Error, Properties.Resources.GetString("Client_UnexpectedChannelDisconnection"));
-			}
-		}
-
-		void ObservePackets()
-		{
-			packetsSubscription = packetListener
-				.PacketStream
-				.ObserveOn(NewThreadScheduler.Default)
-				.Subscribe(packet =>
-				{
-					if (packet.Type == MqttPacketType.Publish)
-					{
-						var publish = packet as Publish;
-						var message = new MqttApplicationMessage(publish.Topic, publish.Payload);
-
-						receiver.OnNext(message);
-						tracer.Info(Properties.Resources.GetString("Client_NewApplicationMessageReceived"), Id, publish.Topic);
-					}
-				}, ex =>
-				{
-					Close(ex);
-				}, () =>
-				{
-					tracer.Warn(Properties.Resources.GetString("Client_PacketsObservableCompleted"));
-					Close(DisconnectedReason.RemoteDisconnected);
-				});
-		}
-
-		void ResetReceiver()
-		{
-			receiver?.OnCompleted();
-			receiver = new Subject<MqttApplicationMessage>();
-		}
-	}
+    internal class MqttClientImpl : IMqttClient
+    {
+        static readonly ITracer _tracer = Tracer.Get<MqttClientImpl>();
+
+        bool _disposed;
+        bool _isProtocolConnected;
+        IPacketListener _packetListener;
+        IDisposable _packetsSubscription;
+        Subject<MqttApplicationMessage> _receiver;
+
+        readonly IPacketChannelFactory _channelFactory;
+        readonly IProtocolFlowProvider _flowProvider;
+        readonly IRepository<ClientSession> _sessionRepository;
+        readonly IPacketIdProvider _packetIdProvider;
+        readonly MqttConfiguration _configuration;
+        readonly TaskRunner _clientSender;
+
+        internal MqttClientImpl( IPacketChannelFactory channelFactory,
+            IProtocolFlowProvider flowProvider,
+            IRepositoryProvider repositoryProvider,
+            IPacketIdProvider packetIdProvider,
+            MqttConfiguration configuration )
+        {
+            _receiver = new Subject<MqttApplicationMessage>();
+            _channelFactory = channelFactory;
+            _flowProvider = flowProvider;
+            _sessionRepository = repositoryProvider.GetRepository<ClientSession>();
+            _packetIdProvider = packetIdProvider;
+            _configuration = configuration;
+            _clientSender = TaskRunner.Get();
+        }
+
+        public event EventHandler<MqttEndpointDisconnected> Disconnected = ( sender, args ) => { };
+
+        public string Id { get; private set; }
+
+        public bool IsConnected
+        {
+            get
+            {
+                CheckUnderlyingConnection();
+                return _isProtocolConnected && Channel.IsConnected;
+            }
+            private set => _isProtocolConnected = value;
+        }
+
+        public IObservable<MqttApplicationMessage> MessageStream => _receiver;
+
+        internal IMqttChannel<IPacket> Channel { get; private set; }
+
+        public async Task<SessionState> ConnectAsync( MqttClientCredentials credentials, MqttLastWill will = null, bool cleanSession = false )
+        {
+            if( _disposed ) throw new ObjectDisposedException( GetType().FullName );
+
+            try
+            {
+                if( IsConnected )
+                {
+                    throw new MqttClientException( string.Format( Properties.Resources.GetString( "Client_AlreadyConnected" ), Id ) );
+                }
+
+                if( string.IsNullOrEmpty( credentials.ClientId ) && !cleanSession )
+                {
+                    throw new MqttClientException( Properties.Resources.GetString( "Client_AnonymousClientWithoutCleanSession" ) );
+                }
+
+                Id = string.IsNullOrEmpty( credentials.ClientId ) ?
+                    MqttClient.GetAnonymousClientId() :
+                    credentials.ClientId;
+
+                OpenClientSession( cleanSession );
+
+                await InitializeChannelAsync().ConfigureAwait( continueOnCapturedContext: false );
+
+                Connect connect = new Connect( Id, cleanSession )
+                {
+                    UserName = credentials.UserName,
+                    Password = credentials.Password,
+                    Will = will,
+                    KeepAlive = _configuration.KeepAliveSecs
+                };
+
+                await SendPacketAsync( connect )
+                    .ConfigureAwait( continueOnCapturedContext: false );
+
+                TimeSpan connectTimeout = TimeSpan.FromSeconds( _configuration.WaitTimeoutSecs );
+                ConnectAck ack = await _packetListener
+                    .PacketStream
+                    .ObserveOn( NewThreadScheduler.Default )
+                    .OfType<ConnectAck>()
+                    .FirstOrDefaultAsync()
+                    .Timeout( connectTimeout );
+
+                if( ack == null )
+                {
+                    string message = string.Format( Properties.Resources.GetString( "Client_ConnectionDisconnected" ), Id );
+
+                    throw new MqttClientException( message );
+                }
+
+                if( ack.Status != MqttConnectionStatus.Accepted ) throw new MqttConnectionException( ack.Status );
+
+                IsConnected = true;
+
+                return ack.SessionPresent ? SessionState.SessionPresent : SessionState.CleanSession;
+            }
+            catch( TimeoutException timeEx )
+            {
+                Close( timeEx );
+                throw new MqttClientException( string.Format( Properties.Resources.GetString( "Client_ConnectionTimeout" ), Id ), timeEx );
+            }
+            catch( MqttConnectionException connectionEx )
+            {
+                Close( connectionEx );
+
+                string message = string.Format( Properties.Resources.GetString( "Client_ConnectNotAccepted" ), Id, connectionEx.ReturnCode );
+
+                throw new MqttClientException( message, connectionEx );
+            }
+            catch( MqttClientException clientEx )
+            {
+                Close( clientEx );
+                throw;
+            }
+            catch( Exception ex )
+            {
+                Close( ex );
+                throw new MqttClientException( string.Format( Properties.Resources.GetString( "Client_ConnectionError" ), Id ), ex );
+            }
+        }
+
+        public Task<SessionState> ConnectAsync( MqttLastWill will = null ) =>
+            ConnectAsync( new MqttClientCredentials(), will, cleanSession: true );
+
+        public async Task SubscribeAsync( string topicFilter, MqttQualityOfService qos )
+        {
+            if( _disposed )
+            {
+                throw new ObjectDisposedException( GetType().FullName );
+            }
+
+            try
+            {
+                ushort packetId = _packetIdProvider.GetPacketId();
+                Subscribe subscribe = new Subscribe( packetId, new Subscription( topicFilter, qos ) );
+
+                SubscribeAck ack = default;
+                TimeSpan subscribeTimeout = TimeSpan.FromSeconds( _configuration.WaitTimeoutSecs );
+
+                await SendPacketAsync( subscribe )
+                    .ConfigureAwait( continueOnCapturedContext: false );
+
+                ack = await _packetListener
+                    .PacketStream
+                    .ObserveOn( NewThreadScheduler.Default )
+                    .OfType<SubscribeAck>()
+                    .FirstOrDefaultAsync( x => x.PacketId == packetId )
+                    .Timeout( subscribeTimeout );
+
+                if( ack == null )
+                {
+                    string message = string.Format( Properties.Resources.GetString( "Client_SubscriptionDisconnected" ), Id, topicFilter );
+
+                    _tracer.Error( message );
+
+                    throw new MqttClientException( message );
+                }
+
+                if( ack.ReturnCodes.FirstOrDefault() == SubscribeReturnCode.Failure )
+                {
+                    string message = string.Format( Properties.Resources.GetString( "Client_SubscriptionRejected" ), Id, topicFilter );
+
+                    _tracer.Error( message );
+
+                    throw new MqttClientException( message );
+                }
+            }
+            catch( TimeoutException timeEx )
+            {
+                Close( timeEx );
+
+                string message = string.Format( Properties.Resources.GetString( "Client_SubscribeTimeout" ), Id, topicFilter );
+
+                throw new MqttClientException( message, timeEx );
+            }
+            catch( MqttClientException clientEx )
+            {
+                Close( clientEx );
+                throw;
+            }
+            catch( Exception ex )
+            {
+                Close( ex );
+
+                string message = string.Format( Properties.Resources.GetString( "Client_SubscribeError" ), Id, topicFilter );
+
+                throw new MqttClientException( message, ex );
+            }
+        }
+
+        public async Task PublishAsync( MqttApplicationMessage message, MqttQualityOfService qos, bool retain = false )
+        {
+            if( _disposed )
+            {
+                throw new ObjectDisposedException( GetType().FullName );
+            }
+
+            try
+            {
+                ushort? packetId = qos == MqttQualityOfService.AtMostOnce ? null : (ushort?)_packetIdProvider.GetPacketId();
+                Publish publish = new Publish( message.Topic, qos, retain, duplicated: false, packetId: packetId )
+                {
+                    Payload = message.Payload
+                };
+
+                PublishSenderFlow senderFlow = _flowProvider.GetFlow<PublishSenderFlow>();
+
+                await _clientSender.Run( async () =>
+                 {
+                     await senderFlow.SendPublishAsync( Id, publish, Channel )
+                         .ConfigureAwait( continueOnCapturedContext: false );
+                 } ).ConfigureAwait( continueOnCapturedContext: false );
+            }
+            catch( Exception ex )
+            {
+                Close( ex );
+                throw;
+            }
+        }
+
+        public async Task UnsubscribeAsync( params string[] topics )
+        {
+            if( _disposed ) throw new ObjectDisposedException( GetType().FullName );
+
+            try
+            {
+                topics = topics ?? Array.Empty<string>();
+
+                ushort packetId = _packetIdProvider.GetPacketId();
+                Unsubscribe unsubscribe = new Unsubscribe( packetId, topics );
+
+                UnsubscribeAck ack = default;
+                TimeSpan unsubscribeTimeout = TimeSpan.FromSeconds( _configuration.WaitTimeoutSecs );
+
+                await SendPacketAsync( unsubscribe )
+                    .ConfigureAwait( continueOnCapturedContext: false );
+
+                ack = await _packetListener
+                    .PacketStream
+                    .ObserveOn( NewThreadScheduler.Default )
+                    .OfType<UnsubscribeAck>()
+                    .FirstOrDefaultAsync( x => x.PacketId == packetId )
+                    .Timeout( unsubscribeTimeout );
+
+                if( ack == null )
+                {
+                    string message = string.Format( Properties.Resources.GetString( "Client_UnsubscribeDisconnected" ), Id, string.Join( ", ", topics ) );
+
+                    _tracer.Error( message );
+
+                    throw new MqttClientException( message );
+                }
+            }
+            catch( TimeoutException timeEx )
+            {
+                Close( timeEx );
+
+                string message = string.Format( Properties.Resources.GetString( "Client_UnsubscribeTimeout" ), Id, string.Join( ", ", topics ) );
+
+                _tracer.Error( message );
+
+                throw new MqttClientException( message, timeEx );
+            }
+            catch( MqttClientException clientEx )
+            {
+                Close( clientEx );
+                throw;
+            }
+            catch( Exception ex )
+            {
+                Close( ex );
+
+                string message = string.Format( Properties.Resources.GetString( "Client_UnsubscribeError" ), Id, string.Join( ", ", topics ) );
+
+                _tracer.Error( message );
+
+                throw new MqttClientException( message, ex );
+            }
+        }
+
+        public async Task DisconnectAsync()
+        {
+            try
+            {
+                if( !IsConnected )
+                {
+                    throw new MqttClientException( Properties.Resources.GetString( "Client_AlreadyDisconnected" ) );
+                }
+
+                _packetsSubscription?.Dispose();
+
+                await SendPacketAsync( new Disconnect() )
+                    .ConfigureAwait( continueOnCapturedContext: false );
+
+                await _packetListener
+                    .PacketStream
+                    .LastOrDefaultAsync();
+
+                Close( DisconnectedReason.SelfDisconnected );
+            }
+            catch( Exception ex )
+            {
+                Close( ex );
+            }
+        }
+
+        void IDisposable.Dispose()
+        {
+            DisposeAsync( disposing: true ).Wait();
+            GC.SuppressFinalize( this );
+        }
+
+        protected virtual async Task DisposeAsync( bool disposing )
+        {
+            if( _disposed ) return;
+
+            if( disposing )
+            {
+                if( IsConnected )
+                {
+                    await DisconnectAsync().ConfigureAwait( continueOnCapturedContext: false );
+                }
+
+                (_clientSender as IDisposable)?.Dispose();
+                _disposed = true;
+            }
+        }
+
+        void Close( Exception ex )
+        {
+            _tracer.Error( ex );
+            Close( DisconnectedReason.Error, ex.Message );
+        }
+
+        void Close( DisconnectedReason reason, string message = null )
+        {
+            _tracer.Info( Properties.Resources.GetString( "Client_Closing" ), Id, reason );
+
+            CloseClientSession();
+            _packetsSubscription?.Dispose();
+            _packetListener?.Dispose();
+            ResetReceiver();
+            Channel?.Dispose();
+            IsConnected = false;
+            Id = null;
+
+            Disconnected( this, new MqttEndpointDisconnected( reason, message ) );
+        }
+
+        async Task InitializeChannelAsync()
+        {
+            Channel = await _channelFactory
+                .CreateAsync()
+                .ConfigureAwait( continueOnCapturedContext: false );
+
+            _packetListener = new ClientPacketListener( Channel, _flowProvider, _configuration );
+            _packetListener.Listen();
+            ObservePackets();
+        }
+
+        void OpenClientSession( bool cleanSession )
+        {
+            ClientSession session = string.IsNullOrEmpty( Id ) ? default : _sessionRepository.Read( Id );
+
+            if( cleanSession && session != null )
+            {
+                _sessionRepository.Delete( session.Id );
+                session = null;
+
+                _tracer.Info( Properties.Resources.GetString( "Client_CleanedOldSession" ), Id );
+            }
+
+            if( session == null )
+            {
+                session = new ClientSession( Id, cleanSession );
+
+                _sessionRepository.Create( session );
+
+                _tracer.Info( Properties.Resources.GetString( "Client_CreatedSession" ), Id );
+            }
+        }
+
+        void CloseClientSession()
+        {
+            ClientSession session = string.IsNullOrEmpty( Id ) ? default : _sessionRepository.Read( Id );
+
+            if( session == null )
+            {
+                return;
+            }
+
+            if( session.Clean )
+            {
+                _sessionRepository.Delete( session.Id );
+
+                _tracer.Info( Properties.Resources.GetString( "Client_DeletedSessionOnDisconnect" ), Id );
+            }
+        }
+
+        async Task SendPacketAsync( IPacket packet )
+        {
+            await _clientSender.Run( async () => await Channel.SendAsync( packet ).ConfigureAwait( continueOnCapturedContext: false ) )
+                .ConfigureAwait( continueOnCapturedContext: false );
+        }
+
+        void CheckUnderlyingConnection()
+        {
+            if( _isProtocolConnected && !Channel.IsConnected )
+            {
+                Close( DisconnectedReason.Error, Properties.Resources.GetString( "Client_UnexpectedChannelDisconnection" ) );
+            }
+        }
+
+        void ObservePackets()
+        {
+            _packetsSubscription = _packetListener
+                .PacketStream
+                .ObserveOn( NewThreadScheduler.Default )
+                .Subscribe( packet =>
+                 {
+                     if( packet.Type == MqttPacketType.Publish )
+                     {
+                         Publish publish = packet as Publish;
+                         MqttApplicationMessage message = new MqttApplicationMessage( publish.Topic, publish.Payload );
+
+                         _receiver.OnNext( message );
+                         _tracer.Info( Properties.Resources.GetString( "Client_NewApplicationMessageReceived" ), Id, publish.Topic );
+                     }
+                 }, ex =>
+                 {
+                     Close( ex );
+                 }, () =>
+                 {
+                     _tracer.Warn( Properties.Resources.GetString( "Client_PacketsObservableCompleted" ) );
+                     Close( DisconnectedReason.RemoteDisconnected );
+                 } );
+        }
+
+        void ResetReceiver()
+        {
+            _receiver?.OnCompleted();
+            _receiver = new Subject<MqttApplicationMessage>();
+        }
+    }
 }

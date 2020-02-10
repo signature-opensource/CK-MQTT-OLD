@@ -1,79 +1,81 @@
-﻿using System;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace CK.MQTT.Sdk
 {
-	internal class TaskRunner : IDisposable
-	{
-		TaskFactory taskFactory;
-		bool disposed;
+    internal class TaskRunner : IDisposable
+    {
+        TaskFactory _taskFactory;
+        bool _disposed;
 
-		private TaskRunner ()
-		{
-			taskFactory = new TaskFactory (CancellationToken.None,
-				TaskCreationOptions.DenyChildAttach,
-				TaskContinuationOptions.None,
-				new SingleThreadScheduler ());
-		}
+        private TaskRunner()
+        {
+            _taskFactory = new TaskFactory( CancellationToken.None,
+                TaskCreationOptions.DenyChildAttach,
+                TaskContinuationOptions.None,
+                new SingleThreadScheduler() );
+        }
 
-		public static TaskRunner Get ()
-		{
-			return new TaskRunner ();
-		}
+        public static TaskRunner Get() => new TaskRunner();
 
-		public Task Run (Func<Task> func)
-		{
-			if (disposed) {
-				throw new ObjectDisposedException (GetType ().FullName);
-			}
+        public Task Run( Func<Task> func )
+        {
+            if( _disposed )
+            {
+                throw new ObjectDisposedException( GetType().FullName );
+            }
 
-			return taskFactory.StartNew (func).Unwrap ();
-		}
+            return _taskFactory.StartNew( func ).Unwrap();
+        }
 
-		public Task<T> Run<T> (Func<Task<T>> func)
-		{
-			if (disposed) {
-				throw new ObjectDisposedException (GetType ().FullName);
-			}
+        public Task<T> Run<T>( Func<Task<T>> func )
+        {
+            if( _disposed )
+            {
+                throw new ObjectDisposedException( GetType().FullName );
+            }
 
-			return taskFactory.StartNew (func).Unwrap ();
-		}
+            return _taskFactory.StartNew( func ).Unwrap();
+        }
 
-		public Task Run (Action action)
-		{
-			if (disposed) {
-				throw new ObjectDisposedException (GetType ().FullName);
-			}
+        public Task Run( Action action )
+        {
+            if( _disposed )
+            {
+                throw new ObjectDisposedException( GetType().FullName );
+            }
 
-			return taskFactory.StartNew (action);
-		}
+            return _taskFactory.StartNew( action );
+        }
 
-		public Task<T> Run<T> (Func<T> func)
-		{
-			if (disposed) {
-				throw new ObjectDisposedException (GetType ().FullName);
-			}
+        public Task<T> Run<T>( Func<T> func )
+        {
+            if( _disposed )
+            {
+                throw new ObjectDisposedException( GetType().FullName );
+            }
 
-			return taskFactory.StartNew (func);
-		}
+            return _taskFactory.StartNew( func );
+        }
 
-		public void Dispose ()
-		{
-			Dispose (disposing: true);
-			GC.SuppressFinalize (this);
-		}
+        public void Dispose()
+        {
+            Dispose( disposing: true );
+            GC.SuppressFinalize( this );
+        }
 
-		protected virtual void Dispose (bool disposing)
-		{
-			if (disposed)
-				return;
+        protected virtual void Dispose( bool disposing )
+        {
+            if( _disposed )
+                return;
 
-			if (disposing) {
-				(taskFactory.Scheduler as IDisposable)?.Dispose ();
-				taskFactory = null;
-				disposed = true;
-			}
-		}
-	}
+            if( disposing )
+            {
+                (_taskFactory.Scheduler as IDisposable)?.Dispose();
+                _taskFactory = null;
+                _disposed = true;
+            }
+        }
+    }
 }

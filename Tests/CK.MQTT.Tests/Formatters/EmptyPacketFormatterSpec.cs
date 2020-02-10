@@ -1,85 +1,85 @@
+using CK.MQTT;
+using CK.MQTT.Sdk;
+using CK.MQTT.Sdk.Formatters;
+using CK.MQTT.Sdk.Packets;
+using FluentAssertions;
+using Moq;
+using NUnit.Framework;
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using CK.MQTT;
-using CK.MQTT.Sdk.Formatters;
-using CK.MQTT.Sdk.Packets;
-using Moq;
-using CK.MQTT.Sdk;
-using FluentAssertions;
-using NUnit.Framework;
 
 namespace Tests.Formatters
 {
-	public class EmptyPacketFormatterSpec
-	{
-		readonly Mock<IMqttChannel<IPacket>> packetChannel;
-		readonly Mock<IMqttChannel<byte[]>> byteChannel;
+    public class EmptyPacketFormatterSpec
+    {
+        readonly Mock<IMqttChannel<IPacket>> packetChannel;
+        readonly Mock<IMqttChannel<byte[]>> byteChannel;
 
-		public EmptyPacketFormatterSpec ()
-		{
-			packetChannel = new Mock<IMqttChannel<IPacket>> ();
-			byteChannel = new Mock<IMqttChannel<byte[]>> ();
-		}
-		
-		[Theory]
-		[TestCase("Files/Binaries/PingResponse.packet", MqttPacketType.PingResponse, typeof(PingResponse))]
-		[TestCase("Files/Binaries/PingRequest.packet", MqttPacketType.PingRequest, typeof(PingRequest))]
-		[TestCase("Files/Binaries/Disconnect.packet", MqttPacketType.Disconnect, typeof(Disconnect))]
-		public async Task when_reading_empty_packet_then_succeeds(string packetPath, MqttPacketType packetType, Type type)
-		{
-			packetPath = Path.Combine (Environment.CurrentDirectory, packetPath);
+        public EmptyPacketFormatterSpec()
+        {
+            packetChannel = new Mock<IMqttChannel<IPacket>>();
+            byteChannel = new Mock<IMqttChannel<byte[]>>();
+        }
 
-			var formatter = GetFormatter (packetType, type);
-			var packet = Packet.ReadAllBytes (packetPath);
+        [Theory]
+        [TestCase( "Files/Binaries/PingResponse.packet", MqttPacketType.PingResponse, typeof( PingResponse ) )]
+        [TestCase( "Files/Binaries/PingRequest.packet", MqttPacketType.PingRequest, typeof( PingRequest ) )]
+        [TestCase( "Files/Binaries/Disconnect.packet", MqttPacketType.Disconnect, typeof( Disconnect ) )]
+        public async Task when_reading_empty_packet_then_succeeds( string packetPath, MqttPacketType packetType, Type type )
+        {
+            packetPath = Path.Combine( Environment.CurrentDirectory, packetPath );
 
-			var result = await formatter.FormatAsync (packet)
-				.ConfigureAwait(continueOnCapturedContext: false);
+            IFormatter formatter = GetFormatter( packetType, type );
+            byte[] packet = Packet.ReadAllBytes( packetPath );
 
-			Assert.NotNull (result);
-		}
+            IPacket result = await formatter.FormatAsync( packet )
+                .ConfigureAwait( continueOnCapturedContext: false );
 
-		[Theory]
-		[TestCase("Files/Binaries/PingResponse_Invalid_HeaderFlag.packet", MqttPacketType.PingResponse, typeof(PingResponse))]
-		[TestCase("Files/Binaries/PingRequest_Invalid_HeaderFlag.packet", MqttPacketType.PingRequest, typeof(PingRequest))]
-		[TestCase("Files/Binaries/Disconnect_Invalid_HeaderFlag.packet", MqttPacketType.Disconnect, typeof(Disconnect))]
-		public void when_reading_invalid_empty_packet_then_fails(string packetPath, MqttPacketType packetType, Type type)
-		{
-			packetPath = Path.Combine (Environment.CurrentDirectory, packetPath);
+            Assert.NotNull( result );
+        }
 
-			var formatter = GetFormatter (packetType, type);
-			var packet = Packet.ReadAllBytes (packetPath);
-			
-			var ex = Assert.Throws<AggregateException> (() => formatter.FormatAsync (packet).Wait());
+        [Theory]
+        [TestCase( "Files/Binaries/PingResponse_Invalid_HeaderFlag.packet", MqttPacketType.PingResponse, typeof( PingResponse ) )]
+        [TestCase( "Files/Binaries/PingRequest_Invalid_HeaderFlag.packet", MqttPacketType.PingRequest, typeof( PingRequest ) )]
+        [TestCase( "Files/Binaries/Disconnect_Invalid_HeaderFlag.packet", MqttPacketType.Disconnect, typeof( Disconnect ) )]
+        public void when_reading_invalid_empty_packet_then_fails( string packetPath, MqttPacketType packetType, Type type )
+        {
+            packetPath = Path.Combine( Environment.CurrentDirectory, packetPath );
 
-			Assert.True (ex.InnerException is MqttException);
-		}
+            IFormatter formatter = GetFormatter( packetType, type );
+            byte[] packet = Packet.ReadAllBytes( packetPath );
 
-		[Theory]
-		[TestCase("Files/Binaries/PingResponse.packet", MqttPacketType.PingResponse, typeof(PingResponse))]
-		[TestCase("Files/Binaries/PingRequest.packet", MqttPacketType.PingRequest, typeof(PingRequest))]
-		[TestCase("Files/Binaries/Disconnect.packet", MqttPacketType.Disconnect, typeof(Disconnect))]
-		public async Task when_writing_empty_packet_then_succeeds(string packetPath, MqttPacketType packetType, Type type)
-		{
-			packetPath = Path.Combine (Environment.CurrentDirectory, packetPath);
+            AggregateException ex = Assert.Throws<AggregateException>( () => formatter.FormatAsync( packet ).Wait() );
 
-			var expectedPacket = Packet.ReadAllBytes (packetPath);
-			var formatter = GetFormatter (packetType, type);
-			var packet = Activator.CreateInstance (type) as IPacket;
+            Assert.True( ex.InnerException is MqttException );
+        }
 
-			var result = await formatter.FormatAsync (packet)
-				.ConfigureAwait(continueOnCapturedContext: false);
+        [Theory]
+        [TestCase( "Files/Binaries/PingResponse.packet", MqttPacketType.PingResponse, typeof( PingResponse ) )]
+        [TestCase( "Files/Binaries/PingRequest.packet", MqttPacketType.PingRequest, typeof( PingRequest ) )]
+        [TestCase( "Files/Binaries/Disconnect.packet", MqttPacketType.Disconnect, typeof( Disconnect ) )]
+        public async Task when_writing_empty_packet_then_succeeds( string packetPath, MqttPacketType packetType, Type type )
+        {
+            packetPath = Path.Combine( Environment.CurrentDirectory, packetPath );
+
+            byte[] expectedPacket = Packet.ReadAllBytes( packetPath );
+            IFormatter formatter = GetFormatter( packetType, type );
+            IPacket packet = Activator.CreateInstance( type ) as IPacket;
+
+            byte[] result = await formatter.FormatAsync( packet )
+                .ConfigureAwait( continueOnCapturedContext: false );
 
             expectedPacket.Should().BeEquivalentTo( result );
-		}
+        }
 
-		IFormatter GetFormatter(MqttPacketType packetType, Type type)
-		{
-			var genericType = typeof (EmptyPacketFormatter<>);
-			var formatterType = genericType.MakeGenericType (type);
-			var formatter = Activator.CreateInstance (formatterType, packetType) as IFormatter;
+        IFormatter GetFormatter( MqttPacketType packetType, Type type )
+        {
+            Type genericType = typeof( EmptyPacketFormatter<> );
+            Type formatterType = genericType.MakeGenericType( type );
+            IFormatter formatter = Activator.CreateInstance( formatterType, packetType ) as IFormatter;
 
-			return formatter;
-		}
-	}
+            return formatter;
+        }
+    }
 }

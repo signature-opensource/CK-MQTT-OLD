@@ -6,7 +6,7 @@
     /// this library doesn't provide any pre-defined authentication mechanism.
     /// </summary>
 	public interface IMqttAuthenticationProvider
-	{
+    {
         /// <summary>
         /// Authenticates the user through the provided credentials
         /// </summary>
@@ -14,6 +14,6 @@
         /// <param name="username">Username to authenticate</param>
         /// <param name="password">Password to authenticate</param>
         /// <returns>A boolean value indicating if the user has been authenticated or not</returns>
-		bool Authenticate (string clientId, string username, string password);
-	}
+		bool Authenticate( string clientId, string username, string password );
+    }
 }

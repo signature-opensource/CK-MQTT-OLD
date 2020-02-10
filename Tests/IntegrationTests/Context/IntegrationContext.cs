@@ -1,11 +1,10 @@
+using CK.MQTT;
+using CK.MQTT.Sdk.Bindings;
+using NUnit.Framework;
+using System;
 using System.Diagnostics;
 using System.Net;
-using CK.MQTT;
 using System.Threading.Tasks;
-using CK.MQTT.Ssl;
-using CK.MQTT.Sdk.Bindings;
-using System;
-using NUnit.Framework;
 
 namespace IntegrationTests.Context
 {

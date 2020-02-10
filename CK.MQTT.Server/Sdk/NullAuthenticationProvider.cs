@@ -2,24 +2,24 @@
 
 namespace CK.MQTT.Sdk
 {
-	internal class NullAuthenticationProvider : IMqttAuthenticationProvider
-	{
-		static readonly Lazy<NullAuthenticationProvider> instance;
+    internal class NullAuthenticationProvider : IMqttAuthenticationProvider
+    {
+        static readonly Lazy<NullAuthenticationProvider> instance;
 
-		static NullAuthenticationProvider ()
-		{
-			instance = new Lazy<NullAuthenticationProvider> (() => new NullAuthenticationProvider ());
-		}
+        static NullAuthenticationProvider()
+        {
+            instance = new Lazy<NullAuthenticationProvider>( () => new NullAuthenticationProvider() );
+        }
 
-		NullAuthenticationProvider ()
-		{
-		}
+        NullAuthenticationProvider()
+        {
+        }
 
-		public static IMqttAuthenticationProvider Instance { get { return instance.Value; } }
+        public static IMqttAuthenticationProvider Instance { get { return instance.Value; } }
 
-		public bool Authenticate (string clientId, string username, string password)
-		{
-			return true;
-		}
-	}
+        public bool Authenticate( string clientId, string username, string password )
+        {
+            return true;
+        }
+    }
 }

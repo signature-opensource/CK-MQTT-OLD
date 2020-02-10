@@ -1,71 +1,79 @@
-﻿using System.Threading.Tasks;
 using CK.MQTT.Sdk.Packets;
 using CK.MQTT.Sdk.Storage;
+using System.Threading.Tasks;
 
 namespace CK.MQTT.Sdk.Flows
 {
-	internal class ClientConnectFlow : IProtocolFlow
-	{
-		readonly IRepository<ClientSession> sessionRepository;
-		readonly IPublishSenderFlow senderFlow;
+    internal class ClientConnectFlow : IProtocolFlow
+    {
+        readonly IRepository<ClientSession> _sessionRepository;
+        readonly IPublishSenderFlow _senderFlow;
 
-		public ClientConnectFlow (IRepository<ClientSession> sessionRepository,
-			IPublishSenderFlow senderFlow)
-		{
-			this.sessionRepository = sessionRepository;
-			this.senderFlow = senderFlow;
-		}
+        public ClientConnectFlow( IRepository<ClientSession> sessionRepository,
+            IPublishSenderFlow senderFlow )
+        {
+            _sessionRepository = sessionRepository;
+            _senderFlow = senderFlow;
+        }
 
-		public async Task ExecuteAsync (string clientId, IPacket input, IMqttChannel<IPacket> channel)
-		{
-			if (input.Type != MqttPacketType.ConnectAck) {
-				return;
-			}
+        public async Task ExecuteAsync( string clientId, IPacket input, IMqttChannel<IPacket> channel )
+        {
+            if( input.Type != MqttPacketType.ConnectAck )
+            {
+                return;
+            }
 
-			var ack = input as ConnectAck;
+            ConnectAck ack = input as ConnectAck;
 
-			if (ack.Status != MqttConnectionStatus.Accepted) {
-				return;
-			}
+            if( ack.Status != MqttConnectionStatus.Accepted )
+            {
+                return;
+            }
 
-			var session = sessionRepository.Read (clientId);
+            ClientSession session = _sessionRepository.Read( clientId );
 
-			if (session == null) {
-				throw new MqttException (string.Format (Properties.Resources.GetString("SessionRepository_ClientSessionNotFound"), clientId));
-			}
+            if( session == null )
+            {
+                throw new MqttException( string.Format( Properties.Resources.GetString( "SessionRepository_ClientSessionNotFound" ), clientId ) );
+            }
 
-			await SendPendingMessagesAsync (session, channel)
-				.ConfigureAwait (continueOnCapturedContext: false);
-			await SendPendingAcknowledgementsAsync (session, channel)
-				.ConfigureAwait (continueOnCapturedContext: false);
-		}
+            await SendPendingMessagesAsync( session, channel )
+                .ConfigureAwait( continueOnCapturedContext: false );
+            await SendPendingAcknowledgementsAsync( session, channel )
+                .ConfigureAwait( continueOnCapturedContext: false );
+        }
 
-		async Task SendPendingMessagesAsync (ClientSession session, IMqttChannel<IPacket> channel)
-		{
-			foreach (var pendingMessage in session.GetPendingMessages ()) {
-				var publish = new Publish(pendingMessage.Topic, pendingMessage.QualityOfService,
-					pendingMessage.Retain, pendingMessage.Duplicated, pendingMessage.PacketId);
+        async Task SendPendingMessagesAsync( ClientSession session, IMqttChannel<IPacket> channel )
+        {
+            foreach( PendingMessage pendingMessage in session.GetPendingMessages() )
+            {
+                Publish publish = new Publish( pendingMessage.Topic, pendingMessage.QualityOfService,
+                    pendingMessage.Retain, pendingMessage.Duplicated, pendingMessage.PacketId );
 
-				await senderFlow
-					.SendPublishAsync (session.Id, publish, channel, PendingMessageStatus.PendingToAcknowledge)
-					.ConfigureAwait (continueOnCapturedContext: false);
-			}
-		}
+                await _senderFlow
+                    .SendPublishAsync( session.Id, publish, channel, PendingMessageStatus.PendingToAcknowledge )
+                    .ConfigureAwait( continueOnCapturedContext: false );
+            }
+        }
 
-		async Task SendPendingAcknowledgementsAsync (ClientSession session, IMqttChannel<IPacket> channel)
-		{
-			foreach (var pendingAcknowledgement in session.GetPendingAcknowledgements ()) {
-				var ack = default(IFlowPacket);
+        async Task SendPendingAcknowledgementsAsync( ClientSession session, IMqttChannel<IPacket> channel )
+        {
+            foreach( PendingAcknowledgement pendingAcknowledgement in session.GetPendingAcknowledgements() )
+            {
+                IFlowPacket ack = default;
 
-				if (pendingAcknowledgement.Type == MqttPacketType.PublishReceived) {
-					ack = new PublishReceived (pendingAcknowledgement.PacketId);
-				} else if (pendingAcknowledgement.Type == MqttPacketType.PublishRelease) {
-					ack = new PublishRelease (pendingAcknowledgement.PacketId);
-				}
+                if( pendingAcknowledgement.Type == MqttPacketType.PublishReceived )
+                {
+                    ack = new PublishReceived( pendingAcknowledgement.PacketId );
+                }
+                else if( pendingAcknowledgement.Type == MqttPacketType.PublishRelease )
+                {
+                    ack = new PublishRelease( pendingAcknowledgement.PacketId );
+                }
 
-				await senderFlow.SendAckAsync (session.Id, ack, channel)
-					.ConfigureAwait (continueOnCapturedContext: false);
-			}
-		}
-	}
+                await _senderFlow.SendAckAsync( session.Id, ack, channel )
+                    .ConfigureAwait( continueOnCapturedContext: false );
+            }
+        }
+    }
 }

@@ -1,85 +1,91 @@
-﻿using System.Diagnostics;
 using CK.MQTT.Sdk.Packets;
+using System;
+using System.Diagnostics;
 using System.Reactive.Subjects;
 using System.Threading.Tasks;
-using System;
 
 namespace CK.MQTT.Sdk
 {
-	internal class PacketChannel : IMqttChannel<IPacket>
-	{
-        static readonly ITracer tracer = Tracer.Get<PacketChannel> ();
+    internal class PacketChannel : IMqttChannel<IPacket>
+    {
+        static readonly ITracer _tracer = Tracer.Get<PacketChannel>();
 
-        bool disposed;
-		
-		readonly IMqttChannel<byte[]> innerChannel;
-		readonly IPacketManager manager;
-		readonly ReplaySubject<IPacket> receiver;
-		readonly ReplaySubject<IPacket> sender;
-		readonly IDisposable subscription;
+        bool _disposed;
 
-		public PacketChannel (IMqttChannel<byte[]> innerChannel, 
-			IPacketManager manager, 
-			MqttConfiguration configuration)
-		{
-			this.innerChannel = innerChannel;
-			this.manager = manager;
+        readonly IMqttChannel<byte[]> _innerChannel;
+        readonly IPacketManager _manager;
+        readonly ReplaySubject<IPacket> _receiver;
+        readonly ReplaySubject<IPacket> _sender;
+        readonly IDisposable _subscription;
 
-			receiver = new ReplaySubject<IPacket> (window: TimeSpan.FromSeconds (configuration.WaitTimeoutSecs));
-			sender = new ReplaySubject<IPacket> (window: TimeSpan.FromSeconds (configuration.WaitTimeoutSecs));
-			subscription = innerChannel
+        public PacketChannel( IMqttChannel<byte[]> innerChannel,
+            IPacketManager manager,
+            MqttConfiguration configuration )
+        {
+            _innerChannel = innerChannel;
+            _manager = manager;
+
+            _receiver = new ReplaySubject<IPacket>( window: TimeSpan.FromSeconds( configuration.WaitTimeoutSecs ) );
+            _sender = new ReplaySubject<IPacket>( window: TimeSpan.FromSeconds( configuration.WaitTimeoutSecs ) );
+            _subscription = innerChannel
                 .ReceiverStream
-				.Subscribe (async bytes => {
-					try {
-						var packet = await this.manager.GetPacketAsync (bytes)
-							.ConfigureAwait(continueOnCapturedContext: false);
+                .Subscribe( async bytes =>
+                {
+                    try
+                    {
+                        IPacket packet = await _manager.GetPacketAsync( bytes )
+                            .ConfigureAwait( continueOnCapturedContext: false );
 
-						receiver.OnNext (packet);
-					} catch (MqttException ex) {
-						receiver.OnError (ex);
-					}
-				}, onError: ex => receiver.OnError (ex), onCompleted: () => receiver.OnCompleted ());
-		}
+                        _receiver.OnNext( packet );
+                    }
+                    catch( MqttException ex )
+                    {
+                        _receiver.OnError( ex );
+                    }
+                }, onError: ex => _receiver.OnError( ex ), onCompleted: () => _receiver.OnCompleted() );
+        }
 
-		public bool IsConnected { get { return innerChannel != null && innerChannel.IsConnected; } }
+        public bool IsConnected => _innerChannel != null && _innerChannel.IsConnected;
 
-		public IObservable<IPacket> ReceiverStream { get { return receiver; } }
+        public IObservable<IPacket> ReceiverStream => _receiver;
 
-		public IObservable<IPacket> SenderStream { get { return sender; } }
+        public IObservable<IPacket> SenderStream => _sender;
 
-		public async Task SendAsync (IPacket packet)
-		{
-			if (disposed) {
-				throw new ObjectDisposedException (GetType ().FullName);
-			}
+        public async Task SendAsync( IPacket packet )
+        {
+            if( _disposed )
+            {
+                throw new ObjectDisposedException( GetType().FullName );
+            }
 
-			var bytes = await manager.GetBytesAsync (packet)
-				.ConfigureAwait(continueOnCapturedContext: false);
+            byte[] bytes = await _manager.GetBytesAsync( packet )
+                .ConfigureAwait( continueOnCapturedContext: false );
 
-			sender.OnNext (packet);
+            _sender.OnNext( packet );
 
-			await innerChannel.SendAsync (bytes)
-				.ConfigureAwait (continueOnCapturedContext: false);
-		}
+            await _innerChannel.SendAsync( bytes )
+                .ConfigureAwait( continueOnCapturedContext: false );
+        }
 
-		public void Dispose ()
-		{
-			Dispose (true);
-			GC.SuppressFinalize (this);
-		}
+        public void Dispose()
+        {
+            Dispose( true );
+            GC.SuppressFinalize( this );
+        }
 
-		protected virtual void Dispose (bool disposing)
-		{
-			if (disposed) return;
+        protected virtual void Dispose( bool disposing )
+        {
+            if( _disposed ) return;
 
-			if (disposing) {
-				tracer.Info (Properties.Resources.GetString("Mqtt_Disposing"), GetType ().FullName);
+            if( disposing )
+            {
+                _tracer.Info( Properties.Resources.GetString( "Mqtt_Disposing" ), GetType().FullName );
 
-				subscription.Dispose ();
-				receiver.OnCompleted ();
-				innerChannel.Dispose ();
-				disposed = true;
-			}
-		}
-	}
+                _subscription.Dispose();
+                _receiver.OnCompleted();
+                _innerChannel.Dispose();
+                _disposed = true;
+            }
+        }
+    }
 }

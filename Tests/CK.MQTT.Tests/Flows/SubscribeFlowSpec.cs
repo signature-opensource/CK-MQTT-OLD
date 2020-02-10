@@ -1,250 +1,251 @@
-using Moq;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using CK.MQTT;
 using CK.MQTT.Sdk;
 using CK.MQTT.Sdk.Flows;
 using CK.MQTT.Sdk.Packets;
 using CK.MQTT.Sdk.Storage;
+using FluentAssertions;
+using Moq;
+using NUnit.Framework;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using FluentAssertions;
-using NUnit.Framework;
 
 namespace Tests.Flows
 {
-	public class SubscribeFlowSpec
-	{
-		[Test]
-		public async Task when_subscribing_new_topics_then_subscriptions_are_created_and_ack_is_sent()
-		{
-			var configuration = new MqttConfiguration { MaximumQualityOfService = MqttQualityOfService.AtLeastOnce };
-			var topicEvaluator = new Mock<IMqttTopicEvaluator> ();
-			var sessionRepository = new Mock<IRepository<ClientSession>> ();
-			var packetIdProvider = Mock.Of<IPacketIdProvider> ();
-			var retainedMessageRepository = Mock.Of<IRepository<RetainedMessage>> ();
-			var senderFlow = Mock.Of<IPublishSenderFlow> ();
+    public class SubscribeFlowSpec
+    {
+        [Test]
+        public async Task when_subscribing_new_topics_then_subscriptions_are_created_and_ack_is_sent()
+        {
+            MqttConfiguration configuration = new MqttConfiguration { MaximumQualityOfService = MqttQualityOfService.AtLeastOnce };
+            Mock<IMqttTopicEvaluator> topicEvaluator = new Mock<IMqttTopicEvaluator>();
+            Mock<IRepository<ClientSession>> sessionRepository = new Mock<IRepository<ClientSession>>();
+            IPacketIdProvider packetIdProvider = Mock.Of<IPacketIdProvider>();
+            IRepository<RetainedMessage> retainedMessageRepository = Mock.Of<IRepository<RetainedMessage>>();
+            IPublishSenderFlow senderFlow = Mock.Of<IPublishSenderFlow>();
 
-			var clientId = Guid.NewGuid().ToString();
-			var session = new ClientSession (clientId, clean: false );
+            string clientId = Guid.NewGuid().ToString();
+            ClientSession session = new ClientSession( clientId, clean: false );
 
-			topicEvaluator.Setup (e => e.IsValidTopicFilter (It.IsAny<string> ())).Returns (true);
-			sessionRepository.Setup (r => r.Read (It.IsAny<string> ())).Returns (session);
+            topicEvaluator.Setup( e => e.IsValidTopicFilter( It.IsAny<string>() ) ).Returns( true );
+            sessionRepository.Setup( r => r.Read( It.IsAny<string>() ) ).Returns( session );
 
-			var fooQoS = MqttQualityOfService.AtLeastOnce;
-			var fooTopic = "test/foo/1";
-			var fooSubscription = new Subscription (fooTopic, fooQoS);
-			var barQoS = MqttQualityOfService.AtMostOnce;
-			var barTopic = "test/bar/1";
-			var barSubscription = new Subscription (barTopic, barQoS);
+            MqttQualityOfService fooQoS = MqttQualityOfService.AtLeastOnce;
+            string fooTopic = "test/foo/1";
+            Subscription fooSubscription = new Subscription( fooTopic, fooQoS );
+            MqttQualityOfService barQoS = MqttQualityOfService.AtMostOnce;
+            string barTopic = "test/bar/1";
+            Subscription barSubscription = new Subscription( barTopic, barQoS );
 
-			var packetId = (ushort)new Random ().Next (0, ushort.MaxValue);
-			var subscribe = new Subscribe (packetId, fooSubscription, barSubscription);
-			
-			var channel = new Mock<IMqttChannel<IPacket>> ();
+            ushort packetId = (ushort)new Random().Next( 0, ushort.MaxValue );
+            Subscribe subscribe = new Subscribe( packetId, fooSubscription, barSubscription );
 
-			var response = default(IPacket);
+            Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
 
-			channel.Setup (c => c.SendAsync (It.IsAny<IPacket> ()))
-				.Callback<IPacket> (p => response = p)
-				.Returns(Task.Delay(0));
+            IPacket response = default;
 
-			var connectionProvider = new Mock<IConnectionProvider> ();
+            channel.Setup( c => c.SendAsync( It.IsAny<IPacket>() ) )
+                .Callback<IPacket>( p => response = p )
+                .Returns( Task.Delay( 0 ) );
 
-			connectionProvider
-				.Setup (p => p.GetConnection (It.Is<string> (c => c == clientId)))
-				.Returns (channel.Object);
+            Mock<IConnectionProvider> connectionProvider = new Mock<IConnectionProvider>();
 
-			var flow = new ServerSubscribeFlow (topicEvaluator.Object, sessionRepository.Object, 
-				retainedMessageRepository, packetIdProvider, senderFlow, configuration);
+            connectionProvider
+                .Setup( p => p.GetConnection( It.Is<string>( c => c == clientId ) ) )
+                .Returns( channel.Object );
 
-			await flow.ExecuteAsync (clientId, subscribe, channel.Object)
-				.ConfigureAwait(continueOnCapturedContext: false);
+            ServerSubscribeFlow flow = new ServerSubscribeFlow( topicEvaluator.Object, sessionRepository.Object,
+                retainedMessageRepository, packetIdProvider, senderFlow, configuration );
 
-			sessionRepository.Verify (r => r.Update (It.Is<ClientSession> (s => s.Id == clientId && s.Subscriptions.Count == 2 
-				&& s.Subscriptions.All(x => x.TopicFilter == fooTopic || x.TopicFilter == barTopic))));
-			Assert.NotNull (response);
+            await flow.ExecuteAsync( clientId, subscribe, channel.Object )
+                .ConfigureAwait( continueOnCapturedContext: false );
 
-			var subscribeAck = response as SubscribeAck;
+            sessionRepository.Verify( r => r.Update( It.Is<ClientSession>( s => s.Id == clientId && s.Subscriptions.Count == 2
+                && s.Subscriptions.All( x => x.TopicFilter == fooTopic || x.TopicFilter == barTopic ) ) ) );
+            Assert.NotNull( response );
 
-			Assert.NotNull (subscribeAck);
-			packetId.Should().Be(subscribeAck.PacketId);
-			2.Should().Be(subscribeAck.ReturnCodes.Count ());
-			Assert.True (subscribeAck.ReturnCodes.Any (c => c == SubscribeReturnCode.MaximumQoS0));
-			Assert.True (subscribeAck.ReturnCodes.Any (c => c == SubscribeReturnCode.MaximumQoS1));
-		}
+            SubscribeAck subscribeAck = response as SubscribeAck;
 
-		[Test]
-		public async Task when_subscribing_existing_topics_then_subscriptions_are_updated_and_ack_is_sent()
-		{
-			var configuration = new MqttConfiguration { MaximumQualityOfService = MqttQualityOfService.AtLeastOnce };
-			var topicEvaluator = new Mock<IMqttTopicEvaluator> ();
-			var sessionRepository = new Mock<IRepository<ClientSession>> ();
-			var packetIdProvider = Mock.Of<IPacketIdProvider> ();
-			var retainedMessageRepository = Mock.Of<IRepository<RetainedMessage>> ();
-			var senderFlow = Mock.Of<IPublishSenderFlow> ();
+            Assert.NotNull( subscribeAck );
+            packetId.Should().Be( subscribeAck.PacketId );
+            2.Should().Be( subscribeAck.ReturnCodes.Count() );
+            Assert.True( subscribeAck.ReturnCodes.Any( c => c == SubscribeReturnCode.MaximumQoS0 ) );
+            Assert.True( subscribeAck.ReturnCodes.Any( c => c == SubscribeReturnCode.MaximumQoS1 ) );
+        }
 
-			var clientId = Guid.NewGuid().ToString();
-			var fooQoS = MqttQualityOfService.AtLeastOnce;
-			var fooTopic = "test/foo/1";
-			var fooSubscription = new Subscription (fooTopic, fooQoS);
+        [Test]
+        public async Task when_subscribing_existing_topics_then_subscriptions_are_updated_and_ack_is_sent()
+        {
+            MqttConfiguration configuration = new MqttConfiguration { MaximumQualityOfService = MqttQualityOfService.AtLeastOnce };
+            Mock<IMqttTopicEvaluator> topicEvaluator = new Mock<IMqttTopicEvaluator>();
+            Mock<IRepository<ClientSession>> sessionRepository = new Mock<IRepository<ClientSession>>();
+            IPacketIdProvider packetIdProvider = Mock.Of<IPacketIdProvider>();
+            IRepository<RetainedMessage> retainedMessageRepository = Mock.Of<IRepository<RetainedMessage>>();
+            IPublishSenderFlow senderFlow = Mock.Of<IPublishSenderFlow>();
 
-			var session = new ClientSession (clientId, clean: false) {  
-				Subscriptions = new List<ClientSubscription> { 
-					new ClientSubscription { ClientId = clientId, MaximumQualityOfService = MqttQualityOfService.ExactlyOnce, TopicFilter = fooTopic } 
-				} 
-			};
+            string clientId = Guid.NewGuid().ToString();
+            MqttQualityOfService fooQoS = MqttQualityOfService.AtLeastOnce;
+            string fooTopic = "test/foo/1";
+            Subscription fooSubscription = new Subscription( fooTopic, fooQoS );
 
-			topicEvaluator.Setup (e => e.IsValidTopicFilter (It.IsAny<string> ())).Returns (true);
-			sessionRepository.Setup (r => r.Read (It.IsAny<string> ())).Returns (session);
+            ClientSession session = new ClientSession( clientId, clean: false )
+            {
+                Subscriptions = new List<ClientSubscription> {
+                    new ClientSubscription { ClientId = clientId, MaximumQualityOfService = MqttQualityOfService.ExactlyOnce, TopicFilter = fooTopic }
+                }
+            };
 
-			var packetId = (ushort)new Random ().Next (0, ushort.MaxValue);
-			var subscribe = new Subscribe (packetId, fooSubscription);
-			
-			var channel = new Mock<IMqttChannel<IPacket>> ();
+            topicEvaluator.Setup( e => e.IsValidTopicFilter( It.IsAny<string>() ) ).Returns( true );
+            sessionRepository.Setup( r => r.Read( It.IsAny<string>() ) ).Returns( session );
 
-			var response = default(IPacket);
+            ushort packetId = (ushort)new Random().Next( 0, ushort.MaxValue );
+            Subscribe subscribe = new Subscribe( packetId, fooSubscription );
 
-			channel.Setup (c => c.SendAsync (It.IsAny<IPacket> ()))
-				.Callback<IPacket> (p => response = p)
-				.Returns(Task.Delay(0));
+            Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
 
-			var connectionProvider = new Mock<IConnectionProvider> ();
+            IPacket response = default;
 
-			connectionProvider
-				.Setup (p => p.GetConnection (It.Is<string> (c => c == clientId)))
-				.Returns (channel.Object);
+            channel.Setup( c => c.SendAsync( It.IsAny<IPacket>() ) )
+                .Callback<IPacket>( p => response = p )
+                .Returns( Task.Delay( 0 ) );
 
-			var flow = new ServerSubscribeFlow (topicEvaluator.Object,  sessionRepository.Object, 
-				retainedMessageRepository, packetIdProvider,
-				senderFlow, configuration);
+            Mock<IConnectionProvider> connectionProvider = new Mock<IConnectionProvider>();
 
-			await flow.ExecuteAsync (clientId, subscribe, channel.Object)
-				.ConfigureAwait(continueOnCapturedContext: false);
+            connectionProvider
+                .Setup( p => p.GetConnection( It.Is<string>( c => c == clientId ) ) )
+                .Returns( channel.Object );
 
-			sessionRepository.Verify (r => r.Update (It.Is<ClientSession> (s => s.Id == clientId && s.Subscriptions.Count == 1 
-				&& s.Subscriptions.Any(x => x.TopicFilter == fooTopic && x.MaximumQualityOfService == fooQoS))));
-			Assert.NotNull (response);
+            ServerSubscribeFlow flow = new ServerSubscribeFlow( topicEvaluator.Object, sessionRepository.Object,
+                retainedMessageRepository, packetIdProvider,
+                senderFlow, configuration );
 
-			var subscribeAck = response as SubscribeAck;
+            await flow.ExecuteAsync( clientId, subscribe, channel.Object )
+                .ConfigureAwait( continueOnCapturedContext: false );
 
-			Assert.NotNull (subscribeAck);
-			packetId.Should().Be(subscribeAck.PacketId);
-			1.Should().Be(subscribeAck.ReturnCodes.Count ());
-			Assert.True (subscribeAck.ReturnCodes.Any (c => c == SubscribeReturnCode.MaximumQoS1));
-		}
+            sessionRepository.Verify( r => r.Update( It.Is<ClientSession>( s => s.Id == clientId && s.Subscriptions.Count == 1
+                && s.Subscriptions.Any( x => x.TopicFilter == fooTopic && x.MaximumQualityOfService == fooQoS ) ) ) );
+            Assert.NotNull( response );
 
-		[Test]
-		public async Task when_subscribing_invalid_topic_then_failure_is_sent_in_ack()
-		{
-			var configuration = new MqttConfiguration { MaximumQualityOfService = MqttQualityOfService.AtLeastOnce };
-			var topicEvaluator = new Mock<IMqttTopicEvaluator> ();
-			var sessionRepository = new Mock<IRepository<ClientSession>> ();
-			var packetIdProvider = Mock.Of<IPacketIdProvider> ();
-			var retainedMessageRepository = Mock.Of<IRepository<RetainedMessage>> ();
-			var senderFlow = Mock.Of<IPublishSenderFlow> ();
+            SubscribeAck subscribeAck = response as SubscribeAck;
 
-			var clientId = Guid.NewGuid().ToString();
-			var session = new ClientSession (clientId, clean: false );
+            Assert.NotNull( subscribeAck );
+            packetId.Should().Be( subscribeAck.PacketId );
+            1.Should().Be( subscribeAck.ReturnCodes.Count() );
+            Assert.True( subscribeAck.ReturnCodes.Any( c => c == SubscribeReturnCode.MaximumQoS1 ) );
+        }
 
-			topicEvaluator.Setup (e => e.IsValidTopicFilter (It.IsAny<string> ())).Returns (false);
-			sessionRepository.Setup (r => r.Read (It.IsAny<string> ())).Returns (session);
+        [Test]
+        public async Task when_subscribing_invalid_topic_then_failure_is_sent_in_ack()
+        {
+            MqttConfiguration configuration = new MqttConfiguration { MaximumQualityOfService = MqttQualityOfService.AtLeastOnce };
+            Mock<IMqttTopicEvaluator> topicEvaluator = new Mock<IMqttTopicEvaluator>();
+            Mock<IRepository<ClientSession>> sessionRepository = new Mock<IRepository<ClientSession>>();
+            IPacketIdProvider packetIdProvider = Mock.Of<IPacketIdProvider>();
+            IRepository<RetainedMessage> retainedMessageRepository = Mock.Of<IRepository<RetainedMessage>>();
+            IPublishSenderFlow senderFlow = Mock.Of<IPublishSenderFlow>();
 
-			var fooQoS = MqttQualityOfService.AtLeastOnce;
-			var fooTopic = "test/foo/1";
-			var fooSubscription = new Subscription (fooTopic, fooQoS);
+            string clientId = Guid.NewGuid().ToString();
+            ClientSession session = new ClientSession( clientId, clean: false );
 
-			var packetId = (ushort)new Random ().Next (0, ushort.MaxValue);
-			var subscribe = new Subscribe (packetId, fooSubscription);
-			
-			var channel = new Mock<IMqttChannel<IPacket>> ();
+            topicEvaluator.Setup( e => e.IsValidTopicFilter( It.IsAny<string>() ) ).Returns( false );
+            sessionRepository.Setup( r => r.Read( It.IsAny<string>() ) ).Returns( session );
 
-			var response = default(IPacket);
+            MqttQualityOfService fooQoS = MqttQualityOfService.AtLeastOnce;
+            string fooTopic = "test/foo/1";
+            Subscription fooSubscription = new Subscription( fooTopic, fooQoS );
 
-			channel.Setup (c => c.SendAsync (It.IsAny<IPacket> ()))
-				.Callback<IPacket> (p => response = p)
-				.Returns(Task.Delay(0));
+            ushort packetId = (ushort)new Random().Next( 0, ushort.MaxValue );
+            Subscribe subscribe = new Subscribe( packetId, fooSubscription );
 
-			var connectionProvider = new Mock<IConnectionProvider> ();
+            Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
 
-			connectionProvider
-				.Setup (p => p.GetConnection (It.Is<string> (c => c == clientId)))
-				.Returns (channel.Object);
+            IPacket response = default;
 
-			var flow = new ServerSubscribeFlow (topicEvaluator.Object, sessionRepository.Object, 
-				retainedMessageRepository, packetIdProvider,
-				senderFlow, configuration);
+            channel.Setup( c => c.SendAsync( It.IsAny<IPacket>() ) )
+                .Callback<IPacket>( p => response = p )
+                .Returns( Task.Delay( 0 ) );
 
-			await flow.ExecuteAsync (clientId, subscribe, channel.Object)
-				.ConfigureAwait(continueOnCapturedContext: false);
+            Mock<IConnectionProvider> connectionProvider = new Mock<IConnectionProvider>();
 
-			Assert.NotNull (response);
+            connectionProvider
+                .Setup( p => p.GetConnection( It.Is<string>( c => c == clientId ) ) )
+                .Returns( channel.Object );
 
-			var subscribeAck = response as SubscribeAck;
+            ServerSubscribeFlow flow = new ServerSubscribeFlow( topicEvaluator.Object, sessionRepository.Object,
+                retainedMessageRepository, packetIdProvider,
+                senderFlow, configuration );
 
-			Assert.NotNull (subscribeAck);
-			packetId.Should().Be(subscribeAck.PacketId);
-			1.Should().Be(subscribeAck.ReturnCodes.Count ());
-			SubscribeReturnCode.Failure.Should().Be(subscribeAck.ReturnCodes.First());
-		}
+            await flow.ExecuteAsync( clientId, subscribe, channel.Object )
+                .ConfigureAwait( continueOnCapturedContext: false );
 
-		[Test]
-		public async Task when_subscribing_topic_with_retain_message_then_retained_is_sent()
-		{
-			var configuration = new MqttConfiguration { MaximumQualityOfService = MqttQualityOfService.AtLeastOnce };
-			var topicEvaluator = new Mock<IMqttTopicEvaluator> ();
-			var sessionRepository = new Mock<IRepository<ClientSession>> ();
-			var packetIdProvider = Mock.Of<IPacketIdProvider> ();
-			var retainedMessageRepository = new Mock<IRepository<RetainedMessage>> ();
-			var senderFlow = new Mock<IPublishSenderFlow> ();
+            Assert.NotNull( response );
 
-			var clientId = Guid.NewGuid().ToString();
-			var session = new ClientSession (clientId, clean: false);
+            SubscribeAck subscribeAck = response as SubscribeAck;
 
-			sessionRepository.Setup (r => r.Read (It.IsAny<string> ())).Returns (session);
+            Assert.NotNull( subscribeAck );
+            packetId.Should().Be( subscribeAck.PacketId );
+            1.Should().Be( subscribeAck.ReturnCodes.Count() );
+            SubscribeReturnCode.Failure.Should().Be( subscribeAck.ReturnCodes.First() );
+        }
 
-			var fooQoS = MqttQualityOfService.AtLeastOnce;
-			var fooTopic = "test/foo/#";
-			var fooSubscription = new Subscription (fooTopic, fooQoS);
+        [Test]
+        public async Task when_subscribing_topic_with_retain_message_then_retained_is_sent()
+        {
+            MqttConfiguration configuration = new MqttConfiguration { MaximumQualityOfService = MqttQualityOfService.AtLeastOnce };
+            Mock<IMqttTopicEvaluator> topicEvaluator = new Mock<IMqttTopicEvaluator>();
+            Mock<IRepository<ClientSession>> sessionRepository = new Mock<IRepository<ClientSession>>();
+            IPacketIdProvider packetIdProvider = Mock.Of<IPacketIdProvider>();
+            Mock<IRepository<RetainedMessage>> retainedMessageRepository = new Mock<IRepository<RetainedMessage>>();
+            Mock<IPublishSenderFlow> senderFlow = new Mock<IPublishSenderFlow>();
 
-			var retainedTopic = "test/foo/bar";
-			var retainedQoS =  MqttQualityOfService.ExactlyOnce;
-			var retainedPayload = Encoding.UTF8.GetBytes ("Retained Message Test");
-			var retainedMessages = new List<RetainedMessage> {
-				new RetainedMessage (retainedTopic, retainedQoS, retainedPayload)
-			};
+            string clientId = Guid.NewGuid().ToString();
+            ClientSession session = new ClientSession( clientId, clean: false );
 
-			topicEvaluator.Setup (e => e.IsValidTopicFilter (It.IsAny<string> ())).Returns (true);
-			topicEvaluator.Setup (e => e.Matches (It.IsAny<string> (), It.IsAny<string> ())).Returns (true);
-			retainedMessageRepository.Setup (r => r.ReadAll ()).Returns (retainedMessages.AsQueryable());
+            sessionRepository.Setup( r => r.Read( It.IsAny<string>() ) ).Returns( session );
 
-			var packetId = (ushort)new Random ().Next (0, ushort.MaxValue);
-			var subscribe = new Subscribe (packetId, fooSubscription);
-			
-			var channel = new Mock<IMqttChannel<IPacket>> ();
+            MqttQualityOfService fooQoS = MqttQualityOfService.AtLeastOnce;
+            string fooTopic = "test/foo/#";
+            Subscription fooSubscription = new Subscription( fooTopic, fooQoS );
 
-			var connectionProvider = new Mock<IConnectionProvider> ();
+            string retainedTopic = "test/foo/bar";
+            MqttQualityOfService retainedQoS = MqttQualityOfService.ExactlyOnce;
+            byte[] retainedPayload = Encoding.UTF8.GetBytes( "Retained Message Test" );
+            List<RetainedMessage> retainedMessages = new List<RetainedMessage> {
+                new RetainedMessage (retainedTopic, retainedQoS, retainedPayload)
+            };
 
-			connectionProvider
-				.Setup (p => p.GetConnection (It.Is<string> (c => c == clientId)))
-				.Returns (channel.Object);
+            topicEvaluator.Setup( e => e.IsValidTopicFilter( It.IsAny<string>() ) ).Returns( true );
+            topicEvaluator.Setup( e => e.Matches( It.IsAny<string>(), It.IsAny<string>() ) ).Returns( true );
+            retainedMessageRepository.Setup( r => r.ReadAll() ).Returns( retainedMessages.AsQueryable() );
 
-			var flow = new ServerSubscribeFlow (topicEvaluator.Object, 
-				sessionRepository.Object, retainedMessageRepository.Object,
-				packetIdProvider, senderFlow.Object, configuration);
+            ushort packetId = (ushort)new Random().Next( 0, ushort.MaxValue );
+            Subscribe subscribe = new Subscribe( packetId, fooSubscription );
 
-			await flow.ExecuteAsync (clientId, subscribe, channel.Object)
-				.ConfigureAwait(continueOnCapturedContext: false);
+            Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
 
-			senderFlow.Verify (f => f.SendPublishAsync (It.Is<string>(s => s == clientId),
-				It.Is<Publish> (p => p.Topic == retainedTopic && 
-					p.QualityOfService == fooQoS && 
-					p.Payload.ToList().SequenceEqual(retainedPayload) && 
-					p.PacketId.HasValue && 
-					p.Retain), 
-				It.Is<IMqttChannel<IPacket>>(c => c == channel.Object),
-				It.Is<PendingMessageStatus>(x => x == PendingMessageStatus.PendingToSend)));
-		}
-	}
+            Mock<IConnectionProvider> connectionProvider = new Mock<IConnectionProvider>();
+
+            connectionProvider
+                .Setup( p => p.GetConnection( It.Is<string>( c => c == clientId ) ) )
+                .Returns( channel.Object );
+
+            ServerSubscribeFlow flow = new ServerSubscribeFlow( topicEvaluator.Object,
+                sessionRepository.Object, retainedMessageRepository.Object,
+                packetIdProvider, senderFlow.Object, configuration );
+
+            await flow.ExecuteAsync( clientId, subscribe, channel.Object )
+                .ConfigureAwait( continueOnCapturedContext: false );
+
+            senderFlow.Verify( f => f.SendPublishAsync( It.Is<string>( s => s == clientId ),
+                It.Is<Publish>( p => p.Topic == retainedTopic &&
+                    p.QualityOfService == fooQoS &&
+                    p.Payload.ToList().SequenceEqual( retainedPayload ) &&
+                    p.PacketId.HasValue &&
+                    p.Retain ),
+                It.Is<IMqttChannel<IPacket>>( c => c == channel.Object ),
+                It.Is<PendingMessageStatus>( x => x == PendingMessageStatus.PendingToSend ) ) );
+        }
+    }
 }

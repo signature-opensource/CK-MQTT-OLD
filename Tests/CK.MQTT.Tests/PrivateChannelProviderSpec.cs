@@ -1,57 +1,59 @@
-using System;
 using CK.MQTT;
 using CK.MQTT.Sdk.Bindings;
-using System.Reactive.Subjects;
-using System.Threading.Tasks;
 using FluentAssertions;
 using NUnit.Framework;
+using System;
+using System.Reactive.Subjects;
+using System.Threading.Tasks;
 
 namespace Tests
 {
     public class PrivateChannelProviderSpec
     {
         [Test]
-        public async Task when_gettting_channels_with_stream_then_succeeds ()
+        public async Task when_gettting_channels_with_stream_then_succeeds()
         {
-            var configuration = new MqttConfiguration ();
-            var privateStreamListener = new Subject<PrivateStream> ();
-            var provider = new PrivateChannelListener (privateStreamListener, configuration);
+            MqttConfiguration configuration = new MqttConfiguration();
+            Subject<PrivateStream> privateStreamListener = new Subject<PrivateStream>();
+            PrivateChannelListener provider = new PrivateChannelListener( privateStreamListener, configuration );
 
-            var channelsCreated = 0;
+            int channelsCreated = 0;
 
             provider
-                .GetChannelStream ()
-                .Subscribe (channel => {
+                .GetChannelStream()
+                .Subscribe( channel =>
+                {
                     channelsCreated++;
-                });
+                } );
 
-            privateStreamListener.OnNext (new PrivateStream (configuration));
-            privateStreamListener.OnNext (new PrivateStream (configuration));
-            privateStreamListener.OnNext (new PrivateStream (configuration));
+            privateStreamListener.OnNext( new PrivateStream( configuration ) );
+            privateStreamListener.OnNext( new PrivateStream( configuration ) );
+            privateStreamListener.OnNext( new PrivateStream( configuration ) );
 
-            await Task.Delay (TimeSpan.FromMilliseconds(1000));
+            await Task.Delay( TimeSpan.FromMilliseconds( 1000 ) );
 
-            3.Should().Be(channelsCreated);
+            3.Should().Be( channelsCreated );
         }
 
         [Test]
-        public async Task when_gettting_channels_without_stream_then_fails ()
+        public async Task when_gettting_channels_without_stream_then_fails()
         {
-            var configuration = new MqttConfiguration ();
-            var privateStreamListener = new Subject<PrivateStream> ();
-            var provider = new PrivateChannelListener (privateStreamListener, configuration);
+            MqttConfiguration configuration = new MqttConfiguration();
+            Subject<PrivateStream> privateStreamListener = new Subject<PrivateStream>();
+            PrivateChannelListener provider = new PrivateChannelListener( privateStreamListener, configuration );
 
-            var channelsCreated = 0;
+            int channelsCreated = 0;
 
             provider
-                .GetChannelStream ()
-                .Subscribe (channel => {
+                .GetChannelStream()
+                .Subscribe( channel =>
+                {
                     channelsCreated++;
-                });
+                } );
 
-            await Task.Delay (TimeSpan.FromMilliseconds(1000));
+            await Task.Delay( TimeSpan.FromMilliseconds( 1000 ) );
 
-            0.Should().Be(channelsCreated);
+            0.Should().Be( channelsCreated );
         }
     }
 }

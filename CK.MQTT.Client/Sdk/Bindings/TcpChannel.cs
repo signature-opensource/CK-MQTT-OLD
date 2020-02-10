@@ -10,133 +10,154 @@ using System.Threading.Tasks;
 
 namespace CK.MQTT.Sdk.Bindings
 {
-	internal class TcpChannel : IMqttChannel<byte[]>
-	{
-        static readonly ITracer tracer = Tracer.Get<TcpChannel> ();
+    internal class TcpChannel : IMqttChannel<byte[]>
+    {
+        static readonly ITracer _tracer = Tracer.Get<TcpChannel>();
 
-        bool disposed;
+        bool _disposed;
 
-		readonly TcpClient client;
-		readonly IPacketBuffer buffer;
-		readonly ReplaySubject<byte[]> receiver;
-		readonly ReplaySubject<byte[]> sender;
-		readonly IDisposable streamSubscription;
+        readonly TcpClient _client;
+        readonly IPacketBuffer _buffer;
+        readonly ReplaySubject<byte[]> _receiver;
+        readonly ReplaySubject<byte[]> _sender;
+        readonly IDisposable _streamSubscription;
 
-		public TcpChannel (TcpClient client, 
-			IPacketBuffer buffer,
-			MqttConfiguration configuration)
-		{
-			this.client = client;
-			this.client.ReceiveBufferSize = configuration.BufferSize;
-			this.client.SendBufferSize = configuration.BufferSize;
-			this.buffer = buffer;
-			receiver = new ReplaySubject<byte[]> (window: TimeSpan.FromSeconds (configuration.WaitTimeoutSecs));
-			sender = new ReplaySubject<byte[]> (window: TimeSpan.FromSeconds (configuration.WaitTimeoutSecs));
-			streamSubscription = SubscribeStream ();
-		}
+        public TcpChannel( TcpClient client,
+            IPacketBuffer buffer,
+            MqttConfiguration configuration )
+        {
+            _client = client;
+            _client.ReceiveBufferSize = configuration.BufferSize;
+            _client.SendBufferSize = configuration.BufferSize;
+            _buffer = buffer;
+            _receiver = new ReplaySubject<byte[]>( window: TimeSpan.FromSeconds( configuration.WaitTimeoutSecs ) );
+            _sender = new ReplaySubject<byte[]>( window: TimeSpan.FromSeconds( configuration.WaitTimeoutSecs ) );
+            _streamSubscription = SubscribeStream();
+        }
 
-		public bool IsConnected
-		{
-			get
-			{
-				var connected = !disposed;
+        public bool IsConnected
+        {
+            get
+            {
+                bool connected = !_disposed;
 
-				try {
-					connected = connected && client.Connected;
-				} catch (Exception) {
-					connected = false;
-				}
-
-				return connected;
-			}
-		}
-
-		public IObservable<byte[]> ReceiverStream { get { return receiver; } }
-
-		public IObservable<byte[]> SenderStream { get { return sender; } }
-
-		public async Task SendAsync (byte[] message)
-		{
-			if (disposed) {
-				throw new ObjectDisposedException (GetType ().FullName);
-			}
-
-			if (!IsConnected) {
-				throw new MqttException (Properties.Resources.GetString("MqttChannel_ClientNotConnected"));
-			}
-
-			sender.OnNext (message);
-
-			try {
-				tracer.Verbose (Properties.Resources.GetString("MqttChannel_SendingPacket"), message.Length);
-
-				await client.GetStream ()
-					.WriteAsync (message, 0, message.Length)
-					.ConfigureAwait (continueOnCapturedContext: false);
-			} catch (ObjectDisposedException disposedEx) {
-				throw new MqttException (Properties.Resources.GetString("MqttChannel_StreamDisconnected"), disposedEx);
-			}
-		}
-
-		public void Dispose ()
-		{
-			Dispose (true);
-			GC.SuppressFinalize (this);
-		}
-
-		protected virtual void Dispose (bool disposing)
-		{
-			if (disposed) return;
-
-            if (disposing) {
-				tracer.Info (Properties.Resources.GetString("Mqtt_Disposing"), GetType ().FullName);
-
-				streamSubscription.Dispose ();
-				receiver.OnCompleted ();
-
-                try {
-                    client?.Dispose ();
-                } catch (SocketException socketEx) {
-                    tracer.Error (socketEx, Properties.Resources.GetString("MqttChannel_DisposeError"), socketEx.SocketErrorCode);
+                try
+                {
+                    connected = connected && _client.Connected;
+                }
+                catch( Exception )
+                {
+                    connected = false;
                 }
 
-                disposed = true;
-			}
-		}
+                return connected;
+            }
+        }
 
-		IDisposable SubscribeStream ()
-		{
-			return Observable.Defer (() => {
-				var buffer = new byte[client.ReceiveBufferSize];
+        public IObservable<byte[]> ReceiverStream { get { return _receiver; } }
 
-				return Observable.FromAsync<int> (() => {
-					return client.GetStream ().ReadAsync (buffer, 0, buffer.Length);
-				})
-				.Select (x => buffer.Take (x));
-			})
-			.Repeat ()
-			.TakeWhile (bytes => bytes.Any ())
-			.ObserveOn (NewThreadScheduler.Default)
-			.Subscribe (bytes => {
-				var packets = default (IEnumerable<byte[]>);
+        public IObservable<byte[]> SenderStream { get { return _sender; } }
 
-				if (buffer.TryGetPackets (bytes, out packets)) {
-					foreach (var packet in packets) {
-						tracer.Verbose (Properties.Resources.GetString("MqttChannel_ReceivedPacket"), packet.Length);
+        public async Task SendAsync( byte[] message )
+        {
+            if( _disposed )
+            {
+                throw new ObjectDisposedException( GetType().FullName );
+            }
 
-						receiver.OnNext (packet);
-					}
-				}
-			}, ex => {
-				if (ex is ObjectDisposedException) {
-					receiver.OnError (new MqttException (Properties.Resources.GetString("MqttChannel_StreamDisconnected"), ex));
-				} else {
-					receiver.OnError (ex);
-				}
-			}, () => {
-				tracer.Warn (Properties.Resources.GetString("MqttChannel_NetworkStreamCompleted"));
-				receiver.OnCompleted ();
-			});
-		}
-	}
+            if( !IsConnected )
+            {
+                throw new MqttException( Properties.Resources.GetString( "MqttChannel_ClientNotConnected" ) );
+            }
+
+            _sender.OnNext( message );
+
+            try
+            {
+                _tracer.Verbose( Properties.Resources.GetString( "MqttChannel_SendingPacket" ), message.Length );
+
+                await _client.GetStream()
+                    .WriteAsync( message, 0, message.Length )
+                    .ConfigureAwait( continueOnCapturedContext: false );
+            }
+            catch( ObjectDisposedException disposedEx )
+            {
+                throw new MqttException( Properties.Resources.GetString( "MqttChannel_StreamDisconnected" ), disposedEx );
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose( true );
+            GC.SuppressFinalize( this );
+        }
+
+        protected virtual void Dispose( bool disposing )
+        {
+            if( _disposed ) return;
+
+            if( disposing )
+            {
+                _tracer.Info( Properties.Resources.GetString( "Mqtt_Disposing" ), GetType().FullName );
+
+                _streamSubscription.Dispose();
+                _receiver.OnCompleted();
+
+                try
+                {
+                    _client?.Dispose();
+                }
+                catch( SocketException socketEx )
+                {
+                    _tracer.Error( socketEx, Properties.Resources.GetString( "MqttChannel_DisposeError" ), socketEx.SocketErrorCode );
+                }
+
+                _disposed = true;
+            }
+        }
+
+        IDisposable SubscribeStream()
+        {
+            return Observable.Defer( () =>
+            {
+                byte[] buffer = new byte[_client.ReceiveBufferSize];
+
+                return Observable.FromAsync<int>( () =>
+                {
+                    return _client.GetStream().ReadAsync( buffer, 0, buffer.Length );
+                } )
+                .Select( x => buffer.Take( x ) );
+            } )
+            .Repeat()
+            .TakeWhile( bytes => bytes.Any() )
+            .ObserveOn( NewThreadScheduler.Default )
+            .Subscribe( bytes =>
+            {
+
+                if( _buffer.TryGetPackets( bytes, out IEnumerable<byte[]> packets ) )
+                {
+                    foreach( byte[] packet in packets )
+                    {
+                        _tracer.Verbose( Properties.Resources.GetString( "MqttChannel_ReceivedPacket" ), packet.Length );
+
+                        _receiver.OnNext( packet );
+                    }
+                }
+            }, ex =>
+            {
+                if( ex is ObjectDisposedException )
+                {
+                    _receiver.OnError( new MqttException( Properties.Resources.GetString( "MqttChannel_StreamDisconnected" ), ex ) );
+                }
+                else
+                {
+                    _receiver.OnError( ex );
+                }
+            }, () =>
+            {
+                _tracer.Warn( Properties.Resources.GetString( "MqttChannel_NetworkStreamCompleted" ) );
+                _receiver.OnCompleted();
+            } );
+        }
+    }
 }

@@ -1,14 +1,14 @@
-﻿using System.Threading.Tasks;
-using CK.MQTT.Sdk.Packets;
+﻿using CK.MQTT.Sdk.Packets;
+using System.Threading.Tasks;
 
 namespace CK.MQTT.Sdk.Formatters
 {
-	internal interface IFormatter
-	{
-		MqttPacketType PacketType { get; }
+    internal interface IFormatter
+    {
+        MqttPacketType PacketType { get; }
 
-		Task<IPacket> FormatAsync (byte[] bytes);
+        Task<IPacket> FormatAsync( byte[] bytes );
 
-		Task<byte[]> FormatAsync (IPacket packet);
-	}
+        Task<byte[]> FormatAsync( IPacket packet );
+    }
 }

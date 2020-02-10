@@ -1,79 +1,49 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 
 namespace CK.MQTT.Sdk
 {
-	internal class Timer
-	{
-		volatile int intervalMillisecs;
-		volatile bool isRunning;
-		Task timerTask;
+    internal class Timer
+    {
+        volatile int _intervalMillisecs;
+        volatile bool _isRunning;
 
-		public Timer () : this (intervalMillisecs: 0)
-		{
-		}
+        public Timer() : this( intervalMillisecs: 0 )
+        {
+        }
 
-		public Timer (int intervalMillisecs, bool autoReset = true)
-		{
-			IntervalMillisecs = intervalMillisecs;
-			AutoReset = autoReset;
-		}
+        public Timer( int intervalMillisecs, bool autoReset = true )
+        {
+            IntervalMillisecs = intervalMillisecs;
+            AutoReset = autoReset;
+        }
 
-		public event EventHandler Elapsed = (sender, e) => {};
+        public event EventHandler Elapsed = ( sender, e ) => { };
 
-		public int IntervalMillisecs
-		{
-			get
-			{
-				return intervalMillisecs;
-			}
-			set
-			{
-				intervalMillisecs = value;
-			}
-		}
+        public int IntervalMillisecs
+        {
+            get => _intervalMillisecs;
+            set => _intervalMillisecs = value;
+        }
 
-		public bool AutoReset { get; set; }
+        public bool AutoReset { get; set; }
 
-		public void Start ()
-		{
-			if (isRunning) {
-				return;
-			}
+        public void Start()
+        {
+            if( _isRunning ) return;
+            if( IntervalMillisecs <= 0 ) throw new InvalidOperationException();
+            _isRunning = true;
+        }
 
-			if (IntervalMillisecs <= 0) {
-				throw new InvalidOperationException ();
-			}
+        public void Reset()
+        {
+            Stop();
+            Start();
+        }
 
-			isRunning = true;
-			timerTask = RunAsync ();
-		}
-
-		public void Reset ()
-		{
-			Stop ();
-			Start ();
-		}
-
-		public void Stop ()
-		{
-			isRunning = false;
-			timerTask = Task.FromResult (default (object));
-		}
-
-		async Task RunAsync ()
-		{
-			while (isRunning) {
-				await Task.Delay (intervalMillisecs);
-
-				if (isRunning) {
-					Elapsed (this, EventArgs.Empty);
-
-					if (!AutoReset) {
-						Stop ();
-					}
-				}
-			}
-		}
-	}
+        public void Stop()
+        {
+            _isRunning = false;
+        }
+    }
 }

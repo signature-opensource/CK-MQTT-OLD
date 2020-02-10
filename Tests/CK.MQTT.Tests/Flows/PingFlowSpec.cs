@@ -1,36 +1,36 @@
-using System;
-using System.Threading.Tasks;
+using CK.MQTT.Sdk;
 using CK.MQTT.Sdk.Flows;
 using CK.MQTT.Sdk.Packets;
-using Moq;
-using CK.MQTT.Sdk;
 using FluentAssertions;
+using Moq;
 using NUnit.Framework;
+using System;
+using System.Threading.Tasks;
 
 namespace Tests.Flows
 {
-	public class PingFlowSpec
-	{
-		[Test]
-		public async Task when_sending_ping_request_then_ping_response_is_sent()
-		{
-			var clientId = Guid.NewGuid ().ToString ();
-			var channel = new Mock<IMqttChannel<IPacket>> ();
-			var sentPacket = default(IPacket);
+    public class PingFlowSpec
+    {
+        [Test]
+        public async Task when_sending_ping_request_then_ping_response_is_sent()
+        {
+            string clientId = Guid.NewGuid().ToString();
+            Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
+            IPacket sentPacket = default;
 
-			channel.Setup (c => c.SendAsync (It.IsAny<IPacket> ()))
-				.Callback<IPacket> (packet => sentPacket = packet)
-				.Returns(Task.Delay(0));
+            channel.Setup( c => c.SendAsync( It.IsAny<IPacket>() ) )
+                .Callback<IPacket>( packet => sentPacket = packet )
+                .Returns( Task.Delay( 0 ) );
 
-			var flow = new PingFlow ();
+            PingFlow flow = new PingFlow();
 
-			await flow.ExecuteAsync (clientId, new PingRequest(), channel.Object)
-				.ConfigureAwait(continueOnCapturedContext: false);
+            await flow.ExecuteAsync( clientId, new PingRequest(), channel.Object )
+                .ConfigureAwait( continueOnCapturedContext: false );
 
-			var pingResponse = sentPacket as PingResponse;
+            PingResponse pingResponse = sentPacket as PingResponse;
 
-			Assert.NotNull (pingResponse);
-			MqttPacketType.PingResponse.Should().Be(pingResponse.Type);
-		}
-	}
+            Assert.NotNull( pingResponse );
+            MqttPacketType.PingResponse.Should().Be( pingResponse.Type );
+        }
+    }
 }

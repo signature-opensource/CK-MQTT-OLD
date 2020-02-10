@@ -3,7 +3,7 @@
 namespace CK.MQTT.Sdk
 {
     public interface IPacketBuffer
-	{
-		bool TryGetPackets (IEnumerable<byte> sequence, out IEnumerable<byte[]> packets);
-	}
+    {
+        bool TryGetPackets( IEnumerable<byte> sequence, out IEnumerable<byte[]> packets );
+    }
 }

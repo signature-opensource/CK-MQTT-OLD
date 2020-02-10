@@ -1,75 +1,81 @@
-﻿using System.Collections.Generic;
-using System.Linq;
 using CK.MQTT.Sdk.Packets;
 using CK.MQTT.Sdk.Storage;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace CK.MQTT.Sdk.Flows
 {
-	internal abstract class ProtocolFlowProvider : IProtocolFlowProvider
-	{
-		protected readonly IMqttTopicEvaluator topicEvaluator;
-		protected readonly IRepositoryProvider repositoryProvider;
-		protected readonly MqttConfiguration configuration;
+    internal abstract class ProtocolFlowProvider : IProtocolFlowProvider
+    {
+        protected readonly IMqttTopicEvaluator topicEvaluator;
+        protected readonly IRepositoryProvider repositoryProvider;
+        protected readonly MqttConfiguration configuration;
 
-		readonly object lockObject = new object ();
-		IDictionary<ProtocolFlowType, IProtocolFlow> flows;
+        readonly object _lockObject = new object();
+        IDictionary<ProtocolFlowType, IProtocolFlow> _flows;
 
-		protected ProtocolFlowProvider (IMqttTopicEvaluator topicEvaluator,
-			IRepositoryProvider repositoryProvider,
-			MqttConfiguration configuration)
-		{
-			this.topicEvaluator = topicEvaluator;
-			this.repositoryProvider = repositoryProvider;
-			this.configuration = configuration;
-		}
+        protected ProtocolFlowProvider( IMqttTopicEvaluator topicEvaluator,
+            IRepositoryProvider repositoryProvider,
+            MqttConfiguration configuration )
+        {
+            this.topicEvaluator = topicEvaluator;
+            this.repositoryProvider = repositoryProvider;
+            this.configuration = configuration;
+        }
 
-		protected abstract IDictionary<ProtocolFlowType, IProtocolFlow> InitializeFlows ();
+        protected abstract IDictionary<ProtocolFlowType, IProtocolFlow> InitializeFlows();
 
-		protected abstract bool IsValidPacketType (MqttPacketType packetType);
+        protected abstract bool IsValidPacketType( MqttPacketType packetType );
 
-		public IProtocolFlow GetFlow (MqttPacketType packetType)
-		{
-			if (!IsValidPacketType (packetType)) {
-				var error = string.Format (Properties.Resources.GetString("ProtocolFlowProvider_InvalidPacketType"), packetType);
+        public IProtocolFlow GetFlow( MqttPacketType packetType )
+        {
+            if( !IsValidPacketType( packetType ) )
+            {
+                string error = string.Format( Properties.Resources.GetString( "ProtocolFlowProvider_InvalidPacketType" ), packetType );
 
-				throw new MqttException (error);
-			}
+                throw new MqttException( error );
+            }
 
-			var flow = default (IProtocolFlow);
-			var flowType = packetType.ToFlowType();
+            ProtocolFlowType flowType = packetType.ToFlowType();
 
-			if (!GetFlows ().TryGetValue (flowType, out flow)) {
-				var error = string.Format (Properties.Resources.GetString("ProtocolFlowProvider_UnknownPacketType"), packetType);
 
-				throw new MqttException (error);
-			}
+            if( !GetFlows().TryGetValue( flowType, out IProtocolFlow flow ) )
+            {
+                string error = string.Format( Properties.Resources.GetString( "ProtocolFlowProvider_UnknownPacketType" ), packetType );
 
-			return flow;
-		}
+                throw new MqttException( error );
+            }
 
-		public T GetFlow<T> ()
-			where T : class, IProtocolFlow
-		{
-			var pair = GetFlows().FirstOrDefault (f => f.Value is T);
+            return flow;
+        }
 
-			if (pair.Equals (default (KeyValuePair<ProtocolFlowType, IProtocolFlow>))) {
-				return default (T);
-			}
+        public T GetFlow<T>()
+            where T : class, IProtocolFlow
+        {
+            KeyValuePair<ProtocolFlowType, IProtocolFlow> pair = GetFlows().FirstOrDefault( f => f.Value is T );
 
-			return pair.Value as T;
-		}
+            if( pair.Equals( default( KeyValuePair<ProtocolFlowType, IProtocolFlow> ) ) )
+            {
+                return default;
+            }
 
-		IDictionary<ProtocolFlowType, IProtocolFlow> GetFlows ()
-		{
-			if (flows == null) {
-				lock (lockObject) {
-					if (flows == null){
-						flows = InitializeFlows ();
-					}
-				}
-			}
+            return pair.Value as T;
+        }
 
-			return flows;
-		}
-	}
+        IDictionary<ProtocolFlowType, IProtocolFlow> GetFlows()
+        {
+            if( _flows == null )
+            {
+                lock( _lockObject )
+                {
+                    if( _flows == null )
+                    {
+                        _flows = InitializeFlows();
+                    }
+                }
+            }
+
+            return _flows;
+        }
+    }
 }

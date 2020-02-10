@@ -33,13 +33,12 @@ namespace CK.MQTT.Proxy.FakeClient
                 }
                 if( ms.Position > int.MaxValue ) throw new ArgumentOutOfRangeException( "The serialized object is too big." );
                 ms.Position = 0;
-                using( var buffer = MemoryPool<byte>.Shared.Rent( (int)ms.Length ) )
+                using( IMemoryOwner<byte> buffer = MemoryPool<byte>.Shared.Rent( (int)ms.Length ) )
                 {
-                    var memory = buffer.Memory;
+                    Memory<byte> memory = buffer.Memory;
                     do
                     {
                         memory = memory.Slice( await ms.ReadAsync( memory ) );
-
                     } while( memory.Length > 0 );
 
                     await _pipe.WriteAsync( buffer.Memory );
@@ -57,13 +56,12 @@ namespace CK.MQTT.Proxy.FakeClient
                 }
                 if( ms.Position > int.MaxValue ) throw new ArgumentOutOfRangeException( "The serialized object is too big." );
                 ms.Position = 0;
-                using( var buffer = MemoryPool<byte>.Shared.Rent( (int)ms.Length ) )
+                using( IMemoryOwner<byte> buffer = MemoryPool<byte>.Shared.Rent( (int)ms.Length ) )
                 {
-                    var memory = buffer.Memory;
+                    Memory<byte> memory = buffer.Memory;
                     do
                     {
                         memory = memory.Slice( ms.Read( memory.Span ) );
-
                     } while( memory.Length > 0 );
 
                     _pipe.Write( buffer.Memory.Span );

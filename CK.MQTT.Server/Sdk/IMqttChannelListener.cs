@@ -8,11 +8,11 @@ namespace CK.MQTT.Sdk
     /// and the listener accepts and establishes the connection on the Server side
     /// </summary>
 	public interface IMqttChannelListener : IDisposable
-	{
+    {
         /// <summary>
         /// Provides the stream of incoming channels on top of an underlying transport protocol
         /// </summary>
         /// <returns>An observable sequence of <see cref="IMqttChannel{T}"/> of byte[]</returns>
-		IObservable<IMqttChannel<byte[]>> GetChannelStream ();
-	}
+		IObservable<IMqttChannel<byte[]>> GetChannelStream();
+    }
 }

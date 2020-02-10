@@ -3,34 +3,36 @@ using System.Runtime.Serialization.Formatters.Binary;
 
 namespace IntegrationTests
 {
-	public class Serializer
-	{
-		public static byte[] Serialize<T> (T message)
-		{
-			var result = default (byte[]);
+    public class Serializer
+    {
+        public static byte[] Serialize<T>( T message )
+        {
+            byte[] result = default;
 
-			using(var stream = new MemoryStream()) {
-				var formatter = new BinaryFormatter ();
+            using( MemoryStream stream = new MemoryStream() )
+            {
+                BinaryFormatter formatter = new BinaryFormatter();
 
-				formatter.Serialize (stream, message);
-				result = stream.ToArray ();
-			}
+                formatter.Serialize( stream, message );
+                result = stream.ToArray();
+            }
 
-			return result;
-		}
+            return result;
+        }
 
-		public static T Deserialize<T>(byte[] content) 
-			where T : class
-		{
-			var result = default (T);
+        public static T Deserialize<T>( byte[] content )
+            where T : class
+        {
+            T result = default;
 
-			using (var stream = new MemoryStream (content)) {
-				var formatter = new BinaryFormatter ();
+            using( MemoryStream stream = new MemoryStream( content ) )
+            {
+                BinaryFormatter formatter = new BinaryFormatter();
 
-				result = formatter.Deserialize (stream) as T;
-			}
+                result = formatter.Deserialize( stream ) as T;
+            }
 
-			return result;
-		}
-	}
+            return result;
+        }
+    }
 }

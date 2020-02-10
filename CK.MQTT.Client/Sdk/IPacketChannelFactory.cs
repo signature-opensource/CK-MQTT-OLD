@@ -3,10 +3,10 @@ using System.Threading.Tasks;
 
 namespace CK.MQTT.Sdk
 {
-	internal interface IPacketChannelFactory
-	{
-		Task<IMqttChannel<IPacket>> CreateAsync ();
+    internal interface IPacketChannelFactory
+    {
+        Task<IMqttChannel<IPacket>> CreateAsync();
 
-		IMqttChannel<IPacket> Create (IMqttChannel<byte[]> binaryChannel);
-	}
+        IMqttChannel<IPacket> Create( IMqttChannel<byte[]> binaryChannel );
+    }
 }

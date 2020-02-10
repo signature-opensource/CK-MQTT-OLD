@@ -1,13 +1,11 @@
-﻿using System.Threading.Tasks;
 using CK.MQTT.Sdk.Packets;
+using System.Threading.Tasks;
 
 namespace CK.MQTT.Sdk.Flows
 {
-	internal class ClientSubscribeFlow : IProtocolFlow
-	{
-		public Task ExecuteAsync (string clientId, IPacket input, IMqttChannel<IPacket> channel)
-		{
-			return Task.Delay (0);
-		}
-	}
+    internal class ClientSubscribeFlow : IProtocolFlow
+    {
+        public Task ExecuteAsync( string clientId, IPacket input, IMqttChannel<IPacket> channel )
+            => Task.Delay( 0 );
+    }
 }

@@ -31,21 +31,21 @@ namespace CK.MQTT.Proxy.FakeClient
 
         public static MqttStubClient Create( IActivityMonitor m, MqttConfiguration config, string pipeName = "mqtt_pipe", string serverName = "." )
         {
-            var pipe = new NamedPipeClientStream( serverName, pipeName, PipeDirection.InOut, PipeOptions.Asynchronous );
+            NamedPipeClientStream pipe = new NamedPipeClientStream( serverName, pipeName, PipeDirection.InOut, PipeOptions.Asynchronous );
             return new MqttStubClient( m, config, pipe );
         }
 
-        public async Task Listen(CancellationToken token)
+        public async Task Listen( CancellationToken token )
         {
-            while(!token.IsCancellationRequested)
+            while( !token.IsCancellationRequested )
             {
-                var payload = await _pipeFormatter.ReceivePayloadAsync( token );
+                System.Collections.Generic.Queue<object> payload = await _pipeFormatter.ReceivePayloadAsync( token );
 
-                if( !(payload.Dequeue() is RelayHeader serverHeader) ) throw new InvalidDataException("Header was not a RelayHeader.");
+                if( !(payload.Dequeue() is RelayHeader serverHeader) ) throw new InvalidDataException( "Header was not a RelayHeader." );
                 switch( serverHeader )
                 {
                     case RelayHeader.Disconnected:
-                        Disconnected?.Invoke(this, (MqttEndpointDisconnected) payload.Dequeue());
+                        Disconnected?.Invoke( this, (MqttEndpointDisconnected)payload.Dequeue() );
                         break;
                     case RelayHeader.MessageEvent:
                         _receiver.OnNext( (MqttApplicationMessage)payload.Dequeue() );
@@ -87,7 +87,7 @@ namespace CK.MQTT.Proxy.FakeClient
             await _pipeFormatter.SendPayloadAsync( StubClientHeader.Connect, will );
             Stack result = _pipeFormatter.ReceivePayload();
             if( !(result.Pop() is SessionState state) ) throw new InvalidOperationException( "Unexpected payload return type." );
-            if(result.Count != 0)
+            if( result.Count != 0 )
             {
                 _m.Warn( "Connect payload returned more than one object." );
             }
@@ -103,10 +103,13 @@ namespace CK.MQTT.Proxy.FakeClient
             _pipe.Dispose();
         }
 
-        public Task PublishAsync( MqttApplicationMessage message, MqttQualityOfService qos, bool retain = false ) => _pipeFormatter.SendPayloadAsync( StubClientHeader.Publish, message, qos, retain );
+        public Task PublishAsync( MqttApplicationMessage message, MqttQualityOfService qos, bool retain = false )
+            => _pipeFormatter.SendPayloadAsync( StubClientHeader.Publish, message, qos, retain );
 
-        public Task SubscribeAsync( string topicFilter, MqttQualityOfService qos ) => _pipeFormatter.SendPayloadAsync( StubClientHeader.Subscribe, topicFilter, qos );
+        public Task SubscribeAsync( string topicFilter, MqttQualityOfService qos )
+            => _pipeFormatter.SendPayloadAsync( StubClientHeader.Subscribe, topicFilter, qos );
 
-        public Task UnsubscribeAsync( params string[] topics ) => _pipeFormatter.SendPayloadAsync( StubClientHeader.Unsubscribe, topics );
+        public Task UnsubscribeAsync( params string[] topics )
+            => _pipeFormatter.SendPayloadAsync( StubClientHeader.Unsubscribe, topics );
     }
 }

@@ -1,64 +1,57 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace CK.MQTT.Sdk.Packets
 {
-	internal class SubscribeAck : IPacket, IEquatable<SubscribeAck>
-	{
-		public SubscribeAck (ushort packetId, params SubscribeReturnCode[] returnCodes)
-		{
-			PacketId = packetId;
-			ReturnCodes = returnCodes;
-		}
+    internal class SubscribeAck : IPacket, IEquatable<SubscribeAck>
+    {
+        public SubscribeAck( ushort packetId, params SubscribeReturnCode[] returnCodes )
+        {
+            PacketId = packetId;
+            ReturnCodes = returnCodes;
+        }
 
-		public MqttPacketType Type { get { return MqttPacketType.SubscribeAck; } }
+        public MqttPacketType Type => MqttPacketType.SubscribeAck;
 
-		public ushort PacketId { get; }
+        public ushort PacketId { get; }
 
-		public IEnumerable<SubscribeReturnCode> ReturnCodes { get; }
+        public IEnumerable<SubscribeReturnCode> ReturnCodes { get; }
 
-		public bool Equals (SubscribeAck other)
-		{
-			if (other == null)
-				return false;
+        public bool Equals( SubscribeAck other )
+        {
+            if( other == null ) return false;
 
-			return PacketId == other.PacketId &&
-				ReturnCodes.SequenceEqual (other.ReturnCodes);
-		}
+            return PacketId == other.PacketId &&
+                ReturnCodes.SequenceEqual( other.ReturnCodes );
+        }
 
-		public override bool Equals (object obj)
-		{
-			if (obj == null)
-				return false;
+        public override bool Equals( object obj )
+        {
+            if( obj == null ) return false;
+            if( !(obj is SubscribeAck subscribeAck) ) return false;
 
-			var subscribeAck = obj as SubscribeAck;
+            return Equals( subscribeAck );
+        }
 
-			if (subscribeAck == null)
-				return false;
+        public static bool operator ==( SubscribeAck subscribeAck, SubscribeAck other )
+        {
+            if( subscribeAck is null || other is null ) return Equals( subscribeAck, other );
 
-			return Equals (subscribeAck);
-		}
+            return subscribeAck.Equals( other );
+        }
 
-		public static bool operator == (SubscribeAck subscribeAck, SubscribeAck other)
-		{
-			if ((object)subscribeAck == null || (object)other == null)
-				return Object.Equals (subscribeAck, other);
+        public static bool operator !=( SubscribeAck subscribeAck, SubscribeAck other )
+        {
+            if( subscribeAck is null || other is null )
+                return !Equals( subscribeAck, other );
 
-			return subscribeAck.Equals (other);
-		}
+            return !subscribeAck.Equals( other );
+        }
 
-		public static bool operator != (SubscribeAck subscribeAck, SubscribeAck other)
-		{
-			if ((object)subscribeAck == null || (object)other == null)
-				return !Object.Equals (subscribeAck, other);
-
-			return !subscribeAck.Equals (other);
-		}
-
-		public override int GetHashCode ()
-		{
-			return PacketId.GetHashCode () + ReturnCodes.GetHashCode ();
-		}
-	}
+        public override int GetHashCode()
+        {
+            return PacketId.GetHashCode() + ReturnCodes.GetHashCode();
+        }
+    }
 }

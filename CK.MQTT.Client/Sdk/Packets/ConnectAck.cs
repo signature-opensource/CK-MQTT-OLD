@@ -1,62 +1,61 @@
-﻿using System;
+using System;
 
 namespace CK.MQTT.Sdk.Packets
 {
-	internal class ConnectAck : IPacket, IEquatable<ConnectAck>
-	{
-		public ConnectAck (MqttConnectionStatus status, bool existingSession)
-		{
-			Status = status;
-			SessionPresent = existingSession;
-		}
+    internal class ConnectAck : IPacket, IEquatable<ConnectAck>
+    {
+        public ConnectAck( MqttConnectionStatus status, bool existingSession )
+        {
+            Status = status;
+            SessionPresent = existingSession;
+        }
 
-		public MqttPacketType Type { get { return MqttPacketType.ConnectAck; } }
+        public MqttPacketType Type { get { return MqttPacketType.ConnectAck; } }
 
-		public MqttConnectionStatus Status { get; }
+        public MqttConnectionStatus Status { get; }
 
-		public bool SessionPresent { get;  }
+        public bool SessionPresent { get; }
 
-		public bool Equals (ConnectAck other)
-		{
-			if (other == null)
-				return false;
+        public bool Equals( ConnectAck other )
+        {
+            if( other == null ) return false;
 
-			return Status == other.Status &&
-				SessionPresent == other.SessionPresent;
-		}
+            return Status == other.Status &&
+                SessionPresent == other.SessionPresent;
+        }
 
-		public override bool Equals (object obj)
-		{
-			if (obj == null)
-				return false;
+        public override bool Equals( object obj )
+        {
+            if( obj == null )
+                return false;
 
-			var connectAck = obj as ConnectAck;
+            ConnectAck connectAck = obj as ConnectAck;
 
-			if (connectAck == null)
-				return false;
+            if( connectAck == null )
+                return false;
 
-			return Equals (connectAck);
-		}
+            return Equals( connectAck );
+        }
 
-		public static bool operator == (ConnectAck connectAck, ConnectAck other)
-		{
-			if ((object)connectAck == null || (object)other == null)
-				return Object.Equals (connectAck, other);
+        public static bool operator ==( ConnectAck connectAck, ConnectAck other )
+        {
+            if( connectAck is null || other is null )
+                return Equals( connectAck, other );
 
-			return connectAck.Equals (other);
-		}
+            return connectAck.Equals( other );
+        }
 
-		public static bool operator != (ConnectAck connectAck, ConnectAck other)
-		{
-			if ((object)connectAck == null || (object)other == null)
-				return !Object.Equals (connectAck, other);
+        public static bool operator !=( ConnectAck connectAck, ConnectAck other )
+        {
+            if( connectAck is null || other is null )
+                return !Equals( connectAck, other );
 
-			return !connectAck.Equals (other);
-		}
+            return !connectAck.Equals( other );
+        }
 
-		public override int GetHashCode ()
-		{
-			return Status.GetHashCode () + SessionPresent.GetHashCode ();
-		}
-	}
+        public override int GetHashCode()
+        {
+            return Status.GetHashCode() + SessionPresent.GetHashCode();
+        }
+    }
 }

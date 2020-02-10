@@ -1,58 +1,61 @@
-using System.Collections.Generic;
 using CK.MQTT.Sdk;
-using System.Threading.Tasks;
 using FluentAssertions;
 using NUnit.Framework;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Tests
 {
-	public class PacketIdProviderSpec
-	{
-		[Test]
-		public void when_getting_packet_id_then_is_sequencial()
-		{
-			var packetIdProvider = new PacketIdProvider ();
-			var count = 5000;
+    public class PacketIdProviderSpec
+    {
+        [Test]
+        public void when_getting_packet_id_then_is_sequencial()
+        {
+            PacketIdProvider packetIdProvider = new PacketIdProvider();
+            int count = 5000;
 
-			for (ushort i = 1; i <= count; i++) {
-				packetIdProvider.GetPacketId ();
-			}
+            for( ushort i = 1; i <= count; i++ )
+            {
+                packetIdProvider.GetPacketId();
+            }
 
-			var packetId = packetIdProvider.GetPacketId ();
+            ushort packetId = packetIdProvider.GetPacketId();
 
-			(count + 1).Should().Be(packetId);
-		}
+            (count + 1).Should().Be( packetId );
+        }
 
-		[Test]
-		public void when_getting_packet_id_and_reaches_limit_then_resets()
-		{
-			var packetIdProvider = new PacketIdProvider ();
+        [Test]
+        public void when_getting_packet_id_and_reaches_limit_then_resets()
+        {
+            PacketIdProvider packetIdProvider = new PacketIdProvider();
 
-			for (var i = 1; i <= ushort.MaxValue; i++) {
-				packetIdProvider.GetPacketId ();
-			}
+            for( int i = 1; i <= ushort.MaxValue; i++ )
+            {
+                packetIdProvider.GetPacketId();
+            }
 
-			var packetId = packetIdProvider.GetPacketId ();
+            ushort packetId = packetIdProvider.GetPacketId();
 
-			1.Should().Be(packetId);
-		}
+            1.Should().Be( packetId );
+        }
 
-		[Test]
-		public void when_getting_packet_id_in_parallel_then_maintains_sequence()
-		{
-			var packetIdProvider = new PacketIdProvider ();
-			var count = 5000;
-			var packetIdTasks = new List<Task> ();
+        [Test]
+        public void when_getting_packet_id_in_parallel_then_maintains_sequence()
+        {
+            PacketIdProvider packetIdProvider = new PacketIdProvider();
+            int count = 5000;
+            List<Task> packetIdTasks = new List<Task>();
 
-			for (ushort i = 1; i <= count; i++) {
-				packetIdTasks.Add(Task.Run(() => packetIdProvider.GetPacketId ()));
-			}
+            for( ushort i = 1; i <= count; i++ )
+            {
+                packetIdTasks.Add( Task.Run( () => packetIdProvider.GetPacketId() ) );
+            }
 
-			Task.WaitAll (packetIdTasks.ToArray());
+            Task.WaitAll( packetIdTasks.ToArray() );
 
-			var packetId = packetIdProvider.GetPacketId ();
+            ushort packetId = packetIdProvider.GetPacketId();
 
-			(count + 1).Should().Be(packetId);
-		}
-	}
+            (count + 1).Should().Be( packetId );
+        }
+    }
 }

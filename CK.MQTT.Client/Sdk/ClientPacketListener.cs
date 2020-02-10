@@ -1,237 +1,262 @@
-﻿using System.Diagnostics;
 using CK.MQTT.Sdk.Flows;
 using CK.MQTT.Sdk.Packets;
+using System;
+using System.Diagnostics;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading.Tasks;
-using System;
 
 namespace CK.MQTT.Sdk
 {
-	internal class ClientPacketListener : IPacketListener
-	{
-		static readonly ITracer tracer = Tracer.Get<ClientPacketListener> ();
+    internal class ClientPacketListener : IPacketListener
+    {
+        static readonly ITracer _tracer = Tracer.Get<ClientPacketListener>();
 
-		readonly IMqttChannel<IPacket> channel;
-		readonly IProtocolFlowProvider flowProvider;
-		readonly MqttConfiguration configuration;
-		readonly ReplaySubject<IPacket> packets;
-		readonly TaskRunner flowRunner;
-		IDisposable listenerDisposable;
-		bool disposed;
-		string clientId = string.Empty;
-		Timer keepAliveTimer;
+        readonly IMqttChannel<IPacket> _channel;
+        readonly IProtocolFlowProvider _flowProvider;
+        readonly MqttConfiguration _configuration;
+        readonly ReplaySubject<IPacket> _packets;
+        readonly TaskRunner _flowRunner;
+        IDisposable _listenerDisposable;
+        bool _disposed;
+        string _clientId = string.Empty;
+        Timer _keepAliveTimer;
 
-		public ClientPacketListener (IMqttChannel<IPacket> channel, 
-			IProtocolFlowProvider flowProvider, 
-			MqttConfiguration configuration)
-		{
-			this.channel = channel;
-			this.flowProvider = flowProvider;
-			this.configuration = configuration;
-			packets = new ReplaySubject<IPacket> (window: TimeSpan.FromSeconds (configuration.WaitTimeoutSecs));
-			flowRunner = TaskRunner.Get ();
-		}
+        public ClientPacketListener( IMqttChannel<IPacket> channel,
+            IProtocolFlowProvider flowProvider,
+            MqttConfiguration configuration )
+        {
+            _channel = channel;
+            _flowProvider = flowProvider;
+            _configuration = configuration;
+            _packets = new ReplaySubject<IPacket>( window: TimeSpan.FromSeconds( configuration.WaitTimeoutSecs ) );
+            _flowRunner = TaskRunner.Get();
+        }
 
-		public IObservable<IPacket> PacketStream { get { return packets; } }
+        public IObservable<IPacket> PacketStream { get { return _packets; } }
 
-		public void Listen ()
-		{
-			if (disposed) {
-				throw new ObjectDisposedException (GetType ().FullName);
-			}
+        public void Listen()
+        {
+            if( _disposed )
+            {
+                throw new ObjectDisposedException( GetType().FullName );
+            }
 
-			listenerDisposable = new CompositeDisposable (
-				ListenFirstPacket (),
-				ListenNextPackets (),
-				ListenCompletionAndErrors (),
-				ListenSentConnectPacket (),
-				ListenSentDisconnectPacket ());
-		}
+            _listenerDisposable = new CompositeDisposable(
+                ListenFirstPacket(),
+                ListenNextPackets(),
+                ListenCompletionAndErrors(),
+                ListenSentConnectPacket(),
+                ListenSentDisconnectPacket() );
+        }
 
-		public void Dispose ()
-		{
-			Dispose (disposing: true);
-			GC.SuppressFinalize (this);
-		}
+        public void Dispose()
+        {
+            Dispose( disposing: true );
+            GC.SuppressFinalize( this );
+        }
 
-		protected virtual void Dispose (bool disposing)
-		{
-			if (disposed) {
-				return;
-			}
+        protected virtual void Dispose( bool disposing )
+        {
+            if( _disposed )
+            {
+                return;
+            }
 
-			if (disposing) {
-				tracer.Info (Properties.Resources.GetString("Mqtt_Disposing"), GetType ().FullName);
+            if( disposing )
+            {
+                _tracer.Info( Properties.Resources.GetString( "Mqtt_Disposing" ), GetType().FullName );
 
-				listenerDisposable.Dispose ();
-				StopKeepAliveMonitor ();
-				packets.OnCompleted ();
-				(flowRunner as IDisposable)?.Dispose ();
-				disposed = true;
-			}
-		}
+                _listenerDisposable.Dispose();
+                StopKeepAliveMonitor();
+                _packets.OnCompleted();
+                (_flowRunner as IDisposable)?.Dispose();
+                _disposed = true;
+            }
+        }
 
-		IDisposable ListenFirstPacket ()
-		{
-			return channel
+        IDisposable ListenFirstPacket()
+        {
+            return _channel
                 .ReceiverStream
-				.FirstOrDefaultAsync ()
-				.Subscribe (async packet => {
-					if (packet == default (IPacket)) {
-						return;
-					}
+                .FirstOrDefaultAsync()
+                .Subscribe( async packet =>
+                {
+                    if( packet == default( IPacket ) )
+                    {
+                        return;
+                    }
 
-					tracer.Info (Properties.Resources.GetString("ClientPacketListener_FirstPacketReceived"), clientId, packet.Type);
+                    _tracer.Info( Properties.Resources.GetString( "ClientPacketListener_FirstPacketReceived" ), _clientId, packet.Type );
 
-					var connectAck = packet as ConnectAck;
+                    ConnectAck connectAck = packet as ConnectAck;
 
-					if (connectAck == null) {
-						NotifyError (Properties.Resources.GetString("ClientPacketListener_FirstReceivedPacketMustBeConnectAck"));
-						return;
-					}
+                    if( connectAck == null )
+                    {
+                        NotifyError( Properties.Resources.GetString( "ClientPacketListener_FirstReceivedPacketMustBeConnectAck" ) );
+                        return;
+                    }
 
-					if (configuration.KeepAliveSecs > 0) {
-						StartKeepAliveMonitor ();
-					}
+                    if( _configuration.KeepAliveSecs > 0 )
+                    {
+                        StartKeepAliveMonitor();
+                    }
 
-					await DispatchPacketAsync (packet)
-						.ConfigureAwait (continueOnCapturedContext: false);
-				}, ex => {
-					NotifyError (ex);
-				});
-		}
+                    await DispatchPacketAsync( packet )
+                        .ConfigureAwait( continueOnCapturedContext: false );
+                }, ex =>
+                {
+                    NotifyError( ex );
+                } );
+        }
 
-		IDisposable ListenNextPackets ()
-		{
-			return channel
+        IDisposable ListenNextPackets()
+        {
+            return _channel
                 .ReceiverStream
-				.Skip (1)
-				.Subscribe (async packet => {
-					await DispatchPacketAsync (packet)
-						.ConfigureAwait (continueOnCapturedContext: false);
-				}, ex => {
-					NotifyError (ex);
-				});
-		}
+                .Skip( 1 )
+                .Subscribe( async packet =>
+                {
+                    await DispatchPacketAsync( packet )
+                        .ConfigureAwait( continueOnCapturedContext: false );
+                }, ex =>
+                {
+                    NotifyError( ex );
+                } );
+        }
 
-		IDisposable ListenCompletionAndErrors ()
-		{
-			return channel
+        IDisposable ListenCompletionAndErrors()
+        {
+            return _channel
                 .ReceiverStream
-                .Subscribe (_ => { },
-				    ex => {
-					    NotifyError (ex);
-				    }, () => {
-					    tracer.Warn (Properties.Resources.GetString("ClientPacketListener_PacketChannelCompleted"), clientId);
+                .Subscribe( _ => { },
+                    ex =>
+                    {
+                        NotifyError( ex );
+                    }, () =>
+                    {
+                        _tracer.Warn( Properties.Resources.GetString( "ClientPacketListener_PacketChannelCompleted" ), _clientId );
 
-					    packets.OnCompleted ();
-				    }
+                        _packets.OnCompleted();
+                    }
                 );
-		}
+        }
 
-		IDisposable ListenSentConnectPacket ()
-		{
-			return channel
-				.SenderStream
-				.OfType<Connect> ()
-				.FirstAsync ()
-				.Subscribe (connect => {
-					clientId = connect.ClientId;
-				});
-		}
+        IDisposable ListenSentConnectPacket()
+        {
+            return _channel
+                .SenderStream
+                .OfType<Connect>()
+                .FirstAsync()
+                .Subscribe( connect =>
+                {
+                    _clientId = connect.ClientId;
+                } );
+        }
 
-		IDisposable ListenSentDisconnectPacket ()
-		{
-			return channel.SenderStream
-				.OfType<Disconnect> ()
-				.FirstAsync ()
-				.ObserveOn (NewThreadScheduler.Default)
-				.Subscribe (disconnect => {
-					if (configuration.KeepAliveSecs > 0) {
-						StopKeepAliveMonitor ();
-					}
-				});
-		}
+        IDisposable ListenSentDisconnectPacket()
+        {
+            return _channel.SenderStream
+                .OfType<Disconnect>()
+                .FirstAsync()
+                .ObserveOn( NewThreadScheduler.Default )
+                .Subscribe( disconnect =>
+                {
+                    if( _configuration.KeepAliveSecs > 0 )
+                    {
+                        StopKeepAliveMonitor();
+                    }
+                } );
+        }
 
-		void StartKeepAliveMonitor ()
-		{
-			var interval = configuration.KeepAliveSecs * 1000;
+        void StartKeepAliveMonitor()
+        {
+            int interval = _configuration.KeepAliveSecs * 1000;
 
-			keepAliveTimer = new Timer ();
+            _keepAliveTimer = new Timer
+            {
+                AutoReset = true,
+                IntervalMillisecs = interval
+            };
+            _keepAliveTimer.Elapsed += async ( sender, e ) =>
+            {
+                try
+                {
+                    _tracer.Warn( Properties.Resources.GetString( "ClientPacketListener_SendingKeepAlive" ), _clientId, _configuration.KeepAliveSecs );
 
-			keepAliveTimer.AutoReset = true;
-			keepAliveTimer.IntervalMillisecs = interval;
-			keepAliveTimer.Elapsed += async (sender, e) => {
-				try {
-					tracer.Warn (Properties.Resources.GetString("ClientPacketListener_SendingKeepAlive"), clientId, configuration.KeepAliveSecs);
+                    PingRequest ping = new PingRequest();
 
-					var ping = new PingRequest ();
+                    await _channel.SendAsync( ping )
+                        .ConfigureAwait( continueOnCapturedContext: false );
+                }
+                catch( Exception ex )
+                {
+                    NotifyError( ex );
+                }
+            };
+            _keepAliveTimer.Start();
 
-					await channel.SendAsync (ping)
-						.ConfigureAwait (continueOnCapturedContext: false);
-				} catch (Exception ex) {
-					NotifyError (ex);
-				}
-			};
-			keepAliveTimer.Start ();
+            _channel.SenderStream.Subscribe( p =>
+            {
+                _keepAliveTimer.IntervalMillisecs = interval;
+            } );
+        }
 
-			channel.SenderStream.Subscribe (p => {
-				keepAliveTimer.IntervalMillisecs = interval;
-			});
-		}
+        void StopKeepAliveMonitor()
+        {
+            if( _keepAliveTimer != null )
+            {
+                _keepAliveTimer.Stop();
+            }
+        }
 
-		void StopKeepAliveMonitor ()
-		{
-			if (keepAliveTimer != null) {
-				keepAliveTimer.Stop ();
-			}
-		}
+        async Task DispatchPacketAsync( IPacket packet )
+        {
+            IProtocolFlow flow = _flowProvider.GetFlow( packet.Type );
 
-		async Task DispatchPacketAsync (IPacket packet)
-		{
-			var flow = flowProvider.GetFlow (packet.Type);
+            if( flow != null )
+            {
+                try
+                {
+                    _packets.OnNext( packet );
 
-			if (flow != null) {
-				try {
-					packets.OnNext (packet);
+                    await _flowRunner.Run( async () =>
+                    {
+                        Publish publish = packet as Publish;
 
-					await flowRunner.Run (async () => {
-						var publish = packet as Publish;
+                        if( publish == null )
+                        {
+                            _tracer.Info( Properties.Resources.GetString( "ClientPacketListener_DispatchingMessage" ), _clientId, packet.Type, flow.GetType().Name );
+                        }
+                        else
+                        {
+                            _tracer.Info( Properties.Resources.GetString( "ClientPacketListener_DispatchingPublish" ), _clientId, flow.GetType().Name, publish.Topic );
+                        }
 
-						if (publish == null) {
-							tracer.Info (Properties.Resources.GetString("ClientPacketListener_DispatchingMessage"), clientId, packet.Type, flow.GetType ().Name);
-						} else {
-							tracer.Info (Properties.Resources.GetString("ClientPacketListener_DispatchingPublish"), clientId, flow.GetType ().Name, publish.Topic);
-						}
+                        await flow.ExecuteAsync( _clientId, packet, _channel )
+                            .ConfigureAwait( continueOnCapturedContext: false );
+                    } )
+                    .ConfigureAwait( continueOnCapturedContext: false );
+                }
+                catch( Exception ex )
+                {
+                    NotifyError( ex );
+                }
+            }
+        }
 
-						await flow.ExecuteAsync (clientId, packet, channel)
-							.ConfigureAwait (continueOnCapturedContext: false);
-					})
-					.ConfigureAwait (continueOnCapturedContext: false);
-				} catch (Exception ex) {
-					NotifyError (ex);
-				}
-			}
-		}
+        void NotifyError( Exception exception )
+        {
+            _tracer.Error( exception, Properties.Resources.GetString( "ClientPacketListener_Error" ) );
 
-		void NotifyError (Exception exception)
-		{
-			tracer.Error (exception, Properties.Resources.GetString("ClientPacketListener_Error"));
+            _packets.OnError( exception );
+        }
 
-			packets.OnError (exception);
-		}
-
-		void NotifyError (string message)
-		{
-			NotifyError (new MqttException (message));
-		}
-
-		void NotifyError (string message, Exception exception)
-		{
-			NotifyError (new MqttException (message, exception));
-		}
-	}
+        void NotifyError( string message )
+        {
+            NotifyError( new MqttException( message ) );
+        }
+    }
 }

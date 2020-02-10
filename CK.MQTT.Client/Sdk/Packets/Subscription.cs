@@ -1,60 +1,47 @@
-﻿using System;
+using System;
 
 namespace CK.MQTT.Sdk.Packets
 {
-	internal class Subscription : IEquatable<Subscription>
-	{
-		public Subscription (string topicFilter, MqttQualityOfService requestedQos)
-		{
-			TopicFilter = topicFilter;
-			MaximumQualityOfService = requestedQos;
-		}
+    internal class Subscription : IEquatable<Subscription>
+    {
+        public Subscription( string topicFilter, MqttQualityOfService requestedQos )
+        {
+            TopicFilter = topicFilter;
+            MaximumQualityOfService = requestedQos;
+        }
 
-		public string TopicFilter { get; set; }
+        public string TopicFilter { get; set; }
 
-		public MqttQualityOfService MaximumQualityOfService { get; set; }
+        public MqttQualityOfService MaximumQualityOfService { get; set; }
 
-		public bool Equals (Subscription other)
-		{
-			if (other == null)
-				return false;
+        public bool Equals( Subscription other )
+        {
+            if( other == null ) return false;
 
-			return TopicFilter == other.TopicFilter &&
-				MaximumQualityOfService == other.MaximumQualityOfService;
-		}
+            return TopicFilter == other.TopicFilter &&
+                MaximumQualityOfService == other.MaximumQualityOfService;
+        }
 
-		public override bool Equals (object obj)
-		{
-			if (obj == null)
-				return false;
+        public override bool Equals( object obj )
+        {
+            if( obj == null ) return false;
+            if( !(obj is Subscription subscription) ) return false;
 
-			var subscription = obj as Subscription;
+            return Equals( subscription );
+        }
 
-			if (subscription == null)
-				return false;
+        public static bool operator ==( Subscription subscription, Subscription other )
+        {
+            if( subscription is null || other is null ) return Equals( subscription, other );
+            return subscription.Equals( other );
+        }
 
-			return Equals (subscription);
-		}
+        public static bool operator !=( Subscription subscription, Subscription other )
+        {
+            if( subscription is null || other is null ) return !Equals( subscription, other );
+            return !subscription.Equals( other );
+        }
 
-		public static bool operator == (Subscription subscription, Subscription other)
-		{
-			if ((object)subscription == null || (object)other == null)
-				return Object.Equals (subscription, other);
-
-			return subscription.Equals (other);
-		}
-
-		public static bool operator != (Subscription subscription, Subscription other)
-		{
-			if ((object)subscription == null || (object)other == null)
-				return !Object.Equals (subscription, other);
-
-			return !subscription.Equals (other);
-		}
-
-		public override int GetHashCode ()
-		{
-			return TopicFilter.GetHashCode () + MaximumQualityOfService.GetHashCode ();
-		}
-	}
+        public override int GetHashCode() => TopicFilter.GetHashCode() + MaximumQualityOfService.GetHashCode();
+    }
 }

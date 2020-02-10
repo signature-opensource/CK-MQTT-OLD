@@ -3,12 +3,12 @@ using System.Threading.Tasks;
 
 namespace CK.MQTT.Ssl
 {
-	public interface IListener<TChannel> where TChannel : IMqttChannel<byte[]>
-	{
-		void Start();
+    public interface IListener<TChannel> where TChannel : IMqttChannel<byte[]>
+    {
+        void Start();
 
-		void Stop();
+        void Stop();
 
         Task<TChannel> AcceptClientAsync();
-	}
+    }
 }

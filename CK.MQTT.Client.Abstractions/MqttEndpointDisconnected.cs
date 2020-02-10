@@ -4,7 +4,7 @@
     /// Reason of an MQTT Client or Server disconnection
     /// </summary>
 	public enum DisconnectedReason
-	{
+    {
         /// <summary>
         /// Disconnected by the remote host
         /// </summary>
@@ -31,7 +31,7 @@
     /// a disconnection event fired by a Client or Server instance
     /// </summary>
 	public class MqttEndpointDisconnected
-	{
+    {
         /// <summary>
         /// Initializes a new instance of the <see cref="MqttEndpointDisconnected" /> class,
         /// specifying the disconnection reason and an optional disconnection message
@@ -41,11 +41,11 @@
         /// See <see cref="DisconnectedReason" /> for more details about the possible options 
         /// </param>
         /// <param name="message">Optional message for the disconnection</param>
-		public MqttEndpointDisconnected (DisconnectedReason reason, string message = null)
-		{
-			Reason = reason;
-			Message = message;
-		}
+		public MqttEndpointDisconnected( DisconnectedReason reason, string message = null )
+        {
+            Reason = reason;
+            Message = message;
+        }
 
         /// <summary>
         /// Reason of the disconnection
@@ -57,5 +57,5 @@
         /// Message that explains the disconnection cause
         /// </summary>
 		public string Message { get; }
-	}
+    }
 }

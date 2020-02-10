@@ -1,50 +1,46 @@
-﻿using System.Collections.Generic;
+﻿using CK.MQTT.Sdk.Formatters;
+using CK.MQTT.Sdk.Packets;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using CK.MQTT.Sdk.Formatters;
-using CK.MQTT.Sdk.Packets;
 
 namespace CK.MQTT.Sdk
 {
-	internal class PacketManager : IPacketManager
-	{
-		readonly IDictionary<MqttPacketType, IFormatter> formatters;
+    internal class PacketManager : IPacketManager
+    {
+        readonly IDictionary<MqttPacketType, IFormatter> formatters;
 
-		public PacketManager (params IFormatter[] formatters)
-			: this ((IEnumerable<IFormatter>)formatters)
-		{
-		}
+        public PacketManager( params IFormatter[] formatters )
+            : this( (IEnumerable<IFormatter>)formatters )
+        {
+        }
 
-		public PacketManager (IEnumerable<IFormatter> formatters)
-		{
-			this.formatters = formatters.ToDictionary (f => f.PacketType);
-		}
+        public PacketManager( IEnumerable<IFormatter> formatters )
+        {
+            this.formatters = formatters.ToDictionary( f => f.PacketType );
+        }
 
-		public async Task<IPacket> GetPacketAsync (byte[] bytes)
-		{
-			var packetType = (MqttPacketType)bytes.Byte (0).Bits (4);
-			var formatter = default (IFormatter);
+        public async Task<IPacket> GetPacketAsync( byte[] bytes )
+        {
+            MqttPacketType packetType = (MqttPacketType)bytes.Byte( 0 ).Bits( 4 );
+            if( !formatters.TryGetValue( packetType, out IFormatter formatter ) )
+                throw new MqttException( Properties.Resources.GetString( "PacketManager_PacketUnknown" ) );
 
-			if (!formatters.TryGetValue (packetType, out formatter))
-				throw new MqttException (Properties.Resources.GetString("PacketManager_PacketUnknown"));
+            IPacket packet = await formatter.FormatAsync( bytes )
+                .ConfigureAwait( continueOnCapturedContext: false );
 
-			var packet = await formatter.FormatAsync (bytes)
-				.ConfigureAwait(continueOnCapturedContext: false);
+            return packet;
+        }
 
-			return packet;
-		}
+        public async Task<byte[]> GetBytesAsync( IPacket packet )
+        {
+            if( !formatters.TryGetValue( packet.Type, out IFormatter formatter ) )
+                throw new MqttException( Properties.Resources.GetString( "PacketManager_PacketUnknown" ) );
 
-		public async Task<byte[]> GetBytesAsync (IPacket packet)
-		{
-			var formatter = default (IFormatter);
+            byte[] bytes = await formatter.FormatAsync( packet )
+                .ConfigureAwait( continueOnCapturedContext: false );
 
-			if (!formatters.TryGetValue (packet.Type, out formatter))
-				throw new MqttException (Properties.Resources.GetString("PacketManager_PacketUnknown"));
-
-			var bytes = await formatter.FormatAsync (packet)
-				.ConfigureAwait(continueOnCapturedContext: false);
-
-			return bytes;
-		}
-	}
+            return bytes;
+        }
+    }
 }

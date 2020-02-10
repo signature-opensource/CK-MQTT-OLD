@@ -7,7 +7,7 @@ namespace CK.MQTT
     /// which are useful to access anywhere
     /// </summary>
 	public class MqttProtocol
-	{
+    {
         /// <summary>
         /// Default port for using secure communication on MQTT, which is 8883
         /// </summary>
@@ -48,10 +48,10 @@ namespace CK.MQTT
 
         public const int MaxIntegerLength = 65535;
 
-		public const int StringPrefixLength = 2;
+        public const int StringPrefixLength = 2;
 
         public const int PacketTypeLength = 1;
 
-		public static MqttEncoder Encoding => MqttEncoder.Default;
-	}
+        public static MqttEncoder Encoding => MqttEncoder.Default;
+    }
 }
