@@ -41,9 +41,6 @@ namespace CK.MQTT.Sdk
             Start();
         }
 
-        public void Stop()
-        {
-            _isRunning = false;
-        }
+        public void Stop() => _isRunning = false;
     }
 }

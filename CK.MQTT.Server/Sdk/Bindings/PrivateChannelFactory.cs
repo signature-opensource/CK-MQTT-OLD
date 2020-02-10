@@ -11,9 +11,9 @@ namespace CK.MQTT.Sdk.Bindings
 
         public PrivateChannelFactory( ISubject<PrivateStream> privateStreamListener, EndpointIdentifier identifier, MqttConfiguration configuration )
         {
-            this._privateStreamListener = privateStreamListener;
-            this._identifier = identifier;
-            this._configuration = configuration;
+            _privateStreamListener = privateStreamListener;
+            _identifier = identifier;
+            _configuration = configuration;
         }
 
         public Task<IMqttChannel<byte[]>> CreateAsync()

@@ -49,9 +49,6 @@ namespace CK.MQTT.Sdk.Packets
             return !subscribeAck.Equals( other );
         }
 
-        public override int GetHashCode()
-        {
-            return PacketId.GetHashCode() + ReturnCodes.GetHashCode();
-        }
+        public override int GetHashCode() => PacketId.GetHashCode() + ReturnCodes.GetHashCode();
     }
 }
