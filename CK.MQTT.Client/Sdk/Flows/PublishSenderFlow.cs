@@ -78,7 +78,7 @@ namespace CK.MQTT.Sdk.Flows
 
             if( session == null )
             {
-                throw new MqttException( string.Format( ClientProperties.SessionRepository_ClientSessionNotFound, clientId ) );
+                throw new MqttException( ClientProperties.SessionRepository_ClientSessionNotFound( clientId ) );
             }
 
             PendingMessage pendingMessage = session
@@ -99,7 +99,7 @@ namespace CK.MQTT.Sdk.Flows
                 {
                     if( channel.IsConnected )
                     {
-                        _tracer.Warn( ClientProperties.PublishFlow_RetryingQoSFlow, sentMessage.Type, clientId );
+                        _tracer.Warn( ClientProperties.PublishFlow_RetryingQoSFlow( sentMessage.Type, clientId ) );
 
                         Publish duplicated = new Publish( sentMessage.Topic, sentMessage.QualityOfService,
                             sentMessage.Retain, duplicated: true, packetId: sentMessage.PacketId )
@@ -159,7 +159,7 @@ namespace CK.MQTT.Sdk.Flows
 
             if( session == null )
             {
-                throw new MqttException( string.Format( ClientProperties.SessionRepository_ClientSessionNotFound, clientId ) );
+                throw new MqttException( ClientProperties.SessionRepository_ClientSessionNotFound( clientId ) );
             }
 
             PendingMessage savedMessage = new PendingMessage

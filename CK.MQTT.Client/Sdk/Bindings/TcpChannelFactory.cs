@@ -40,7 +40,7 @@ namespace CK.MQTT.Sdk.Bindings
             }
             catch( SocketException socketEx )
             {
-                string message = string.Format( ClientProperties.TcpChannelFactory_TcpClient_Failed, _hostAddress, _configuration.Port );
+                string message = ClientProperties.TcpChannelFactory_TcpClient_Failed( _hostAddress, _configuration.Port );
 
                 _tracer.Error( socketEx, message );
 
@@ -57,10 +57,9 @@ namespace CK.MQTT.Sdk.Bindings
                 }
                 catch { }
 
-                string message = string.Format( ClientProperties.TcpChannelFactory_TcpClient_Failed, _hostAddress, _configuration.Port );
+                string message = ClientProperties.TcpChannelFactory_TcpClient_Failed( _hostAddress, _configuration.Port );
 
                 _tracer.Error( timeoutEx, message );
-
                 throw new MqttException( message, timeoutEx );
             }
         }

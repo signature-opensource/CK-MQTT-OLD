@@ -44,10 +44,10 @@ Package=0.1.0-pre";
                 Version.Substring( 0, Version.IndexOf( '-' ) ) :
                 Version;
 
-            File.WriteAllText( Target, string.Format(
-@"AssemblyVersion={0}, 
-FileVersion={0},
-PackageVersion={1}", assembly, Version ) );
+            File.WriteAllText( Target,
+$@"AssemblyVersion={assembly}, 
+FileVersion={assembly},
+PackageVersion={Version}" );
 
         }
     }

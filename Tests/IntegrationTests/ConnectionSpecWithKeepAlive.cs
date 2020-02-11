@@ -54,7 +54,7 @@ namespace IntegrationTests
             } )
             .Subscribe(
                 _ => { },
-                ex => { Console.WriteLine( string.Format( "Error: {0}", ex.Message ) ); } );
+                ex => { Console.WriteLine( $"Error: {ex.Message}" ); } );
 
             client.Dispose();
 

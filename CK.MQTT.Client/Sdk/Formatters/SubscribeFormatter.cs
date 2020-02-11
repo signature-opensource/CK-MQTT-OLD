@@ -89,9 +89,7 @@ namespace CK.MQTT.Sdk.Formatters
 
                 if( !topicEvaluator.IsValidTopicFilter( subscription.TopicFilter ) )
                 {
-                    string error = string.Format( ClientProperties.SubscribeFormatter_InvalidTopicFilter, subscription.TopicFilter );
-
-                    throw new MqttException( error );
+                    throw new MqttException( ClientProperties.SubscribeFormatter_InvalidTopicFilter( subscription.TopicFilter ) );
                 }
 
                 byte[] topicBytes = MqttProtocol.Encoding.EncodeString( subscription.TopicFilter );
@@ -117,9 +115,7 @@ namespace CK.MQTT.Sdk.Formatters
 
                 if( !topicEvaluator.IsValidTopicFilter( topicFilter ) )
                 {
-                    string error = string.Format( ClientProperties.SubscribeFormatter_InvalidTopicFilter, topicFilter );
-
-                    throw new MqttException( error );
+                    throw new MqttException( ClientProperties.SubscribeFormatter_InvalidTopicFilter( topicFilter ) );
                 }
 
                 byte requestedQosByte = bytes.Byte( index );

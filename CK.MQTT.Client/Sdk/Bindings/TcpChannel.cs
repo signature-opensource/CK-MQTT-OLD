@@ -74,7 +74,7 @@ namespace CK.MQTT.Sdk.Bindings
 
             try
             {
-                _tracer.Verbose( ClientProperties.MqttChannel_SendingPacket, message.Length );
+                _tracer.Verbose( ClientProperties.MqttChannel_SendingPacket( message.Length ) );
 
                 await _client.GetStream()
                     .WriteAsync( message, 0, message.Length );
@@ -89,7 +89,7 @@ namespace CK.MQTT.Sdk.Bindings
         {
             if( _disposed ) return;
             _disposed = true;
-            _tracer.Info( ClientProperties.Mqtt_Disposing, GetType().FullName );
+            _tracer.Info( ClientProperties.Mqtt_Disposing( GetType().FullName ) );
 
             _streamSubscription.Dispose();
             _receiver.OnCompleted();
@@ -100,7 +100,7 @@ namespace CK.MQTT.Sdk.Bindings
             }
             catch( SocketException socketEx )
             {
-                _tracer.Error( socketEx, ClientProperties.MqttChannel_DisposeError, socketEx.SocketErrorCode );
+                _tracer.Error( socketEx, ClientProperties.MqttChannel_DisposeError( socketEx.SocketErrorCode ) );
             }
         }
 
@@ -126,7 +126,7 @@ namespace CK.MQTT.Sdk.Bindings
                 {
                     foreach( byte[] packet in packets )
                     {
-                        _tracer.Verbose( ClientProperties.MqttChannel_ReceivedPacket, packet.Length );
+                        _tracer.Verbose( ClientProperties.MqttChannel_ReceivedPacket( packet.Length ) );
 
                         _receiver.OnNext( packet );
                     }

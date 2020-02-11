@@ -30,7 +30,7 @@ namespace CK.MQTT.Sdk.Flows
             {
                 Disconnect disconnect = input as Disconnect;
 
-                _tracer.Info( ServerProperties.DisconnectFlow_Disconnecting, clientId );
+                _tracer.Info( ServerProperties.DisconnectFlow_Disconnecting( clientId ) );
 
                 _willRepository.Delete( clientId );
 
@@ -38,14 +38,14 @@ namespace CK.MQTT.Sdk.Flows
 
                 if( session == null )
                 {
-                    throw new MqttException( string.Format( ServerProperties.SessionRepository_ClientSessionNotFound, clientId ) );
+                    throw new MqttException( ServerProperties.SessionRepository_ClientSessionNotFound( clientId ) );
                 }
 
                 if( session.Clean )
                 {
                     _sessionRepository.Delete( session.Id );
 
-                    _tracer.Info( ServerProperties.Server_DeletedSessionOnDisconnect, clientId );
+                    _tracer.Info( ServerProperties.Server_DeletedSessionOnDisconnect( clientId ) );
                 }
 
                 _connectionProvider.RemoveConnection( clientId );

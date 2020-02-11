@@ -59,7 +59,7 @@ namespace CK.MQTT.Sdk
                 return;
             }
 
-            _tracer.Info( ClientProperties.Mqtt_Disposing, GetType().FullName );
+            _tracer.Info( ClientProperties.Mqtt_Disposing( GetType().FullName ) );
 
             _listenerDisposable.Dispose();
             StopKeepAliveMonitor();
@@ -80,11 +80,9 @@ namespace CK.MQTT.Sdk
                         return;
                     }
 
-                    _tracer.Info( ClientProperties.ClientPacketListener_FirstPacketReceived, _clientId, packet.Type );
+                    _tracer.Info( ClientProperties.ClientPacketListener_FirstPacketReceived( _clientId, packet.Type ) );
 
-                    ConnectAck connectAck = packet as ConnectAck;
-
-                    if( connectAck == null )
+                    if( !(packet is ConnectAck connectAck) )
                     {
                         NotifyError( ClientProperties.ClientPacketListener_FirstReceivedPacketMustBeConnectAck );
                         return;
@@ -118,7 +116,7 @@ namespace CK.MQTT.Sdk
                     ex => NotifyError( ex )
                     , () =>
                     {
-                        _tracer.Warn( ClientProperties.ClientPacketListener_PacketChannelCompleted, _clientId );
+                        _tracer.Warn( ClientProperties.ClientPacketListener_PacketChannelCompleted( _clientId ) );
                         _packets.OnCompleted();
                     }
                 );
@@ -153,7 +151,7 @@ namespace CK.MQTT.Sdk
             {
                 try
                 {
-                    _tracer.Warn( ClientProperties.ClientPacketListener_SendingKeepAlive, _clientId, _configuration.KeepAliveSecs );
+                    _tracer.Warn( ClientProperties.ClientPacketListener_SendingKeepAlive( _clientId, _configuration.KeepAliveSecs ) );
 
                     PingRequest ping = new PingRequest();
 
@@ -196,11 +194,11 @@ namespace CK.MQTT.Sdk
 
                         if( publish == null )
                         {
-                            _tracer.Info( ClientProperties.ClientPacketListener_DispatchingMessage, _clientId, packet.Type, flow.GetType().Name );
+                            _tracer.Info( ClientProperties.ClientPacketListener_DispatchingMessage( _clientId, packet.Type, flow.GetType().Name ) );
                         }
                         else
                         {
-                            _tracer.Info( ClientProperties.ClientPacketListener_DispatchingPublish, _clientId, flow.GetType().Name, publish.Topic );
+                            _tracer.Info( ClientProperties.ClientPacketListener_DispatchingPublish( _clientId, flow.GetType().Name, publish.Topic ) );
                         }
 
                         await flow.ExecuteAsync( _clientId, packet, _channel );

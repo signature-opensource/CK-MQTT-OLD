@@ -80,7 +80,7 @@ namespace IntegrationTests
             Assert.True( ex.InnerException is MqttClientException );
             Assert.NotNull( ex.InnerException.InnerException );
             Assert.NotNull( ex.InnerException.InnerException is MqttException );
-            string.Format( Properties.SubscribeFormatter_InvalidTopicFilter, topicFilter ).Should().Be( ex.InnerException.InnerException.Message );
+            ex.InnerException.InnerException.Message.Should().Be( ClientProperties.SubscribeFormatter_InvalidTopicFilter( topicFilter ) );
         }
 
         [Test]

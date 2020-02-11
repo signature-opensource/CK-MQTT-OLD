@@ -50,15 +50,9 @@ namespace CK.MQTT
             new MqttClientFactory( hostAddress ).CreateClientAsync( new MqttConfiguration() );
 
         internal static string GetPrivateClientId() =>
-            string.Format(
-                "private{0}",
-                Guid.NewGuid().ToString().Replace( "-", string.Empty ).Substring( 0, 10 )
-            );
+                "private" + Guid.NewGuid().ToString().Replace( "-", "" ).Substring( 0, 10 );
 
         internal static string GetAnonymousClientId() =>
-            string.Format(
-                "anonymous{0}",
-                Guid.NewGuid().ToString().Replace( "-", string.Empty ).Substring( 0, 10 )
-            );
+                "anonymous" + Guid.NewGuid().ToString().Replace( "-", "" ).Substring( 0, 10 );
     }
 }

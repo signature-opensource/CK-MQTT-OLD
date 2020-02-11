@@ -19,9 +19,7 @@ namespace CK.MQTT.Sdk.Formatters
 
             if( PacketType != actualType )
             {
-                string error = string.Format( ClientProperties.Formatter_InvalidPacket, typeof( T ).Name );
-
-                throw new MqttException( error );
+                throw new MqttException( ClientProperties.Formatter_InvalidPacket( typeof( T ).Name ) );
             }
 
             T packet = await Task.Run( () => Read( bytes ) );
@@ -33,7 +31,7 @@ namespace CK.MQTT.Sdk.Formatters
         {
             if( packet.Type != PacketType )
             {
-                string error = string.Format( ClientProperties.Formatter_InvalidPacket, typeof( T ).Name );
+                string error = ClientProperties.Formatter_InvalidPacket( typeof( T ).Name );
 
                 throw new MqttException( error );
             }
@@ -49,7 +47,7 @@ namespace CK.MQTT.Sdk.Formatters
 
             if( packetTypePredicate( PacketType ) && headerFlag != expectedFlag )
             {
-                string error = string.Format( ClientProperties.Formatter_InvalidHeaderFlag, headerFlag, typeof( T ).Name, expectedFlag );
+                string error = ClientProperties.Formatter_InvalidHeaderFlag( headerFlag, typeof( T ).Name, expectedFlag );
 
                 throw new MqttException( error );
             }

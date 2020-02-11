@@ -44,7 +44,7 @@ namespace CK.MQTT.Sdk.Bindings
 
             try
             {
-                _tracer.Verbose( ClientProperties.MqttChannel_SendingPacket, message.Length );
+                _tracer.Verbose( ClientProperties.MqttChannel_SendingPacket( message.Length ) );
                 _stream.Send( message, _identifier );
                 return Task.FromResult( true );
             }
@@ -58,7 +58,7 @@ namespace CK.MQTT.Sdk.Bindings
         {
             if( _disposed ) return;
 
-            _tracer.Info( ServerProperties.Mqtt_Disposing, nameof( PrivateChannel ) );
+            _tracer.Info( ClientProperties.Mqtt_Disposing( nameof( PrivateChannel ) ) );
 
             _streamSubscription.Dispose();
             _receiver.OnCompleted();
@@ -78,7 +78,7 @@ namespace CK.MQTT.Sdk.Bindings
                 .ObserveOn( NewThreadScheduler.Default )
                 .Subscribe( packet =>
                 {
-                    _tracer.Verbose( ClientProperties.MqttChannel_ReceivedPacket, packet.Length );
+                    _tracer.Verbose( ClientProperties.MqttChannel_ReceivedPacket( packet.Length ) );
 
                     _receiver.OnNext( packet );
                 }, ex =>

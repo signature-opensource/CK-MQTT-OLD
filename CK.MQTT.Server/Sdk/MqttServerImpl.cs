@@ -110,7 +110,7 @@ namespace CK.MQTT.Sdk
 
             try
             {
-                _tracer.Info( ServerProperties.Mqtt_Disposing, GetType().FullName );
+                _tracer.Info( ClientProperties.Mqtt_Disposing( GetType().FullName ) );
 
                 _streamSubscription?.Dispose();
 

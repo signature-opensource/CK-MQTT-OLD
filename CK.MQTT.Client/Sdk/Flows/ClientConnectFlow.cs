@@ -34,7 +34,7 @@ namespace CK.MQTT.Sdk.Flows
 
             if( session == null )
             {
-                throw new MqttException( string.Format( ClientProperties.SessionRepository_ClientSessionNotFound, clientId ) );
+                throw new MqttException( ClientProperties.SessionRepository_ClientSessionNotFound( clientId ) );
             }
 
             await SendPendingMessagesAsync( session, channel );

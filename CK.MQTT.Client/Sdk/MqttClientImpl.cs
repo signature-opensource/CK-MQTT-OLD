@@ -69,7 +69,7 @@ namespace CK.MQTT.Sdk
             {
                 if( IsConnected )
                 {
-                    throw new MqttClientException( string.Format( ClientProperties.Client_AlreadyConnected, Id ) );
+                    throw new MqttClientException( ClientProperties.Client_AlreadyConnected( Id ) );
                 }
 
                 if( string.IsNullOrEmpty( credentials.ClientId ) && !cleanSession )
@@ -105,7 +105,7 @@ namespace CK.MQTT.Sdk
 
                 if( ack == null )
                 {
-                    string message = string.Format( ClientProperties.Client_ConnectionDisconnected, Id );
+                    string message = ClientProperties.Client_ConnectionDisconnected( Id );
 
                     throw new MqttClientException( message );
                 }
@@ -119,13 +119,13 @@ namespace CK.MQTT.Sdk
             catch( TimeoutException timeEx )
             {
                 Close( timeEx );
-                throw new MqttClientException( string.Format( ClientProperties.Client_ConnectionTimeout, Id ), timeEx );
+                throw new MqttClientException( ClientProperties.Client_ConnectionTimeout( Id ), timeEx );
             }
             catch( MqttConnectionException connectionEx )
             {
                 Close( connectionEx );
 
-                string message = string.Format( ClientProperties.Client_ConnectNotAccepted, Id, connectionEx.ReturnCode );
+                string message = ClientProperties.Client_ConnectNotAccepted( Id, connectionEx.ReturnCode );
 
                 throw new MqttClientException( message, connectionEx );
             }
@@ -137,7 +137,7 @@ namespace CK.MQTT.Sdk
             catch( Exception ex )
             {
                 Close( ex );
-                throw new MqttClientException( string.Format( ClientProperties.Client_ConnectionError, Id ), ex );
+                throw new MqttClientException( ClientProperties.Client_ConnectionError( Id ), ex );
             }
         }
 
@@ -170,7 +170,7 @@ namespace CK.MQTT.Sdk
 
                 if( ack == null )
                 {
-                    string message = string.Format( ClientProperties.Client_SubscriptionDisconnected, Id, topicFilter );
+                    string message = ClientProperties.Client_SubscriptionDisconnected( Id, topicFilter );
 
                     _tracer.Error( message );
 
@@ -179,7 +179,7 @@ namespace CK.MQTT.Sdk
 
                 if( ack.ReturnCodes.FirstOrDefault() == SubscribeReturnCode.Failure )
                 {
-                    string message = string.Format( ClientProperties.Client_SubscriptionRejected, Id, topicFilter );
+                    string message = ClientProperties.Client_SubscriptionRejected( Id, topicFilter );
 
                     _tracer.Error( message );
 
@@ -190,7 +190,7 @@ namespace CK.MQTT.Sdk
             {
                 Close( timeEx );
 
-                string message = string.Format( ClientProperties.Client_SubscribeTimeout, Id, topicFilter );
+                string message = ClientProperties.Client_SubscribeTimeout( Id, topicFilter );
 
                 throw new MqttClientException( message, timeEx );
             }
@@ -203,7 +203,7 @@ namespace CK.MQTT.Sdk
             {
                 Close( ex );
 
-                string message = string.Format( ClientProperties.Client_SubscribeError, Id, topicFilter );
+                string message = ClientProperties.Client_SubscribeError( Id, topicFilter );
 
                 throw new MqttClientException( message, ex );
             }
@@ -263,7 +263,7 @@ namespace CK.MQTT.Sdk
 
                 if( ack == null )
                 {
-                    string message = string.Format( ClientProperties.Client_UnsubscribeDisconnected, Id, string.Join( ", ", topics ) );
+                    string message = ClientProperties.Client_UnsubscribeDisconnected( Id, string.Join( ", ", topics ) );
 
                     _tracer.Error( message );
 
@@ -274,7 +274,7 @@ namespace CK.MQTT.Sdk
             {
                 Close( timeEx );
 
-                string message = string.Format( ClientProperties.Client_UnsubscribeTimeout, Id, string.Join( ", ", topics ) );
+                string message = ClientProperties.Client_UnsubscribeTimeout( Id, string.Join( ", ", topics ) );
 
                 _tracer.Error( message );
 
@@ -289,7 +289,7 @@ namespace CK.MQTT.Sdk
             {
                 Close( ex );
 
-                string message = string.Format( ClientProperties.Client_UnsubscribeError, Id, string.Join( ", ", topics ) );
+                string message = ClientProperties.Client_UnsubscribeError( Id, string.Join( ", ", topics ) );
 
                 _tracer.Error( message );
 
@@ -352,7 +352,7 @@ namespace CK.MQTT.Sdk
 
         void Close( DisconnectedReason reason, string message = null )
         {
-            _tracer.Info( ClientProperties.Client_Closing, Id, reason );
+            _tracer.Info( ClientProperties.Client_Closing( Id, reason ) );
 
             CloseClientSession();
             _packetsSubscription?.Dispose();
@@ -384,7 +384,7 @@ namespace CK.MQTT.Sdk
                 _sessionRepository.Delete( session.Id );
                 session = null;
 
-                _tracer.Info( ClientProperties.Client_CleanedOldSession, Id );
+                _tracer.Info( ClientProperties.Client_CleanedOldSession( Id ) );
             }
 
             if( session == null )
@@ -393,7 +393,7 @@ namespace CK.MQTT.Sdk
 
                 _sessionRepository.Create( session );
 
-                _tracer.Info( ClientProperties.Client_CreatedSession, Id );
+                _tracer.Info( ClientProperties.Client_CreatedSession( Id ) );
             }
         }
 
@@ -410,7 +410,7 @@ namespace CK.MQTT.Sdk
             {
                 _sessionRepository.Delete( session.Id );
 
-                _tracer.Info( ClientProperties.Client_DeletedSessionOnDisconnect, Id );
+                _tracer.Info( ClientProperties.Client_DeletedSessionOnDisconnect( Id ) );
             }
         }
 
@@ -440,7 +440,7 @@ namespace CK.MQTT.Sdk
                          MqttApplicationMessage message = new MqttApplicationMessage( publish.Topic, publish.Payload );
 
                          _receiver.OnNext( message );
-                         _tracer.Info( ClientProperties.Client_NewApplicationMessageReceived, Id, publish.Topic );
+                         _tracer.Info( ClientProperties.Client_NewApplicationMessageReceived( Id, publish.Topic ) );
                      }
                  }, ex =>
                  {

@@ -7,7 +7,7 @@ namespace CK.MQTT.Sdk.Formatters
 {
     internal class ConnectFormatter : Formatter<Connect>
     {
-        public override MqttPacketType PacketType { get { return MqttPacketType.Connect; } }
+        public override MqttPacketType PacketType => MqttPacketType.Connect;
 
         protected override Connect Read( byte[] bytes )
         {
@@ -20,9 +20,8 @@ namespace CK.MQTT.Sdk.Formatters
 
             if( protocolName != MqttProtocol.Name )
             {
-                string error = string.Format( ClientProperties.ConnectFormatter_InvalidProtocolName, protocolName );
 
-                throw new MqttException( error );
+                throw new MqttException( ClientProperties.ConnectFormatter_InvalidProtocolName( protocolName ) );
             }
 
             int protocolLevelIndex = MqttProtocol.PacketTypeLength + remainingLengthBytesLength + MqttProtocol.NameLength;
@@ -30,9 +29,11 @@ namespace CK.MQTT.Sdk.Formatters
 
             if( protocolLevel < MqttProtocol.SupportedLevel )
             {
-                string error = string.Format( ClientProperties.ConnectFormatter_UnsupportedLevel, protocolLevel );
 
-                throw new MqttConnectionException( MqttConnectionStatus.UnacceptableProtocolVersion, error );
+                throw new MqttConnectionException(
+                    MqttConnectionStatus.UnacceptableProtocolVersion,
+                    ClientProperties.ConnectFormatter_UnsupportedLevel( protocolLevel )
+                );
             }
 
             int protocolLevelLength = 1;
@@ -72,7 +73,7 @@ namespace CK.MQTT.Sdk.Formatters
 
             if( !IsValidClientId( clientId ) )
             {
-                string error = string.Format( ClientProperties.ConnectFormatter_InvalidClientIdFormat, clientId );
+                string error = ClientProperties.ConnectFormatter_InvalidClientIdFormat( clientId );
 
                 throw new MqttConnectionException( MqttConnectionStatus.IdentifierRejected, error );
             }
@@ -194,9 +195,7 @@ namespace CK.MQTT.Sdk.Formatters
 
             if( !IsValidClientId( packet.ClientId ) )
             {
-                string error = string.Format( ClientProperties.ConnectFormatter_InvalidClientIdFormat, packet.ClientId );
-
-                throw new MqttException( error );
+                throw new MqttException( ClientProperties.ConnectFormatter_InvalidClientIdFormat( packet.ClientId ) );
             }
 
             List<byte> payload = new List<byte>();

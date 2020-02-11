@@ -42,7 +42,7 @@ namespace CK.MQTT.Sdk.Flows
 
             if( session == null )
             {
-                throw new MqttException( string.Format( ServerProperties.SessionRepository_ClientSessionNotFound, clientId ) );
+                throw new MqttException( ServerProperties.SessionRepository_ClientSessionNotFound( clientId ) );
             }
 
             List<SubscribeReturnCode> returnCodes = new List<SubscribeReturnCode>();
@@ -53,7 +53,7 @@ namespace CK.MQTT.Sdk.Flows
                 {
                     if( !_topicEvaluator.IsValidTopicFilter( subscription.TopicFilter ) )
                     {
-                        _tracer.Error( ServerProperties.ServerSubscribeFlow_InvalidTopicSubscription, subscription.TopicFilter, clientId );
+                        _tracer.Error( ServerProperties.ServerSubscribeFlow_InvalidTopicSubscription( subscription.TopicFilter, clientId ) );
 
                         returnCodes.Add( SubscribeReturnCode.Failure );
                         continue;
@@ -88,7 +88,7 @@ namespace CK.MQTT.Sdk.Flows
                 }
                 catch( RepositoryException repoEx )
                 {
-                    _tracer.Error( repoEx, ServerProperties.ServerSubscribeFlow_ErrorOnSubscription, clientId, subscription.TopicFilter );
+                    _tracer.Error( repoEx, ServerProperties.ServerSubscribeFlow_ErrorOnSubscription( clientId, subscription.TopicFilter ) );
 
                     returnCodes.Add( SubscribeReturnCode.Failure );
                 }

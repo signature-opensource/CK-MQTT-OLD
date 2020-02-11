@@ -16,12 +16,12 @@ namespace Tests
         {
             if( Path.GetExtension( path ) != ".packet" )
             {
-                throw new ApplicationException( string.Format( "File extension {0} is invalid. .packet file is expected", Path.GetExtension( path ) ) );
+                throw new ApplicationException( $"File extension {Path.GetExtension( path )} is invalid. .packet file is expected" );
             }
 
             if( !File.Exists( path ) )
             {
-                throw new ApplicationException( string.Format( "The file {0} does not exists", path ) );
+                throw new ApplicationException( $"The file {path} does not exists" );
             }
 
             List<byte> bytes = new List<byte>();
@@ -64,12 +64,12 @@ namespace Tests
         {
             if( Path.GetExtension( path ) != ".json" )
             {
-                throw new ApplicationException( string.Format( "File extension {0} is invalid. .json file is expected", Path.GetExtension( path ) ) );
+                throw new ApplicationException( $"File extension {Path.GetExtension( path )} is invalid. .json file is expected" );
             }
 
             if( !File.Exists( path ) )
             {
-                throw new ApplicationException( string.Format( "The file {0} does not exists", path ) );
+                throw new ApplicationException( $"The file {path} does not exists" );
             }
 
             string text = File.ReadAllText( path );
@@ -81,12 +81,12 @@ namespace Tests
         {
             if( Path.GetExtension( path ) != ".json" )
             {
-                throw new ApplicationException( string.Format( "File extension {0} is invalid. .json file is expected", Path.GetExtension( path ) ) );
+                throw new ApplicationException( $"File extension {Path.GetExtension( path )} is invalid. .json file is expected" );
             }
 
             if( !File.Exists( path ) )
             {
-                throw new ApplicationException( string.Format( "The file {0} does not exists", path ) );
+                throw new ApplicationException( $"The file {path} does not exists" );
             }
 
             string text = File.ReadAllText( path );

@@ -37,8 +37,7 @@ namespace CK.MQTT.Sdk.Formatters
 
             if( !_topicEvaluator.IsValidTopicName( topic ) )
             {
-                string error = string.Format( ClientProperties.PublishFormatter_InvalidTopicName, topic );
-                throw new MqttException( error );
+                throw new MqttException( ClientProperties.PublishFormatter_InvalidTopicName( topic ) );
             }
 
             int variableHeaderLength = topic.Length + 2;
@@ -110,7 +109,7 @@ namespace CK.MQTT.Sdk.Formatters
         byte[] GetVariableHeader( Publish packet )
         {
             if( !_topicEvaluator.IsValidTopicName( packet.Topic ) )
-                throw new MqttException( ClientProperties.PublishFormatter_InvalidTopicName );
+                throw new MqttException( ClientProperties.PublishFormatter_InvalidTopicName( packet.Topic ) );
 
             if( packet.PacketId.HasValue && packet.QualityOfService == MqttQualityOfService.AtMostOnce )
                 throw new MqttException( ClientProperties.PublishFormatter_InvalidPacketId );
