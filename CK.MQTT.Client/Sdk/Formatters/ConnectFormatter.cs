@@ -20,7 +20,7 @@ namespace CK.MQTT.Sdk.Formatters
 
             if( protocolName != MqttProtocol.Name )
             {
-                string error = string.Format( Properties.Resources.GetString( "ConnectFormatter_InvalidProtocolName" ), protocolName );
+                string error = string.Format( Properties.ConnectFormatter_InvalidProtocolName, protocolName );
 
                 throw new MqttException( error );
             }
@@ -30,7 +30,7 @@ namespace CK.MQTT.Sdk.Formatters
 
             if( protocolLevel < MqttProtocol.SupportedLevel )
             {
-                string error = string.Format( Properties.Resources.GetString( "ConnectFormatter_UnsupportedLevel" ), protocolLevel );
+                string error = string.Format( Properties.ConnectFormatter_UnsupportedLevel, protocolLevel );
 
                 throw new MqttConnectionException( MqttConnectionStatus.UnacceptableProtocolVersion, error );
             }
@@ -40,22 +40,22 @@ namespace CK.MQTT.Sdk.Formatters
             byte connectFlags = bytes.Byte( connectFlagsIndex );
 
             if( connectFlags.IsSet( 0 ) )
-                throw new MqttException( Properties.Resources.GetString( "ConnectFormatter_InvalidReservedFlag" ) );
+                throw new MqttException( Properties.ConnectFormatter_InvalidReservedFlag );
 
             if( connectFlags.Bits( 4, 2 ) == 0x03 )
-                throw new MqttException( Properties.Resources.GetString( "Formatter_InvalidQualityOfService" ) );
+                throw new MqttException( Properties.Formatter_InvalidQualityOfService );
 
             bool willFlag = connectFlags.IsSet( 2 );
             bool willRetain = connectFlags.IsSet( 5 );
 
             if( !willFlag && willRetain )
-                throw new MqttException( Properties.Resources.GetString( "ConnectFormatter_InvalidWillRetainFlag" ) );
+                throw new MqttException( Properties.ConnectFormatter_InvalidWillRetainFlag );
 
             bool userNameFlag = connectFlags.IsSet( 7 );
             bool passwordFlag = connectFlags.IsSet( 6 );
 
             if( !userNameFlag && passwordFlag )
-                throw new MqttException( Properties.Resources.GetString( "ConnectFormatter_InvalidPasswordFlag" ) );
+                throw new MqttException( Properties.ConnectFormatter_InvalidPasswordFlag );
 
             MqttQualityOfService willQos = (MqttQualityOfService)connectFlags.Bits( 4, 2 );
             bool cleanSession = connectFlags.IsSet( 1 );
@@ -68,17 +68,17 @@ namespace CK.MQTT.Sdk.Formatters
             string clientId = bytes.GetString( payloadStartIndex, out int nextIndex );
 
             if( clientId.Length > MqttProtocol.ClientIdMaxLength )
-                throw new MqttConnectionException( MqttConnectionStatus.IdentifierRejected, Properties.Resources.GetString( "ConnectFormatter_ClientIdMaxLengthExceeded" ) );
+                throw new MqttConnectionException( MqttConnectionStatus.IdentifierRejected, Properties.ConnectFormatter_ClientIdMaxLengthExceeded );
 
             if( !IsValidClientId( clientId ) )
             {
-                string error = string.Format( Properties.Resources.GetString( "ConnectFormatter_InvalidClientIdFormat" ), clientId );
+                string error = string.Format( Properties.ConnectFormatter_InvalidClientIdFormat, clientId );
 
                 throw new MqttConnectionException( MqttConnectionStatus.IdentifierRejected, error );
             }
 
             if( string.IsNullOrEmpty( clientId ) && !cleanSession )
-                throw new MqttConnectionException( MqttConnectionStatus.IdentifierRejected, Properties.Resources.GetString( "ConnectFormatter_ClientIdEmptyRequiresCleanSession" ) );
+                throw new MqttConnectionException( MqttConnectionStatus.IdentifierRejected, Properties.ConnectFormatter_ClientIdEmptyRequiresCleanSession );
 
             if( string.IsNullOrEmpty( clientId ) )
             {
@@ -166,7 +166,7 @@ namespace CK.MQTT.Sdk.Formatters
             int passwordFlag = userNameFlag == 1 ? Convert.ToInt32( !string.IsNullOrEmpty( packet.Password ) ) : 0;
 
             if( userNameFlag == 0 && passwordFlag == 1 )
-                throw new MqttException( Properties.Resources.GetString( "ConnectFormatter_InvalidPasswordFlag" ) );
+                throw new MqttException( Properties.ConnectFormatter_InvalidPasswordFlag );
 
             cleanSession <<= 1;
             willFlag <<= 2;
@@ -190,11 +190,11 @@ namespace CK.MQTT.Sdk.Formatters
         byte[] GetPayload( Connect packet )
         {
             if( packet.ClientId.Length > MqttProtocol.ClientIdMaxLength )
-                throw new MqttException( Properties.Resources.GetString( "ConnectFormatter_ClientIdMaxLengthExceeded" ) );
+                throw new MqttException( Properties.ConnectFormatter_ClientIdMaxLengthExceeded );
 
             if( !IsValidClientId( packet.ClientId ) )
             {
-                string error = string.Format( Properties.Resources.GetString( "ConnectFormatter_InvalidClientIdFormat" ), packet.ClientId );
+                string error = string.Format( Properties.ConnectFormatter_InvalidClientIdFormat, packet.ClientId );
 
                 throw new MqttException( error );
             }
@@ -218,7 +218,7 @@ namespace CK.MQTT.Sdk.Formatters
             }
 
             if( string.IsNullOrEmpty( packet.UserName ) && !string.IsNullOrEmpty( packet.Password ) )
-                throw new MqttException( Properties.Resources.GetString( "ConnectFormatter_PasswordNotAllowed" ) );
+                throw new MqttException( Properties.ConnectFormatter_PasswordNotAllowed );
 
             if( !string.IsNullOrEmpty( packet.UserName ) )
             {

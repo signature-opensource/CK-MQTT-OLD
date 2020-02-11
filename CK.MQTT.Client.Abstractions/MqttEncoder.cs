@@ -15,7 +15,7 @@ namespace CK.MQTT.Sdk
 
             if( textBytes.Length > MqttProtocol.MaxIntegerLength )
             {
-                throw new MqttException( Properties.Resources.GetString( "ProtocolEncoding_StringMaxLengthExceeded" ) );
+                throw new MqttException( Properties.ProtocolEncoding_StringMaxLengthExceeded );
             }
 
             byte[] numberBytes = MqttProtocol.Encoding.EncodeInteger( textBytes.Length );
@@ -31,7 +31,7 @@ namespace CK.MQTT.Sdk
         {
             if( number > MqttProtocol.MaxIntegerLength )
             {
-                throw new MqttException( Properties.Resources.GetString( "ProtocolEncoding_IntegerMaxValueExceeded" ) );
+                throw new MqttException( Properties.ProtocolEncoding_IntegerMaxValueExceeded );
             }
 
             return EncodeInteger( (ushort)number );
@@ -81,7 +81,7 @@ namespace CK.MQTT.Sdk
                 value += (encodedByte & 127) * multiplier;
 
                 if( multiplier > 128 * 128 * 128 || index > 4 )
-                    throw new MqttException( Properties.Resources.GetString( "ProtocolEncoding_MalformedRemainingLength" ) );
+                    throw new MqttException( Properties.ProtocolEncoding_MalformedRemainingLength );
 
                 multiplier *= 128;
             } while( (encodedByte & 128) != 0 );

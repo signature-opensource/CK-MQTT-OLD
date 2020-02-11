@@ -24,7 +24,7 @@ namespace CK.MQTT.Sdk
         {
             MqttPacketType packetType = (MqttPacketType)bytes.Byte( 0 ).Bits( 4 );
             if( !formatters.TryGetValue( packetType, out IFormatter formatter ) )
-                throw new MqttException( Properties.Resources.GetString( "PacketManager_PacketUnknown" ) );
+                throw new MqttException( Properties.PacketManager_PacketUnknown );
 
             IPacket packet = await formatter.FormatAsync( bytes );
 
@@ -34,7 +34,7 @@ namespace CK.MQTT.Sdk
         public async Task<byte[]> GetBytesAsync( IPacket packet )
         {
             if( !formatters.TryGetValue( packet.Type, out IFormatter formatter ) )
-                throw new MqttException( Properties.Resources.GetString( "PacketManager_PacketUnknown" ) );
+                throw new MqttException( Properties.PacketManager_PacketUnknown );
 
             byte[] bytes = await formatter.FormatAsync( packet );
 

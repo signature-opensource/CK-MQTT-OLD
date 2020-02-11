@@ -87,7 +87,7 @@ namespace CK.MQTT.Sdk
                 throw new ObjectDisposedException( nameof( MqttServerImpl ) );
 
             if( !_started )
-                throw new InvalidOperationException( ServerProperties.Resources.GetString( "Server_NotStartedError" ) );
+                throw new InvalidOperationException( ServerProperties.Server_NotStartedError );
 
             MqttConnectedClientFactory factory = new MqttConnectedClientFactory( _privateStreamListener );
             IMqttConnectedClient client = await factory
@@ -110,7 +110,7 @@ namespace CK.MQTT.Sdk
 
             try
             {
-                _tracer.Info( ServerProperties.Resources.GetString( "Mqtt_Disposing" ), GetType().FullName );
+                _tracer.Info( ServerProperties.Mqtt_Disposing, GetType().FullName );
 
                 _streamSubscription?.Dispose();
 
@@ -144,7 +144,7 @@ namespace CK.MQTT.Sdk
 
         void ProcessChannel( IMqttChannel<byte[]> binaryChannel )
         {
-            _tracer.Verbose( ServerProperties.Resources.GetString( "Server_NewSocketAccepted" ) );
+            _tracer.Verbose( ServerProperties.Server_NewSocketAccepted );
 
             IMqttChannel<IPacket> packetChannel = _channelFactory.Create( binaryChannel );
             ServerPacketListener packetListener = new ServerPacketListener( packetChannel, _connectionProvider, _flowProvider, _configuration );
@@ -154,12 +154,12 @@ namespace CK.MQTT.Sdk
                 .PacketStream
                 .Subscribe( _ => { }, ex =>
                 {
-                    _tracer.Error( ex, ServerProperties.Resources.GetString( "Server_PacketsObservableError" ) );
+                    _tracer.Error( ex, ServerProperties.Server_PacketsObservableError );
                     packetChannel.Dispose();
                     packetListener.Dispose();
                 }, () =>
                 {
-                    _tracer.Warn( ServerProperties.Resources.GetString( "Server_PacketsObservableCompleted" ) );
+                    _tracer.Warn( ServerProperties.Server_PacketsObservableCompleted );
                     packetChannel.Dispose();
                     packetListener.Dispose();
                 }

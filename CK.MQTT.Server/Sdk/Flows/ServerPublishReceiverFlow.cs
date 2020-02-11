@@ -46,7 +46,7 @@ namespace CK.MQTT.Sdk.Flows
                     Payload = will.Will.Payload
                 };
 
-                _tracer.Info( ServerProperties.Resources.GetString( "ServerPublishReceiverFlow_SendingWill" ), clientId, willPublish.Topic );
+                _tracer.Info( ServerProperties.ServerPublishReceiverFlow_SendingWill, clientId, willPublish.Topic );
 
                 await DispatchAsync( willPublish, clientId, isWill: true );
             }
@@ -82,7 +82,7 @@ namespace CK.MQTT.Sdk.Flows
 
             if( publish.Topic.Trim().StartsWith( "$" ) && !_connectionProvider.PrivateClients.Contains( clientId ) )
             {
-                throw new MqttException( ServerProperties.Resources.GetString( "ServerPublishReceiverFlow_SystemMessageNotAllowedForClient" ) );
+                throw new MqttException( ServerProperties.ServerPublishReceiverFlow_SystemMessageNotAllowedForClient );
             }
         }
 
@@ -95,7 +95,7 @@ namespace CK.MQTT.Sdk.Flows
 
             if( !subscriptions.Any() )
             {
-                _tracer.Verbose( ServerProperties.Resources.GetString( "ServerPublishReceiverFlow_TopicNotSubscribed" ), publish.Topic, clientId );
+                _tracer.Verbose( ServerProperties.ServerPublishReceiverFlow_TopicNotSubscribed, publish.Topic, clientId );
 
                 _undeliveredMessagesListener.OnNext( new MqttUndeliveredMessage { SenderId = clientId, Message = new MqttApplicationMessage( publish.Topic, publish.Payload ) } );
             }

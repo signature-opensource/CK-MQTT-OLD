@@ -83,9 +83,9 @@ namespace CK.MQTT.Sdk
             }
             catch( Exception ex )
             {
-                _tracer.Error( ex, ServerProperties.Resources.GetString( "Server_InitializeError" ) );
+                _tracer.Error( ex, ServerProperties.Server_InitializeError );
 
-                throw new MqttServerException( ServerProperties.Resources.GetString( "Server_InitializeError" ), ex );
+                throw new MqttServerException( ServerProperties.Server_InitializeError, ex );
             }
         }
     }

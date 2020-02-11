@@ -91,14 +91,14 @@ namespace CK.MQTT.Sdk
         {
             if( !IsValidTopicName( topicName ) )
             {
-                string message = string.Format( Properties.Resources.GetString( "TopicEvaluator_InvalidTopicName" ), topicName );
+                string message = string.Format( Properties.TopicEvaluator_InvalidTopicName, topicName );
 
                 throw new MqttException( message );
             }
 
             if( !IsValidTopicFilter( topicFilter ) )
             {
-                string message = string.Format( Properties.Resources.GetString( "TopicEvaluator_InvalidTopicFilter" ), topicFilter );
+                string message = string.Format( Properties.TopicEvaluator_InvalidTopicFilter, topicFilter );
 
                 throw new MqttException( message );
             }

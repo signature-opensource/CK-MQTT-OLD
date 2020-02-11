@@ -45,12 +45,12 @@ namespace CK.MQTT.Sdk.Flows
         {
             if( publish.QualityOfService != MqttQualityOfService.AtMostOnce && !publish.PacketId.HasValue )
             {
-                throw new MqttException( Properties.Resources.GetString( "PublishReceiverFlow_PacketIdRequired" ) );
+                throw new MqttException( Properties.PublishReceiverFlow_PacketIdRequired );
             }
 
             if( publish.QualityOfService == MqttQualityOfService.AtMostOnce && publish.PacketId.HasValue )
             {
-                throw new MqttException( Properties.Resources.GetString( "PublishReceiverFlow_PacketIdNotAllowed" ) );
+                throw new MqttException( Properties.PublishReceiverFlow_PacketIdNotAllowed );
             }
         }
 
@@ -63,7 +63,7 @@ namespace CK.MQTT.Sdk.Flows
 
             if( session == null )
             {
-                throw new MqttException( string.Format( Properties.Resources.GetString( "SessionRepository_ClientSessionNotFound" ), clientId ) );
+                throw new MqttException( string.Format( Properties.SessionRepository_ClientSessionNotFound, clientId ) );
             }
 
             if( qos == MqttQualityOfService.ExactlyOnce && session.GetPendingAcknowledgements().Any( ack => ack.Type == MqttPacketType.PublishReceived && ack.PacketId == publish.PacketId.Value ) )

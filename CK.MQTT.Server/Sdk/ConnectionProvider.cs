@@ -26,7 +26,7 @@ namespace CK.MQTT.Sdk
         {
             if( _privateClients.Contains( clientId ) )
             {
-                string message = string.Format( ServerProperties.Resources.GetString( "ConnectionProvider_PrivateClientAlreadyRegistered" ), clientId );
+                string message = string.Format( ServerProperties.ConnectionProvider_PrivateClientAlreadyRegistered, clientId );
 
                 throw new MqttServerException( message );
             }
@@ -41,7 +41,7 @@ namespace CK.MQTT.Sdk
         {
             if( _connections.TryGetValue( clientId, out _ ) )
             {
-                _tracer.Warn( ServerProperties.Resources.GetString( "ConnectionProvider_ClientIdExists" ), clientId );
+                _tracer.Warn( ServerProperties.ConnectionProvider_ClientIdExists, clientId );
 
                 RemoveConnection( clientId );
             }
@@ -55,7 +55,7 @@ namespace CK.MQTT.Sdk
             {
                 if( !existingConnection.IsConnected )
                 {
-                    _tracer.Warn( ServerProperties.Resources.GetString( "ConnectionProvider_ClientDisconnected" ), clientId );
+                    _tracer.Warn( ServerProperties.ConnectionProvider_ClientDisconnected, clientId );
 
                     RemoveConnection( clientId );
                     existingConnection = default;
@@ -69,7 +69,7 @@ namespace CK.MQTT.Sdk
         {
             if( _connections.TryRemove( clientId, out IMqttChannel<IPacket> existingConnection ) )
             {
-                _tracer.Info( ServerProperties.Resources.GetString( "ConnectionProvider_RemovingClient" ), clientId );
+                _tracer.Info( ServerProperties.ConnectionProvider_RemovingClient, clientId );
 
                 existingConnection.Dispose();
             }

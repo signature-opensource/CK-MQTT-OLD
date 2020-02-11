@@ -824,8 +824,7 @@ namespace Tests.Flows
             Assert.True( ex.InnerException is MqttException );
             ex.InnerException.Message.Should()
                 .Be(
-                    ServerProperties.Resources.GetString(
-                        "ServerPublishReceiverFlow_SystemMessageNotAllowedForClient" ) );
+                    ServerProperties.ServerPublishReceiverFlow_SystemMessageNotAllowedForClient );
         }
 
         [Test]

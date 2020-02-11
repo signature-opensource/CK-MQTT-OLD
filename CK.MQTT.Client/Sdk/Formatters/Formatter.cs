@@ -19,7 +19,7 @@ namespace CK.MQTT.Sdk.Formatters
 
             if( PacketType != actualType )
             {
-                string error = string.Format( Properties.Resources.GetString( "Formatter_InvalidPacket" ), typeof( T ).Name );
+                string error = string.Format( Properties.Formatter_InvalidPacket, typeof( T ).Name );
 
                 throw new MqttException( error );
             }
@@ -33,7 +33,7 @@ namespace CK.MQTT.Sdk.Formatters
         {
             if( packet.Type != PacketType )
             {
-                string error = string.Format( Properties.Resources.GetString( "Formatter_InvalidPacket" ), typeof( T ).Name );
+                string error = string.Format( Properties.Formatter_InvalidPacket, typeof( T ).Name );
 
                 throw new MqttException( error );
             }
@@ -49,7 +49,7 @@ namespace CK.MQTT.Sdk.Formatters
 
             if( packetTypePredicate( PacketType ) && headerFlag != expectedFlag )
             {
-                string error = string.Format( Properties.Resources.GetString( "Formatter_InvalidHeaderFlag" ), headerFlag, typeof( T ).Name, expectedFlag );
+                string error = string.Format( Properties.Formatter_InvalidHeaderFlag, headerFlag, typeof( T ).Name, expectedFlag );
 
                 throw new MqttException( error );
             }
