@@ -79,8 +79,7 @@ namespace CK.MQTT.Sdk.Flows
                         session.AddSubscription( clientSubscription );
                     }
 
-                    await SendRetainedMessagesAsync( clientSubscription, channel )
-                        .ConfigureAwait( continueOnCapturedContext: false );
+                    await SendRetainedMessagesAsync( clientSubscription, channel );
 
                     MqttQualityOfService supportedQos = _configuration.GetSupportedQos( subscription.MaximumQualityOfService );
                     SubscribeReturnCode returnCode = supportedQos.ToReturnCode();
@@ -97,8 +96,7 @@ namespace CK.MQTT.Sdk.Flows
 
             _sessionRepository.Update( session );
 
-            await channel.SendAsync( new SubscribeAck( subscribe.PacketId, returnCodes.ToArray() ) )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            await channel.SendAsync( new SubscribeAck( subscribe.PacketId, returnCodes.ToArray() ) );
         }
 
         async Task SendRetainedMessagesAsync( ClientSubscription subscription, IMqttChannel<IPacket> channel )
@@ -120,8 +118,7 @@ namespace CK.MQTT.Sdk.Flows
                         Payload = retainedMessage.Payload
                     };
 
-                    await _senderFlow.SendPublishAsync( subscription.ClientId, publish, channel )
-                        .ConfigureAwait( continueOnCapturedContext: false );
+                    await _senderFlow.SendPublishAsync( subscription.ClientId, publish, channel );
                 }
             }
         }

@@ -23,8 +23,7 @@ namespace Tests.Formatters
             ConnectFormatter formatter = new ConnectFormatter();
             byte[] packet = Packet.ReadAllBytes( packetPath );
 
-            IPacket result = await formatter.FormatAsync( packet )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            IPacket result = await formatter.FormatAsync( packet );
 
             expectedConnect.Should().Be( result );
         }
@@ -76,8 +75,7 @@ namespace Tests.Formatters
             ConnectFormatter formatter = new ConnectFormatter();
             Connect connect = Packet.ReadPacket<Connect>( jsonPath );
 
-            byte[] result = await formatter.FormatAsync( connect )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            byte[] result = await formatter.FormatAsync( connect );
 
             expectedPacket.Should().BeEquivalentTo( result );
         }

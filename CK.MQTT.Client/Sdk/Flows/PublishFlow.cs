@@ -38,18 +38,15 @@ namespace CK.MQTT.Sdk.Flows
                 return;
             }
 
-            await channel.SendAsync( ack )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            await channel.SendAsync( ack );
 
             if( ack.Type == MqttPacketType.PublishReceived )
             {
-                await MonitorAckAsync<PublishRelease>( ack, clientId, channel )
-                    .ConfigureAwait( continueOnCapturedContext: false );
+                await MonitorAckAsync<PublishRelease>( ack, clientId, channel );
             }
             else if( ack.Type == MqttPacketType.PublishRelease )
             {
-                await MonitorAckAsync<PublishComplete>( ack, clientId, channel )
-                    .ConfigureAwait( continueOnCapturedContext: false );
+                await MonitorAckAsync<PublishComplete>( ack, clientId, channel );
             }
         }
 

@@ -40,8 +40,7 @@ namespace Tests.Flows
 
             ServerConnectFlow flow = new ServerConnectFlow( authenticationProvider, sessionRepository.Object, willRepository.Object, senderFlow.Object );
 
-            await flow.ExecuteAsync( clientId, connect, channel.Object )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            await flow.ExecuteAsync( clientId, connect, channel.Object );
 
             sessionRepository.Verify( r => r.Create( It.Is<ClientSession>( s => s.Id == clientId && s.Clean == true ) ) );
             sessionRepository.Verify( r => r.Delete( It.IsAny<string>() ), Times.Never );
@@ -89,8 +88,7 @@ namespace Tests.Flows
 
             ServerConnectFlow flow = new ServerConnectFlow( authenticationProvider, sessionRepository.Object, willRepository.Object, senderFlow.Object );
 
-            await flow.ExecuteAsync( clientId, connect, channel.Object )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            await flow.ExecuteAsync( clientId, connect, channel.Object );
 
             sessionRepository.Verify( r => r.Create( It.IsAny<ClientSession>() ), Times.Never );
             sessionRepository.Verify( r => r.Delete( It.IsAny<string>() ), Times.Never );
@@ -137,8 +135,7 @@ namespace Tests.Flows
 
             ServerConnectFlow flow = new ServerConnectFlow( authenticationProvider, sessionRepository.Object, willRepository.Object, senderFlow.Object );
 
-            await flow.ExecuteAsync( clientId, connect, channel.Object )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            await flow.ExecuteAsync( clientId, connect, channel.Object );
 
             ConnectAck connectAck = sentPacket as ConnectAck;
 
@@ -183,8 +180,7 @@ namespace Tests.Flows
 
             ServerConnectFlow flow = new ServerConnectFlow( authenticationProvider, sessionRepository.Object, willRepository.Object, senderFlow.Object );
 
-            await flow.ExecuteAsync( clientId, connect, channel.Object )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            await flow.ExecuteAsync( clientId, connect, channel.Object );
 
             ConnectAck connectAck = sentPacket as ConnectAck;
 
@@ -223,8 +219,7 @@ namespace Tests.Flows
 
             ServerConnectFlow flow = new ServerConnectFlow( authenticationProvider, sessionRepository.Object, willRepository.Object, senderFlow.Object );
 
-            await flow.ExecuteAsync( clientId, connect, channel.Object )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            await flow.ExecuteAsync( clientId, connect, channel.Object );
 
             ConnectAck connectAck = sentPacket as ConnectAck;
 
@@ -363,8 +358,7 @@ namespace Tests.Flows
 
             ServerConnectFlow flow = new ServerConnectFlow( authenticationProvider, sessionRepository.Object, willRepository.Object, senderFlow.Object );
 
-            await flow.ExecuteAsync( clientId, connect, channel.Object )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            await flow.ExecuteAsync( clientId, connect, channel.Object );
 
             sessionRepository.Verify( r => r.Create( It.IsAny<ClientSession>() ), Times.Never );
             sessionRepository.Verify( r => r.Delete( It.IsAny<string>() ), Times.Never );

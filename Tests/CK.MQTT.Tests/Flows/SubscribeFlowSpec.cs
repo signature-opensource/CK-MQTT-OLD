@@ -59,8 +59,7 @@ namespace Tests.Flows
             ServerSubscribeFlow flow = new ServerSubscribeFlow( topicEvaluator.Object, sessionRepository.Object,
                 retainedMessageRepository, packetIdProvider, senderFlow, configuration );
 
-            await flow.ExecuteAsync( clientId, subscribe, channel.Object )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            await flow.ExecuteAsync( clientId, subscribe, channel.Object );
 
             sessionRepository.Verify( r => r.Update( It.Is<ClientSession>( s => s.Id == clientId && s.Subscriptions.Count == 2
                 && s.Subscriptions.All( x => x.TopicFilter == fooTopic || x.TopicFilter == barTopic ) ) ) );
@@ -121,8 +120,7 @@ namespace Tests.Flows
                 retainedMessageRepository, packetIdProvider,
                 senderFlow, configuration );
 
-            await flow.ExecuteAsync( clientId, subscribe, channel.Object )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            await flow.ExecuteAsync( clientId, subscribe, channel.Object );
 
             sessionRepository.Verify( r => r.Update( It.Is<ClientSession>( s => s.Id == clientId && s.Subscriptions.Count == 1
                 && s.Subscriptions.Any( x => x.TopicFilter == fooTopic && x.MaximumQualityOfService == fooQoS ) ) ) );
@@ -177,8 +175,7 @@ namespace Tests.Flows
                 retainedMessageRepository, packetIdProvider,
                 senderFlow, configuration );
 
-            await flow.ExecuteAsync( clientId, subscribe, channel.Object )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            await flow.ExecuteAsync( clientId, subscribe, channel.Object );
 
             Assert.NotNull( response );
 
@@ -235,8 +232,7 @@ namespace Tests.Flows
                 sessionRepository.Object, retainedMessageRepository.Object,
                 packetIdProvider, senderFlow.Object, configuration );
 
-            await flow.ExecuteAsync( clientId, subscribe, channel.Object )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            await flow.ExecuteAsync( clientId, subscribe, channel.Object );
 
             senderFlow.Verify( f => f.SendPublishAsync( It.Is<string>( s => s == clientId ),
                 It.Is<Publish>( p => p.Topic == retainedTopic &&

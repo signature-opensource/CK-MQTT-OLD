@@ -79,8 +79,7 @@ namespace CK.MQTT.Ssl
                 _tracer.Verbose( "Sending packet of {0} bytes", message.Length );
 
                 await _client.GetStream()
-                    .WriteAsync( message, 0, message.Length )
-                    .ConfigureAwait( continueOnCapturedContext: false );
+                    .WriteAsync( message, 0, message.Length );
             }
             catch( ObjectDisposedException disposedEx )
             {

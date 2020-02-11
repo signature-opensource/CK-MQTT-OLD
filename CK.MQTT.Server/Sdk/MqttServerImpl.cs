@@ -91,13 +91,11 @@ namespace CK.MQTT.Sdk
 
             MqttConnectedClientFactory factory = new MqttConnectedClientFactory( _privateStreamListener );
             IMqttConnectedClient client = await factory
-                .CreateClientAsync( _configuration )
-                .ConfigureAwait( continueOnCapturedContext: false );
+                .CreateClientAsync( _configuration );
             string clientId = GetPrivateClientId();
 
             await client
-                .ConnectAsync( new MqttClientCredentials( clientId ) )
-                .ConfigureAwait( continueOnCapturedContext: false );
+                .ConnectAsync( new MqttClientCredentials( clientId ) );
 
             _connectionProvider.RegisterPrivateClient( clientId );
 

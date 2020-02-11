@@ -1,4 +1,4 @@
-﻿using CK.MQTT.Sdk.Formatters;
+using CK.MQTT.Sdk.Formatters;
 using CK.MQTT.Sdk.Packets;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,8 +26,7 @@ namespace CK.MQTT.Sdk
             if( !formatters.TryGetValue( packetType, out IFormatter formatter ) )
                 throw new MqttException( Properties.Resources.GetString( "PacketManager_PacketUnknown" ) );
 
-            IPacket packet = await formatter.FormatAsync( bytes )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            IPacket packet = await formatter.FormatAsync( bytes );
 
             return packet;
         }
@@ -37,8 +36,7 @@ namespace CK.MQTT.Sdk
             if( !formatters.TryGetValue( packet.Type, out IFormatter formatter ) )
                 throw new MqttException( Properties.Resources.GetString( "PacketManager_PacketUnknown" ) );
 
-            byte[] bytes = await formatter.FormatAsync( packet )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            byte[] bytes = await formatter.FormatAsync( packet );
 
             return bytes;
         }

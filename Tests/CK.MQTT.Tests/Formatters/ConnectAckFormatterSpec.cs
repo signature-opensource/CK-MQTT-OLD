@@ -22,8 +22,7 @@ namespace Tests.Formatters
             ConnectAckFormatter formatter = new ConnectAckFormatter();
             byte[] packet = Packet.ReadAllBytes( packetPath );
 
-            IPacket result = await formatter.FormatAsync( packet )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            IPacket result = await formatter.FormatAsync( packet );
 
             expectedConnectAck.Should().Be( result );
         }
@@ -55,8 +54,7 @@ namespace Tests.Formatters
             ConnectAckFormatter formatter = new ConnectAckFormatter();
             ConnectAck connectAck = Packet.ReadPacket<ConnectAck>( jsonPath );
 
-            byte[] result = await formatter.FormatAsync( connectAck )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            byte[] result = await formatter.FormatAsync( connectAck );
 
             expectedPacket.Should().BeEquivalentTo( result );
         }

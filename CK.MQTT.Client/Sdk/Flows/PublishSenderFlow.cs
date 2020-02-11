@@ -36,8 +36,7 @@ namespace CK.MQTT.Sdk.Flows
 
             if( ackPacket != default( IFlowPacket ) )
             {
-                await SendAckAsync( clientId, ackPacket, channel )
-                    .ConfigureAwait( continueOnCapturedContext: false );
+                await SendAckAsync( clientId, ackPacket, channel );
             }
         }
 
@@ -56,17 +55,15 @@ namespace CK.MQTT.Sdk.Flows
                 SaveMessage( message, clientId, PendingMessageStatus.PendingToAcknowledge );
             }
 
-            await channel.SendAsync( message )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            await channel.SendAsync( message );
 
             if( qos == MqttQualityOfService.AtLeastOnce )
             {
-                await MonitorAckAsync<PublishAck>( message, clientId, channel )
-                    .ConfigureAwait( continueOnCapturedContext: false );
+                await MonitorAckAsync<PublishAck>( message, clientId, channel );
             }
             else if( qos == MqttQualityOfService.ExactlyOnce )
             {
-                await MonitorAckAsync<PublishReceived>( message, clientId, channel ).ConfigureAwait( continueOnCapturedContext: false );
+                await MonitorAckAsync<PublishReceived>( message, clientId, channel );
                 await channel
                     .ReceiverStream
                     .ObserveOn( NewThreadScheduler.Default )

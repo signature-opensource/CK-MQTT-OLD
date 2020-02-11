@@ -37,10 +37,8 @@ namespace CK.MQTT.Sdk.Flows
                 throw new MqttException( string.Format( Properties.Resources.GetString( "SessionRepository_ClientSessionNotFound" ), clientId ) );
             }
 
-            await SendPendingMessagesAsync( session, channel )
-                .ConfigureAwait( continueOnCapturedContext: false );
-            await SendPendingAcknowledgementsAsync( session, channel )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            await SendPendingMessagesAsync( session, channel );
+            await SendPendingAcknowledgementsAsync( session, channel );
         }
 
         async Task SendPendingMessagesAsync( ClientSession session, IMqttChannel<IPacket> channel )
@@ -51,8 +49,7 @@ namespace CK.MQTT.Sdk.Flows
                     pendingMessage.Retain, pendingMessage.Duplicated, pendingMessage.PacketId );
 
                 await _senderFlow
-                    .SendPublishAsync( session.Id, publish, channel, PendingMessageStatus.PendingToAcknowledge )
-                    .ConfigureAwait( continueOnCapturedContext: false );
+                    .SendPublishAsync( session.Id, publish, channel, PendingMessageStatus.PendingToAcknowledge );
             }
         }
 
@@ -71,8 +68,7 @@ namespace CK.MQTT.Sdk.Flows
                     ack = new PublishRelease( pendingAcknowledgement.PacketId );
                 }
 
-                await _senderFlow.SendAckAsync( session.Id, ack, channel )
-                    .ConfigureAwait( continueOnCapturedContext: false );
+                await _senderFlow.SendAckAsync( session.Id, ack, channel );
             }
         }
     }

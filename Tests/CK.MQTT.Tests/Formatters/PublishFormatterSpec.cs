@@ -35,8 +35,7 @@ namespace Tests.Formatters
             PublishFormatter formatter = new PublishFormatter( topicEvaluator );
             byte[] packet = Packet.ReadAllBytes( packetPath );
 
-            IPacket result = await formatter.FormatAsync( packet )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            IPacket result = await formatter.FormatAsync( packet );
 
             expectedPublish.Should().Be( result );
         }
@@ -71,8 +70,7 @@ namespace Tests.Formatters
             PublishFormatter formatter = new PublishFormatter( topicEvaluator );
             Publish publish = Packet.ReadPacket<Publish>( jsonPath );
 
-            byte[] result = await formatter.FormatAsync( publish )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            byte[] result = await formatter.FormatAsync( publish );
 
             expectedPacket.Should().BeEquivalentTo( result );
         }

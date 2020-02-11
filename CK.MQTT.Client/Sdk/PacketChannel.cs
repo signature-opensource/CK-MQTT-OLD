@@ -33,8 +33,7 @@ namespace CK.MQTT.Sdk
                 {
                     try
                     {
-                        IPacket packet = await _manager.GetPacketAsync( bytes )
-                            .ConfigureAwait( continueOnCapturedContext: false );
+                        IPacket packet = await _manager.GetPacketAsync( bytes );
 
                         _receiver.OnNext( packet );
                     }
@@ -58,13 +57,11 @@ namespace CK.MQTT.Sdk
                 throw new ObjectDisposedException( GetType().FullName );
             }
 
-            byte[] bytes = await _manager.GetBytesAsync( packet )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            byte[] bytes = await _manager.GetBytesAsync( packet );
 
             _sender.OnNext( packet );
 
-            await _innerChannel.SendAsync( bytes )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            await _innerChannel.SendAsync( bytes );
         }
 
         public void Dispose()

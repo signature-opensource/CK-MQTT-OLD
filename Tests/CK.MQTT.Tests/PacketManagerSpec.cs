@@ -49,8 +49,7 @@ namespace Tests
                 .Returns( Task.FromResult<IPacket>( (IPacket)packet ) );
 
             PacketManager packetManager = new PacketManager( formatter.Object );
-            IPacket result = await packetManager.GetPacketAsync( bytes )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            IPacket result = await packetManager.GetPacketAsync( bytes );
             packet.Should().Be( result );
         }
 
@@ -88,8 +87,7 @@ namespace Tests
                 .Returns( Task.FromResult( bytes ) );
 
             PacketManager packetManager = new PacketManager( formatter.Object );
-            byte[] result = await packetManager.GetBytesAsync( packet )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            byte[] result = await packetManager.GetBytesAsync( packet );
             bytes.Should().BeEquivalentTo( result );
         }
 
@@ -113,8 +111,7 @@ namespace Tests
                 .Returns( Task.FromResult( bytes ) );
 
             PacketManager packetManager = new PacketManager( formatter.Object );
-            byte[] result = await packetManager.GetBytesAsync( packet )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            byte[] result = await packetManager.GetBytesAsync( packet );
 
             bytes.Should().BeEquivalentTo( result );
         }

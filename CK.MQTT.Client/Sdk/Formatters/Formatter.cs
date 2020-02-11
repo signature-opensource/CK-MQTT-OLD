@@ -1,4 +1,4 @@
-﻿using CK.MQTT.Sdk.Packets;
+using CK.MQTT.Sdk.Packets;
 using System;
 using System.Threading.Tasks;
 
@@ -24,8 +24,7 @@ namespace CK.MQTT.Sdk.Formatters
                 throw new MqttException( error );
             }
 
-            T packet = await Task.Run( () => Read( bytes ) )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            T packet = await Task.Run( () => Read( bytes ) );
 
             return packet;
         }
@@ -39,8 +38,7 @@ namespace CK.MQTT.Sdk.Formatters
                 throw new MqttException( error );
             }
 
-            byte[] bytes = await Task.Run( () => Write( packet as T ) )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            byte[] bytes = await Task.Run( () => Write( packet as T ) );
 
             return bytes;
         }

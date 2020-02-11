@@ -95,8 +95,7 @@ namespace CK.MQTT.Sdk
                         StartKeepAliveMonitor();
                     }
 
-                    await DispatchPacketAsync( packet )
-                        .ConfigureAwait( continueOnCapturedContext: false );
+                    await DispatchPacketAsync( packet );
                 }, ex =>
                 {
                     NotifyError( ex );
@@ -104,63 +103,42 @@ namespace CK.MQTT.Sdk
         }
 
         IDisposable ListenNextPackets()
-        {
-            return _channel
+            => _channel
                 .ReceiverStream
                 .Skip( 1 )
-                .Subscribe( async packet =>
-                {
-                    await DispatchPacketAsync( packet )
-                        .ConfigureAwait( continueOnCapturedContext: false );
-                }, ex =>
-                {
-                    NotifyError( ex );
-                } );
-        }
+                .Subscribe(
+                    async packet => await DispatchPacketAsync( packet )
+                    , ex => NotifyError( ex )
+                );
 
         IDisposable ListenCompletionAndErrors()
-        {
-            return _channel
+            => _channel
                 .ReceiverStream
                 .Subscribe( _ => { },
-                    ex =>
-                    {
-                        NotifyError( ex );
-                    }, () =>
+                    ex => NotifyError( ex )
+                    , () =>
                     {
                         _tracer.Warn( Properties.Resources.GetString( "ClientPacketListener_PacketChannelCompleted" ), _clientId );
-
                         _packets.OnCompleted();
                     }
                 );
-        }
 
         IDisposable ListenSentConnectPacket()
-        {
-            return _channel
+            => _channel
                 .SenderStream
                 .OfType<Connect>()
                 .FirstAsync()
-                .Subscribe( connect =>
-                {
-                    _clientId = connect.ClientId;
-                } );
-        }
+                .Subscribe( connect => _clientId = connect.ClientId );
 
         IDisposable ListenSentDisconnectPacket()
-        {
-            return _channel.SenderStream
+            => _channel.SenderStream
                 .OfType<Disconnect>()
                 .FirstAsync()
                 .ObserveOn( NewThreadScheduler.Default )
                 .Subscribe( disconnect =>
                 {
-                    if( _configuration.KeepAliveSecs > 0 )
-                    {
-                        StopKeepAliveMonitor();
-                    }
+                    if( _configuration.KeepAliveSecs > 0 ) StopKeepAliveMonitor();
                 } );
-        }
 
         void StartKeepAliveMonitor()
         {
@@ -179,8 +157,7 @@ namespace CK.MQTT.Sdk
 
                     PingRequest ping = new PingRequest();
 
-                    await _channel.SendAsync( ping )
-                        .ConfigureAwait( continueOnCapturedContext: false );
+                    await _channel.SendAsync( ping );
                 }
                 catch( Exception ex )
                 {
@@ -226,10 +203,8 @@ namespace CK.MQTT.Sdk
                             _tracer.Info( Properties.Resources.GetString( "ClientPacketListener_DispatchingPublish" ), _clientId, flow.GetType().Name, publish.Topic );
                         }
 
-                        await flow.ExecuteAsync( _clientId, packet, _channel )
-                            .ConfigureAwait( continueOnCapturedContext: false );
-                    } )
-                    .ConfigureAwait( continueOnCapturedContext: false );
+                        await flow.ExecuteAsync( _clientId, packet, _channel );
+                    } );
                 }
                 catch( Exception ex )
                 {

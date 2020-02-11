@@ -30,8 +30,7 @@ namespace IntegrationTests
             IMqttConnectedClient client = await Server.CreateClientAsync();
             string topicFilter = Guid.NewGuid().ToString() + "/#";
 
-            await client.SubscribeAsync( topicFilter, MqttQualityOfService.AtMostOnce )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            await client.SubscribeAsync( topicFilter, MqttQualityOfService.AtMostOnce );
 
             Assert.True( client.IsConnected );
 
@@ -46,8 +45,7 @@ namespace IntegrationTests
             IMqttConnectedClient client = await Server.CreateClientAsync();
             string topicFilter = "$SYS/" + Guid.NewGuid().ToString() + "/#";
 
-            await client.SubscribeAsync( topicFilter, MqttQualityOfService.AtMostOnce )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            await client.SubscribeAsync( topicFilter, MqttQualityOfService.AtMostOnce );
 
             Assert.True( client.IsConnected );
 

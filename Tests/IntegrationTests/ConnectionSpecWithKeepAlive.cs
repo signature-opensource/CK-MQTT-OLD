@@ -21,8 +21,7 @@ namespace IntegrationTests
         {
             IMqttClient client = await GetClientAsync();
 
-            await client.ConnectAsync( new MqttClientCredentials( MqttTestHelper.GetClientId() ) )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            await client.ConnectAsync( new MqttClientCredentials( MqttTestHelper.GetClientId() ) );
 
             string clientId = client.Id;
             bool existClientAfterConnect = Server.ActiveClients.Any( c => c == clientId );
@@ -74,8 +73,7 @@ namespace IntegrationTests
             IMqttClient client = await GetClientAsync();
             string clientId = MqttTestHelper.GetClientId();
 
-            await client.ConnectAsync( new MqttClientCredentials( clientId ) )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            await client.ConnectAsync( new MqttClientCredentials( clientId ) );
 
             await Task.Delay( TimeSpan.FromSeconds( KeepAliveSecs * 5 ) );
 

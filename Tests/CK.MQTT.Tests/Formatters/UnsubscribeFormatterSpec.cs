@@ -23,8 +23,7 @@ namespace Tests.Formatters
             UnsubscribeFormatter formatter = new UnsubscribeFormatter();
             byte[] packet = Packet.ReadAllBytes( packetPath );
 
-            IPacket result = await formatter.FormatAsync( packet )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            IPacket result = await formatter.FormatAsync( packet );
 
             expectedUnsubscribe.Should().Be( result );
         }
@@ -69,8 +68,7 @@ namespace Tests.Formatters
             UnsubscribeFormatter formatter = new UnsubscribeFormatter();
             Unsubscribe unsubscribe = Packet.ReadPacket<Unsubscribe>( jsonPath );
 
-            byte[] result = await formatter.FormatAsync( unsubscribe )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            byte[] result = await formatter.FormatAsync( unsubscribe );
 
             expectedPacket.Should().BeEquivalentTo( result );
         }

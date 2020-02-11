@@ -48,8 +48,7 @@ namespace CK.MQTT.Sdk.Flows
 
                 _tracer.Info( ServerProperties.Resources.GetString( "ServerPublishReceiverFlow_SendingWill" ), clientId, willPublish.Topic );
 
-                await DispatchAsync( willPublish, clientId, isWill: true )
-                    .ConfigureAwait( continueOnCapturedContext: false );
+                await DispatchAsync( willPublish, clientId, isWill: true );
             }
         }
 
@@ -74,8 +73,7 @@ namespace CK.MQTT.Sdk.Flows
                 }
             }
 
-            await DispatchAsync( publish, clientId )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            await DispatchAsync( publish, clientId );
         }
 
         protected override void Validate( Publish publish, string clientId )
@@ -105,8 +103,7 @@ namespace CK.MQTT.Sdk.Flows
             {
                 foreach( ClientSubscription subscription in subscriptions )
                 {
-                    await DispatchAsync( publish, subscription, isWill )
-                        .ConfigureAwait( continueOnCapturedContext: false );
+                    await DispatchAsync( publish, subscription, isWill );
                 }
             }
         }
@@ -123,8 +120,7 @@ namespace CK.MQTT.Sdk.Flows
             };
             IMqttChannel<IPacket> clientChannel = _connectionProvider.GetConnection( subscription.ClientId );
 
-            await _senderFlow.SendPublishAsync( subscription.ClientId, subscriptionPublish, clientChannel )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            await _senderFlow.SendPublishAsync( subscription.ClientId, subscriptionPublish, clientChannel );
         }
     }
 }

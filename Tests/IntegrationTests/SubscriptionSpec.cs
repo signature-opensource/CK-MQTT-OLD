@@ -30,8 +30,7 @@ namespace IntegrationTests
             IMqttClient client = await GetClientAsync();
             string topicFilter = Guid.NewGuid().ToString() + "/#";
 
-            await client.SubscribeAsync( topicFilter, MqttQualityOfService.AtMostOnce )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            await client.SubscribeAsync( topicFilter, MqttQualityOfService.AtMostOnce );
 
             Assert.True( client.IsConnected );
 
@@ -116,8 +115,7 @@ namespace IntegrationTests
             }
 
             await Task.WhenAll( tasks );
-            await client.UnsubscribeAsync( topics.ToArray() )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            await client.UnsubscribeAsync( topics.ToArray() );
 
             Assert.True( client.IsConnected );
 

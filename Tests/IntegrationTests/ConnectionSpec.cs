@@ -411,14 +411,12 @@ namespace IntegrationTests
             using( IMqttClient client = await GetClientAsync() )
             {
 
-                await client.ConnectAsync( new MqttClientCredentials( MqttTestHelper.GetClientId() ) )
-                    .ConfigureAwait( continueOnCapturedContext: false );
+                await client.ConnectAsync( new MqttClientCredentials( MqttTestHelper.GetClientId() ) );
 
                 string clientId = client.Id;
                 bool existClientAfterConnect = Server.ActiveClients.Any( c => c == clientId );
 
-                await client.DisconnectAsync()
-                    .ConfigureAwait( continueOnCapturedContext: false );
+                await client.DisconnectAsync();
 
                 ManualResetEventSlim clientClosed = new ManualResetEventSlim();
 

@@ -139,10 +139,8 @@ namespace IntegrationTests
             int subscriber1Received = 0;
             int subscriber2Received = 0;
 
-            await subscriber1.SubscribeAsync( topicFilter, MqttQualityOfService.AtMostOnce )
-                .ConfigureAwait( continueOnCapturedContext: false );
-            await subscriber2.SubscribeAsync( topicFilter, MqttQualityOfService.AtMostOnce )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            await subscriber1.SubscribeAsync( topicFilter, MqttQualityOfService.AtMostOnce );
+            await subscriber2.SubscribeAsync( topicFilter, MqttQualityOfService.AtMostOnce );
 
             subscriber1.MessageStream
                 .Subscribe( m =>
@@ -186,10 +184,8 @@ namespace IntegrationTests
             count.Should().Be( subscriber2Received );
             Assert.True( completed );
 
-            await subscriber1.UnsubscribeAsync( topicFilter )
-                .ConfigureAwait( continueOnCapturedContext: false );
-            await subscriber2.UnsubscribeAsync( topicFilter )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            await subscriber1.UnsubscribeAsync( topicFilter );
+            await subscriber2.UnsubscribeAsync( topicFilter );
 
             subscriber1.Dispose();
             subscriber2.Dispose();
@@ -249,10 +245,8 @@ namespace IntegrationTests
             ManualResetEventSlim subscriberDone = new ManualResetEventSlim();
             int subscriberReceived = 0;
 
-            await subscriber.SubscribeAsync( requestTopic, MqttQualityOfService.AtMostOnce )
-                .ConfigureAwait( continueOnCapturedContext: false );
-            await publisher.SubscribeAsync( responseTopic, MqttQualityOfService.AtMostOnce )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            await subscriber.SubscribeAsync( requestTopic, MqttQualityOfService.AtMostOnce );
+            await publisher.SubscribeAsync( responseTopic, MqttQualityOfService.AtMostOnce );
 
             subscriber.MessageStream
                 .Subscribe( async m =>
@@ -263,8 +257,7 @@ namespace IntegrationTests
                         ResponseMessage response = GetResponseMessage( request );
                         MqttApplicationMessage message = new MqttApplicationMessage( responseTopic, Serializer.Serialize( response ) );
 
-                        await subscriber.PublishAsync( message, MqttQualityOfService.AtMostOnce )
-                            .ConfigureAwait( continueOnCapturedContext: false );
+                        await subscriber.PublishAsync( message, MqttQualityOfService.AtMostOnce );
                     }
                 } );
 
@@ -297,10 +290,8 @@ namespace IntegrationTests
             subscriberReceived.Should().Be( count );
             Assert.True( completed );
 
-            await subscriber.UnsubscribeAsync( requestTopic )
-                .ConfigureAwait( continueOnCapturedContext: false );
-            await publisher.UnsubscribeAsync( responseTopic )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            await subscriber.UnsubscribeAsync( requestTopic );
+            await publisher.UnsubscribeAsync( responseTopic );
 
             subscriber.Dispose();
             publisher.Dispose();
@@ -512,10 +503,8 @@ namespace IntegrationTests
             0.Should().Be( client1OldMessagesReceived );
             0.Should().Be( client2OldMessagesReceived );
 
-            await client1.UnsubscribeAsync( topic )
-                .ConfigureAwait( continueOnCapturedContext: false );
-            await client2.UnsubscribeAsync( topic )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            await client1.UnsubscribeAsync( topic );
+            await client2.UnsubscribeAsync( topic );
 
             client1.Dispose();
             client2.Dispose();
@@ -535,8 +524,7 @@ namespace IntegrationTests
             int subscriberReceived = 0;
 
             await subscriber
-                .SubscribeAsync( topic, MqttQualityOfService.AtMostOnce )
-                .ConfigureAwait( continueOnCapturedContext: false );
+                .SubscribeAsync( topic, MqttQualityOfService.AtMostOnce );
 
             subscriber
                 .MessageStream
@@ -585,8 +573,7 @@ namespace IntegrationTests
             SessionState.SessionPresent.Should().Be( sessionState );
             count.Should().Be( subscriberReceived );
 
-            await subscriber.UnsubscribeAsync( topic )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            await subscriber.UnsubscribeAsync( topic );
 
             subscriber.Dispose();
             publisher.Dispose();
@@ -609,8 +596,7 @@ namespace IntegrationTests
             int subscriberReceived = 0;
 
             await subscriber
-                .SubscribeAsync( topic, MqttQualityOfService.AtMostOnce )
-                .ConfigureAwait( continueOnCapturedContext: false );
+                .SubscribeAsync( topic, MqttQualityOfService.AtMostOnce );
 
             subscriber
                 .MessageStream
@@ -644,8 +630,7 @@ namespace IntegrationTests
             SessionState.CleanSession.Should().Be( sessionState );
             0.Should().Be( subscriberReceived );
 
-            await subscriber.UnsubscribeAsync( topic )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            await subscriber.UnsubscribeAsync( topic );
 
             subscriber.Dispose();
             publisher.Dispose();
@@ -664,7 +649,7 @@ namespace IntegrationTests
             ManualResetEventSlim goalAchieved = new ManualResetEventSlim();
             int received = 0;
 
-            await subscriber.SubscribeAsync( topic, MqttQualityOfService.AtMostOnce ).ConfigureAwait( continueOnCapturedContext: false );
+            await subscriber.SubscribeAsync( topic, MqttQualityOfService.AtMostOnce );
 
             subscriber
                 .MessageStream
@@ -720,7 +705,7 @@ namespace IntegrationTests
             Assert.False( completed );
             0.Should().Be( received );
 
-            await subscriber.UnsubscribeAsync( topic ).ConfigureAwait( continueOnCapturedContext: false );
+            await subscriber.UnsubscribeAsync( topic );
 
             subscriber.Dispose();
             publisher.Dispose();

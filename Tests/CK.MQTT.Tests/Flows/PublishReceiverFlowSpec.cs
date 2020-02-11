@@ -92,8 +92,7 @@ namespace Tests.Flows
 
             channel.Setup( c => c.ReceiverStream ).Returns( receiver );
 
-            await flow.ExecuteAsync( clientId, publish, channel.Object )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            await flow.ExecuteAsync( clientId, publish, channel.Object );
 
             retainedRepository.Verify( r => r.Create( It.IsAny<RetainedMessage>() ), Times.Never );
             publishSenderFlow.Verify( s => s.SendPublishAsync( It.Is<string>( x => x == subscribedClientId1 ),
@@ -167,8 +166,7 @@ namespace Tests.Flows
             channel.Setup( c => c.IsConnected ).Returns( true );
             channel.Setup( c => c.ReceiverStream ).Returns( receiver );
 
-            await flow.ExecuteAsync( clientId, publish, channel.Object )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            await flow.ExecuteAsync( clientId, publish, channel.Object );
 
             retainedRepository.Verify( r => r.Create( It.IsAny<RetainedMessage>() ), Times.Never );
             publishSenderFlow.Verify( s => s.SendPublishAsync( It.Is<string>( x => x == subscribedClientId ),
@@ -409,8 +407,7 @@ namespace Tests.Flows
             ServerPublishReceiverFlow flow = new ServerPublishReceiverFlow( topicEvaluator.Object, connectionProvider.Object, publishSenderFlow.Object,
                 retainedRepository.Object, sessionRepository.Object, willRepository.Object, packetIdProvider, undeliveredMessagesListener, configuration );
 
-            await flow.ExecuteAsync( clientId, publish, channel.Object )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            await flow.ExecuteAsync( clientId, publish, channel.Object );
 
             retainedRepository.Verify( r => r.Create( It.Is<RetainedMessage>( m => m.Id == topic && m.QualityOfService == qos && m.Payload.ToList().SequenceEqual( publish.Payload ) ) ) );
             channel.Verify( c => c.SendAsync( It.IsAny<IPacket>() ), Times.Never );
@@ -462,8 +459,7 @@ namespace Tests.Flows
             ServerPublishReceiverFlow flow = new ServerPublishReceiverFlow( topicEvaluator.Object, connectionProvider.Object, publishSenderFlow.Object,
                 retainedRepository.Object, sessionRepository.Object, willRepository.Object, packetIdProvider, undeliveredMessagesListener, configuration );
 
-            await flow.ExecuteAsync( clientId, publish, channel.Object )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            await flow.ExecuteAsync( clientId, publish, channel.Object );
 
             retainedRepository.Verify( r => r.Delete( It.Is<string>( m => m == existingRetainedMessage.Id ) ) );
             retainedRepository.Verify( r => r.Create( It.Is<RetainedMessage>( m => m.Id == topic && m.QualityOfService == qos && m.Payload.ToList().SequenceEqual( publish.Payload ) ) ) );
@@ -529,8 +525,7 @@ namespace Tests.Flows
             channel.Setup( c => c.IsConnected ).Returns( true );
             channel.Setup( c => c.ReceiverStream ).Returns( receiver );
 
-            await flow.ExecuteAsync( clientId, publish, channel.Object )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            await flow.ExecuteAsync( clientId, publish, channel.Object );
 
             publishSenderFlow.Verify( s => s.SendPublishAsync( It.Is<string>( x => x == subscribedClientId ),
                 It.Is<Publish>( p => p.Topic == publish.Topic &&
@@ -658,8 +653,7 @@ namespace Tests.Flows
 
             channel.Setup( c => c.ReceiverStream ).Returns( receiver );
 
-            await flow.ExecuteAsync( clientId, publish, channel.Object )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            await flow.ExecuteAsync( clientId, publish, channel.Object );
 
             publishSenderFlow.Verify( s => s.SendPublishAsync( It.Is<string>( x => x == subscribedClientId ),
                 It.Is<Publish>( p => p.Topic == publish.Topic &&
@@ -739,8 +733,7 @@ namespace Tests.Flows
 
             channel.Setup( c => c.ReceiverStream ).Returns( receiver );
 
-            await flow.ExecuteAsync( clientId, publish, channel.Object )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            await flow.ExecuteAsync( clientId, publish, channel.Object );
 
             publishSenderFlow.Verify( s => s.SendPublishAsync( It.Is<string>( x => x == subscribedClientId ),
                 It.Is<Publish>( p => p.Topic == publish.Topic &&
@@ -781,8 +774,7 @@ namespace Tests.Flows
 
             channel.Setup( c => c.IsConnected ).Returns( true );
 
-            await flow.ExecuteAsync( clientId, publishRelease, channel.Object )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            await flow.ExecuteAsync( clientId, publishRelease, channel.Object );
 
             channel.Verify( c => c.SendAsync( It.Is<IPacket>( p => p is PublishComplete && (p as PublishComplete).PacketId == packetId ) ) );
         }

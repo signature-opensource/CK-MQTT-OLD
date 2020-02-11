@@ -83,7 +83,7 @@ namespace CK.MQTT.Sdk
 
                 OpenClientSession( cleanSession );
 
-                await InitializeChannelAsync().ConfigureAwait( continueOnCapturedContext: false );
+                await InitializeChannelAsync();
 
                 Connect connect = new Connect( Id, cleanSession )
                 {
@@ -93,8 +93,7 @@ namespace CK.MQTT.Sdk
                     KeepAlive = _configuration.KeepAliveSecs
                 };
 
-                await SendPacketAsync( connect )
-                    .ConfigureAwait( continueOnCapturedContext: false );
+                await SendPacketAsync( connect );
 
                 TimeSpan connectTimeout = TimeSpan.FromSeconds( _configuration.WaitTimeoutSecs );
                 ConnectAck ack = await _packetListener
@@ -160,8 +159,7 @@ namespace CK.MQTT.Sdk
                 SubscribeAck ack = default;
                 TimeSpan subscribeTimeout = TimeSpan.FromSeconds( _configuration.WaitTimeoutSecs );
 
-                await SendPacketAsync( subscribe )
-                    .ConfigureAwait( continueOnCapturedContext: false );
+                await SendPacketAsync( subscribe );
 
                 ack = await _packetListener
                     .PacketStream
@@ -230,9 +228,8 @@ namespace CK.MQTT.Sdk
 
                 await _clientSender.Run( async () =>
                  {
-                     await senderFlow.SendPublishAsync( Id, publish, Channel )
-                         .ConfigureAwait( continueOnCapturedContext: false );
-                 } ).ConfigureAwait( continueOnCapturedContext: false );
+                     await senderFlow.SendPublishAsync( Id, publish, Channel );
+                 } );
             }
             catch( Exception ex )
             {
@@ -255,8 +252,7 @@ namespace CK.MQTT.Sdk
                 UnsubscribeAck ack = default;
                 TimeSpan unsubscribeTimeout = TimeSpan.FromSeconds( _configuration.WaitTimeoutSecs );
 
-                await SendPacketAsync( unsubscribe )
-                    .ConfigureAwait( continueOnCapturedContext: false );
+                await SendPacketAsync( unsubscribe );
 
                 ack = await _packetListener
                     .PacketStream
@@ -312,8 +308,7 @@ namespace CK.MQTT.Sdk
 
                 _packetsSubscription?.Dispose();
 
-                await SendPacketAsync( new Disconnect() )
-                    .ConfigureAwait( continueOnCapturedContext: false );
+                await SendPacketAsync( new Disconnect() );
 
                 await _packetListener
                     .PacketStream
@@ -341,7 +336,7 @@ namespace CK.MQTT.Sdk
             {
                 if( IsConnected )
                 {
-                    await DisconnectAsync().ConfigureAwait( continueOnCapturedContext: false );
+                    await DisconnectAsync();
                 }
 
                 (_clientSender as IDisposable)?.Dispose();
@@ -373,8 +368,7 @@ namespace CK.MQTT.Sdk
         async Task InitializeChannelAsync()
         {
             Channel = await _channelFactory
-                .CreateAsync()
-                .ConfigureAwait( continueOnCapturedContext: false );
+                .CreateAsync();
 
             _packetListener = new ClientPacketListener( Channel, _flowProvider, _configuration );
             _packetListener.Listen();
@@ -422,8 +416,7 @@ namespace CK.MQTT.Sdk
 
         async Task SendPacketAsync( IPacket packet )
         {
-            await _clientSender.Run( async () => await Channel.SendAsync( packet ).ConfigureAwait( continueOnCapturedContext: false ) )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            await _clientSender.Run( async () => await Channel.SendAsync( packet ) );
         }
 
         void CheckUnderlyingConnection()

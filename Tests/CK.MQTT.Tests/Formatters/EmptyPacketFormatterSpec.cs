@@ -33,8 +33,7 @@ namespace Tests.Formatters
             IFormatter formatter = GetFormatter( packetType, type );
             byte[] packet = Packet.ReadAllBytes( packetPath );
 
-            IPacket result = await formatter.FormatAsync( packet )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            IPacket result = await formatter.FormatAsync( packet );
 
             Assert.NotNull( result );
         }
@@ -67,8 +66,7 @@ namespace Tests.Formatters
             IFormatter formatter = GetFormatter( packetType, type );
             IPacket packet = Activator.CreateInstance( type ) as IPacket;
 
-            byte[] result = await formatter.FormatAsync( packet )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            byte[] result = await formatter.FormatAsync( packet );
 
             expectedPacket.Should().BeEquivalentTo( result );
         }

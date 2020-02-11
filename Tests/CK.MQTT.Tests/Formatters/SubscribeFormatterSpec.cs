@@ -26,8 +26,7 @@ namespace Tests.Formatters
             SubscribeFormatter formatter = new SubscribeFormatter( topicEvaluator );
             byte[] packet = Packet.ReadAllBytes( packetPath );
 
-            IPacket result = await formatter.FormatAsync( packet )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            IPacket result = await formatter.FormatAsync( packet );
 
             expectedSubscribe.Should().Be( result );
         }
@@ -77,8 +76,7 @@ namespace Tests.Formatters
             SubscribeFormatter formatter = new SubscribeFormatter( topicEvaluator );
             Subscribe subscribe = Packet.ReadPacket<Subscribe>( jsonPath );
 
-            byte[] result = await formatter.FormatAsync( subscribe )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            byte[] result = await formatter.FormatAsync( subscribe );
 
             expectedPacket.Should().BeEquivalentTo( result );
         }

@@ -28,8 +28,7 @@ namespace CK.MQTT.Sdk.Bindings
                 Task connectTask = tcpClient.ConnectAsync( _hostAddress, _configuration.Port );
                 Task timeoutTask = Task.Delay( TimeSpan.FromSeconds( _configuration.ConnectionTimeoutSecs ) );
                 Task resultTask = await Task
-                    .WhenAny( connectTask, timeoutTask )
-                    .ConfigureAwait( continueOnCapturedContext: false );
+                    .WhenAny( connectTask, timeoutTask );
 
                 if( resultTask == timeoutTask )
                     throw new TimeoutException();

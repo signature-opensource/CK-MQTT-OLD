@@ -34,8 +34,7 @@ namespace CK.MQTT.Sdk
             }
 
             IMqttChannel<byte[]> binaryChannel = await _innerChannelFactory
-                .CreateAsync()
-                .ConfigureAwait( continueOnCapturedContext: false );
+                .CreateAsync();
 
             return Create( binaryChannel );
         }

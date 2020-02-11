@@ -70,15 +70,12 @@ namespace CK.MQTT.Sdk.Flows
                 _willRepository.Create( connectionWill );
             }
 
-            await channel.SendAsync( new ConnectAck( MqttConnectionStatus.Accepted, sessionPresent ) )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            await channel.SendAsync( new ConnectAck( MqttConnectionStatus.Accepted, sessionPresent ) );
 
             if( sendPendingMessages )
             {
-                await SendPendingMessagesAsync( session, channel )
-                    .ConfigureAwait( continueOnCapturedContext: false );
-                await SendPendingAcknowledgementsAsync( session, channel )
-                    .ConfigureAwait( continueOnCapturedContext: false );
+                await SendPendingMessagesAsync( session, channel );
+                await SendPendingAcknowledgementsAsync( session, channel );
             }
         }
 
@@ -97,13 +94,11 @@ namespace CK.MQTT.Sdk.Flows
                     session.RemovePendingMessage( pendingMessage );
                     _sessionRepository.Update( session );
 
-                    await _senderFlow.SendPublishAsync( session.Id, publish, channel )
-                        .ConfigureAwait( continueOnCapturedContext: false );
+                    await _senderFlow.SendPublishAsync( session.Id, publish, channel );
                 }
                 else
                 {
-                    await _senderFlow.SendPublishAsync( session.Id, publish, channel, PendingMessageStatus.PendingToAcknowledge )
-                        .ConfigureAwait( continueOnCapturedContext: false );
+                    await _senderFlow.SendPublishAsync( session.Id, publish, channel, PendingMessageStatus.PendingToAcknowledge );
                 }
             }
         }
@@ -119,8 +114,7 @@ namespace CK.MQTT.Sdk.Flows
                 else if( pendingAcknowledgement.Type == MqttPacketType.PublishRelease )
                     ack = new PublishRelease( pendingAcknowledgement.PacketId );
 
-                await _senderFlow.SendAckAsync( session.Id, ack, channel, PendingMessageStatus.PendingToAcknowledge )
-                    .ConfigureAwait( continueOnCapturedContext: false );
+                await _senderFlow.SendAckAsync( session.Id, ack, channel, PendingMessageStatus.PendingToAcknowledge );
             }
         }
     }

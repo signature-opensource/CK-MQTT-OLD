@@ -32,8 +32,7 @@ namespace Tests.Flows
 
             sessionRepository.Setup( r => r.Read( It.IsAny<string>() ) ).Returns( session );
 
-            await flow.ExecuteAsync( clientId, disconnect, channel.Object )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            await flow.ExecuteAsync( clientId, disconnect, channel.Object );
 
             willRepository.Verify( r => r.Delete( It.IsAny<string>() ) );
             sessionRepository.Verify( r => r.Delete( It.Is<string>( s => s == session.Id ) ) );
@@ -60,8 +59,7 @@ namespace Tests.Flows
 
             sessionRepository.Setup( r => r.Read( It.IsAny<string>() ) ).Returns( session );
 
-            await flow.ExecuteAsync( clientId, disconnect, channel.Object )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            await flow.ExecuteAsync( clientId, disconnect, channel.Object );
 
             willRepository.Verify( r => r.Delete( It.IsAny<string>() ) );
             sessionRepository.Verify( r => r.Delete( It.Is<string>( s => s == session.Id ) ), Times.Never );

@@ -22,8 +22,7 @@ namespace Tests.Formatters
             FlowPacketFormatter<UnsubscribeAck> formatter = new FlowPacketFormatter<UnsubscribeAck>( MqttPacketType.UnsubscribeAck, id => new UnsubscribeAck( id ) );
             byte[] packet = Packet.ReadAllBytes( packetPath );
 
-            IPacket result = await formatter.FormatAsync( packet )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            IPacket result = await formatter.FormatAsync( packet );
 
             expectedUnsubscribeAck.Should().Be( result );
         }
@@ -53,8 +52,7 @@ namespace Tests.Formatters
             FlowPacketFormatter<UnsubscribeAck> formatter = new FlowPacketFormatter<UnsubscribeAck>( MqttPacketType.UnsubscribeAck, id => new UnsubscribeAck( id ) );
             UnsubscribeAck unsubscribeAck = Packet.ReadPacket<UnsubscribeAck>( jsonPath );
 
-            byte[] result = await formatter.FormatAsync( unsubscribeAck )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            byte[] result = await formatter.FormatAsync( unsubscribeAck );
 
             expectedPacket.Should().BeEquivalentTo( result );
         }

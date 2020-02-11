@@ -51,8 +51,7 @@ namespace Tests.Flows
 
             ServerUnsubscribeFlow flow = new ServerUnsubscribeFlow( sessionRepository.Object );
 
-            await flow.ExecuteAsync( clientId, unsubscribe, channel.Object )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            await flow.ExecuteAsync( clientId, unsubscribe, channel.Object );
 
             Assert.NotNull( response );
             0.Should().Be( updatedSession.Subscriptions.Count );
@@ -91,8 +90,7 @@ namespace Tests.Flows
 
             ServerUnsubscribeFlow flow = new ServerUnsubscribeFlow( sessionRepository.Object );
 
-            await flow.ExecuteAsync( clientId, unsubscribe, channel.Object )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            await flow.ExecuteAsync( clientId, unsubscribe, channel.Object );
 
             sessionRepository.Verify( r => r.Delete( It.IsAny<string>() ), Times.Never );
             Assert.NotNull( response );

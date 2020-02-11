@@ -77,8 +77,7 @@ namespace CK.MQTT.Sdk.Bindings
                 _tracer.Verbose( Properties.Resources.GetString( "MqttChannel_SendingPacket" ), message.Length );
 
                 await _client.GetStream()
-                    .WriteAsync( message, 0, message.Length )
-                    .ConfigureAwait( continueOnCapturedContext: false );
+                    .WriteAsync( message, 0, message.Length );
             }
             catch( ObjectDisposedException disposedEx )
             {

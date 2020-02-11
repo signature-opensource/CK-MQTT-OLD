@@ -9,8 +9,7 @@ namespace CK.MQTT.Sdk.Flows
         {
             if( input.Type != MqttPacketType.PingRequest ) return;
 
-            await channel.SendAsync( new PingResponse() )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            await channel.SendAsync( new PingResponse() );
         }
     }
 }

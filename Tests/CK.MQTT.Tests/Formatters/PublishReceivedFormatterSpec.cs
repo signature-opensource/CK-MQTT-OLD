@@ -22,8 +22,7 @@ namespace Tests.Formatters
             FlowPacketFormatter<PublishReceived> formatter = new FlowPacketFormatter<PublishReceived>( MqttPacketType.PublishReceived, id => new PublishReceived( id ) );
             byte[] packet = Packet.ReadAllBytes( packetPath );
 
-            IPacket result = await formatter.FormatAsync( packet )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            IPacket result = await formatter.FormatAsync( packet );
 
             expectedPublishReceived.Should().Be( result );
         }
@@ -53,8 +52,7 @@ namespace Tests.Formatters
             FlowPacketFormatter<PublishReceived> formatter = new FlowPacketFormatter<PublishReceived>( MqttPacketType.PublishReceived, id => new PublishReceived( id ) );
             PublishReceived publishReceived = Packet.ReadPacket<PublishReceived>( jsonPath );
 
-            byte[] result = await formatter.FormatAsync( publishReceived )
-                .ConfigureAwait( continueOnCapturedContext: false );
+            byte[] result = await formatter.FormatAsync( publishReceived );
 
             expectedPacket.Should().BeEquivalentTo( result );
         }
