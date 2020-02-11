@@ -31,9 +31,9 @@ namespace CK.MQTT.Ssl
                 }
                 catch( SocketException socketEx )
                 {
-                    _tracer.Error( socketEx, Properties.TcpChannelProvider_TcpListener_Failed );
+                    _tracer.Error( socketEx, ClientProperties.TcpChannelProvider_TcpListener_Failed );
 
-                    throw new MqttException( Properties.TcpChannelProvider_TcpListener_Failed, socketEx );
+                    throw new MqttException( ClientProperties.TcpChannelProvider_TcpListener_Failed, socketEx );
                 }
 
                 return tcpListener;

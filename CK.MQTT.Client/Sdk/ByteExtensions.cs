@@ -9,7 +9,7 @@ namespace CK.MQTT.Sdk
         internal static bool IsSet( this byte @byte, int bit )
         {
             if( bit > 7 )
-                throw new ArgumentOutOfRangeException( nameof( bit ), Properties.ByteExtensions_InvalidBitPosition );
+                throw new ArgumentOutOfRangeException( nameof( bit ), ClientProperties.ByteExtensions_InvalidBitPosition );
 
             return (@byte & (1 << bit)) != 0;
         }
@@ -17,7 +17,7 @@ namespace CK.MQTT.Sdk
         internal static byte Set( this byte @byte, int bit )
         {
             if( bit > 7 )
-                throw new ArgumentOutOfRangeException( nameof( bit ), Properties.ByteExtensions_InvalidBitPosition );
+                throw new ArgumentOutOfRangeException( nameof( bit ), ClientProperties.ByteExtensions_InvalidBitPosition );
 
             return Convert.ToByte( @byte | (1 << bit) );
         }
@@ -25,7 +25,7 @@ namespace CK.MQTT.Sdk
         internal static byte Unset( this byte @byte, int bit )
         {
             if( bit > 7 )
-                throw new ArgumentOutOfRangeException( nameof( bit ), Properties.ByteExtensions_InvalidBitPosition );
+                throw new ArgumentOutOfRangeException( nameof( bit ), ClientProperties.ByteExtensions_InvalidBitPosition );
 
             return Convert.ToByte( @byte & ~(1 << bit) );
         }
@@ -38,7 +38,7 @@ namespace CK.MQTT.Sdk
         internal static byte Bits( this byte @byte, int index, int count )
         {
             if( index < 1 || index > 8 )
-                throw new ArgumentOutOfRangeException( nameof( index ), Properties.ByteExtensions_InvalidByteIndex );
+                throw new ArgumentOutOfRangeException( nameof( index ), ClientProperties.ByteExtensions_InvalidByteIndex );
 
             if( index > 1 )
             {

@@ -30,7 +30,7 @@ namespace CK.MQTT.Sdk
         {
             if( _innerChannelFactory == null )
             {
-                throw new MqttException( Properties.PacketChannelFactory_InnerChannelFactoryNotFound );
+                throw new MqttException( ClientProperties.PacketChannelFactory_InnerChannelFactoryNotFound );
             }
 
             IMqttChannel<byte[]> binaryChannel = await _innerChannelFactory

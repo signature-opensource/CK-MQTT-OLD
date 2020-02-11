@@ -76,7 +76,7 @@ namespace CK.MQTT.Sdk.Formatters
         byte[] GetPayload( Subscribe packet )
         {
             if( packet.Subscriptions == null || !packet.Subscriptions.Any() )
-                throw new MqttProtocolViolationException( Properties.SubscribeFormatter_MissingTopicFilterQosPair );
+                throw new MqttProtocolViolationException( ClientProperties.SubscribeFormatter_MissingTopicFilterQosPair );
 
             List<byte> payload = new List<byte>();
 
@@ -84,12 +84,12 @@ namespace CK.MQTT.Sdk.Formatters
             {
                 if( string.IsNullOrEmpty( subscription.TopicFilter ) )
                 {
-                    throw new MqttProtocolViolationException( Properties.SubscribeFormatter_MissingTopicFilterQosPair );
+                    throw new MqttProtocolViolationException( ClientProperties.SubscribeFormatter_MissingTopicFilterQosPair );
                 }
 
                 if( !topicEvaluator.IsValidTopicFilter( subscription.TopicFilter ) )
                 {
-                    string error = string.Format( Properties.SubscribeFormatter_InvalidTopicFilter, subscription.TopicFilter );
+                    string error = string.Format( ClientProperties.SubscribeFormatter_InvalidTopicFilter, subscription.TopicFilter );
 
                     throw new MqttException( error );
                 }
@@ -107,7 +107,7 @@ namespace CK.MQTT.Sdk.Formatters
         IEnumerable<Subscription> GetSubscriptions( byte[] bytes, int headerLength )
         {
             if( bytes.Length - headerLength < 4 ) //At least 4 bytes required on payload: MSB, LSB, Topic Filter, Requests QoS
-                throw new MqttProtocolViolationException( Properties.SubscribeFormatter_MissingTopicFilterQosPair );
+                throw new MqttProtocolViolationException( ClientProperties.SubscribeFormatter_MissingTopicFilterQosPair );
 
             int index = headerLength;
 
@@ -117,7 +117,7 @@ namespace CK.MQTT.Sdk.Formatters
 
                 if( !topicEvaluator.IsValidTopicFilter( topicFilter ) )
                 {
-                    string error = string.Format( Properties.SubscribeFormatter_InvalidTopicFilter, topicFilter );
+                    string error = string.Format( ClientProperties.SubscribeFormatter_InvalidTopicFilter, topicFilter );
 
                     throw new MqttException( error );
                 }
@@ -125,7 +125,7 @@ namespace CK.MQTT.Sdk.Formatters
                 byte requestedQosByte = bytes.Byte( index );
 
                 if( !Enum.IsDefined( typeof( MqttQualityOfService ), requestedQosByte ) )
-                    throw new MqttProtocolViolationException( Properties.Formatter_InvalidQualityOfService );
+                    throw new MqttProtocolViolationException( ClientProperties.Formatter_InvalidQualityOfService );
 
                 MqttQualityOfService requestedQos = (MqttQualityOfService)requestedQosByte;
 

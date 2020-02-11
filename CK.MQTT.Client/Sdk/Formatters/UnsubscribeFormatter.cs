@@ -21,7 +21,7 @@ namespace CK.MQTT.Sdk.Formatters
             int index = 1 + remainingLengthBytesLength + 2;
 
             if( bytes.Length == index )
-                throw new MqttProtocolViolationException( Properties.UnsubscribeFormatter_MissingTopics );
+                throw new MqttProtocolViolationException( ClientProperties.UnsubscribeFormatter_MissingTopics );
 
             List<string> topics = new List<string>();
 
@@ -80,7 +80,7 @@ namespace CK.MQTT.Sdk.Formatters
         byte[] GetPayload( Unsubscribe packet )
         {
             if( packet.Topics == null || !packet.Topics.Any() )
-                throw new MqttProtocolViolationException( Properties.UnsubscribeFormatter_MissingTopics );
+                throw new MqttProtocolViolationException( ClientProperties.UnsubscribeFormatter_MissingTopics );
 
             List<byte> payload = new List<byte>();
 

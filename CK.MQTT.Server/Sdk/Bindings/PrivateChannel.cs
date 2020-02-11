@@ -38,19 +38,19 @@ namespace CK.MQTT.Sdk.Bindings
         {
             if( _disposed ) throw new ObjectDisposedException( nameof( PrivateChannel ) );
 
-            if( !IsConnected ) throw new MqttException( Properties.MqttChannel_ClientNotConnected );
+            if( !IsConnected ) throw new MqttException( ClientProperties.MqttChannel_ClientNotConnected );
 
             _sender.OnNext( message );
 
             try
             {
-                _tracer.Verbose( Properties.MqttChannel_SendingPacket, message.Length );
+                _tracer.Verbose( ClientProperties.MqttChannel_SendingPacket, message.Length );
                 _stream.Send( message, _identifier );
                 return Task.FromResult( true );
             }
             catch( ObjectDisposedException disposedEx )
             {
-                throw new MqttException( Properties.MqttChannel_StreamDisconnected, disposedEx );
+                throw new MqttException( ClientProperties.MqttChannel_StreamDisconnected, disposedEx );
             }
         }
 
@@ -78,14 +78,14 @@ namespace CK.MQTT.Sdk.Bindings
                 .ObserveOn( NewThreadScheduler.Default )
                 .Subscribe( packet =>
                 {
-                    _tracer.Verbose( Properties.MqttChannel_ReceivedPacket, packet.Length );
+                    _tracer.Verbose( ClientProperties.MqttChannel_ReceivedPacket, packet.Length );
 
                     _receiver.OnNext( packet );
                 }, ex =>
                 {
                     if( ex is ObjectDisposedException )
                     {
-                        _receiver.OnError( new MqttException( Properties.MqttChannel_StreamDisconnected, ex ) );
+                        _receiver.OnError( new MqttException( ClientProperties.MqttChannel_StreamDisconnected, ex ) );
                     }
                     else
                     {
@@ -93,7 +93,7 @@ namespace CK.MQTT.Sdk.Bindings
                     }
                 }, () =>
                 {
-                    _tracer.Warn( Properties.MqttChannel_NetworkStreamCompleted );
+                    _tracer.Warn( ClientProperties.MqttChannel_NetworkStreamCompleted );
                     _receiver.OnCompleted();
                 } );
         }
