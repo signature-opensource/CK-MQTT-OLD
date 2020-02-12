@@ -93,7 +93,7 @@ namespace CK.MQTT.Sdk.Flows
         protected async Task MonitorAckAsync<T>( Publish sentMessage, string clientId, IMqttChannel<IPacket> channel )
             where T : IFlowPacket
         {
-            IDisposable intervalSubscription = Observable
+            using( IDisposable intervalSubscription = Observable
                 .Interval( TimeSpan.FromSeconds( configuration.WaitTimeoutSecs ), NewThreadScheduler.Default )
                 .Subscribe( async _ =>
                 {
@@ -109,15 +109,14 @@ namespace CK.MQTT.Sdk.Flows
 
                         await channel.SendAsync( duplicated );
                     }
-                } );
-
-            await channel
-                .ReceiverStream
-                .ObserveOn( NewThreadScheduler.Default )
-                .OfType<T>()
-                .FirstOrDefaultAsync( x => x.PacketId == sentMessage.PacketId.Value );
-
-            intervalSubscription.Dispose();
+                } ) )
+            {
+                await channel
+                    .ReceiverStream
+                    .ObserveOn( NewThreadScheduler.Default )
+                    .OfType<T>()
+                    .FirstOrDefaultAsync( x => x.PacketId == sentMessage.PacketId.Value );
+            }
         }
 
         void DefineSenderRules()

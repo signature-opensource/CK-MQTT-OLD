@@ -71,7 +71,7 @@ namespace CK.MQTT.Sdk.Flows
         protected async Task MonitorAckAsync<T>( IFlowPacket sentMessage, string clientId, IMqttChannel<IPacket> channel )
             where T : IFlowPacket
         {
-            IDisposable intervalSubscription = Observable
+            using( IDisposable intervalSubscription = Observable
                 .Interval( TimeSpan.FromSeconds( configuration.WaitTimeoutSecs ), NewThreadScheduler.Default )
                 .Subscribe( async _ =>
                 {
@@ -81,15 +81,14 @@ namespace CK.MQTT.Sdk.Flows
 
                         await channel.SendAsync( sentMessage );
                     }
-                } );
-
-            await channel
-                .ReceiverStream
-                .ObserveOn( NewThreadScheduler.Default )
-                .OfType<T>()
-                .FirstOrDefaultAsync( x => x.PacketId == sentMessage.PacketId );
-
-            intervalSubscription.Dispose();
+                } ) )
+            {
+                await channel
+                    .ReceiverStream
+                    .ObserveOn( NewThreadScheduler.Default )
+                    .OfType<T>()
+                    .FirstOrDefaultAsync( x => x.PacketId == sentMessage.PacketId );
+            }
         }
 
         void SavePendingAcknowledgement( IFlowPacket ack, string clientId )

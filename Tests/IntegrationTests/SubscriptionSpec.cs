@@ -27,41 +27,41 @@ namespace IntegrationTests
         [Test]
         public async Task when_subscribe_topic_then_succeeds()
         {
-            IMqttClient client = await GetClientAsync();
-            string topicFilter = Guid.NewGuid().ToString() + "/#";
+            using( IMqttClient client = await GetClientAsync() )
+            {
+                string topicFilter = Guid.NewGuid().ToString() + "/#";
 
-            await client.SubscribeAsync( topicFilter, MqttQualityOfService.AtMostOnce );
+                await client.SubscribeAsync( topicFilter, MqttQualityOfService.AtMostOnce );
 
-            Assert.True( client.IsConnected );
+                Assert.True( client.IsConnected );
 
-            await client.UnsubscribeAsync( topicFilter );
-
-            client.Dispose();
+                await client.UnsubscribeAsync( topicFilter );
+            }
         }
 
         [TestCase( 100 )]
         [TestCase( 200 )]
         public async Task when_subscribe_multiple_topics_then_succeeds( int topicsToSubscribe )
         {
-            IMqttClient client = await GetClientAsync();
-            List<string> topics = new List<string>();
-            List<Task> tasks = new List<Task>();
-
-            for( int i = 1; i <= topicsToSubscribe; i++ )
+            using( IMqttClient client = await GetClientAsync() )
             {
-                string topicFilter = Guid.NewGuid().ToString();
+                List<string> topics = new List<string>();
+                List<Task> tasks = new List<Task>();
 
-                tasks.Add( client.SubscribeAsync( topicFilter, MqttQualityOfService.AtMostOnce ) );
-                topics.Add( topicFilter );
+                for( int i = 1; i <= topicsToSubscribe; i++ )
+                {
+                    string topicFilter = Guid.NewGuid().ToString();
+
+                    tasks.Add( client.SubscribeAsync( topicFilter, MqttQualityOfService.AtMostOnce ) );
+                    topics.Add( topicFilter );
+                }
+
+                await Task.WhenAll( tasks );
+
+                Assert.True( client.IsConnected );
+
+                await client.UnsubscribeAsync( topics.ToArray() );
             }
-
-            await Task.WhenAll( tasks );
-
-            Assert.True( client.IsConnected );
-
-            await client.UnsubscribeAsync( topics.ToArray() );
-
-            client.Dispose();
         }
 
         [Theory]
@@ -102,24 +102,24 @@ namespace IntegrationTests
         [TestCase( 500 )]
         public async Task when_unsubscribe_topic_then_succeeds( int topicsToSubscribe )
         {
-            IMqttClient client = await GetClientAsync();
-            List<string> topics = new List<string>();
-            List<Task> tasks = new List<Task>();
-
-            for( int i = 1; i <= topicsToSubscribe; i++ )
+            using( IMqttClient client = await GetClientAsync() )
             {
-                string topicFilter = Guid.NewGuid().ToString();
+                List<string> topics = new List<string>();
+                List<Task> tasks = new List<Task>();
 
-                tasks.Add( client.SubscribeAsync( topicFilter, MqttQualityOfService.AtMostOnce ) );
-                topics.Add( topicFilter );
+                for( int i = 1; i <= topicsToSubscribe; i++ )
+                {
+                    string topicFilter = Guid.NewGuid().ToString();
+
+                    tasks.Add( client.SubscribeAsync( topicFilter, MqttQualityOfService.AtMostOnce ) );
+                    topics.Add( topicFilter );
+                }
+
+                await Task.WhenAll( tasks );
+                await client.UnsubscribeAsync( topics.ToArray() );
+
+                Assert.True( client.IsConnected );
             }
-
-            await Task.WhenAll( tasks );
-            await client.UnsubscribeAsync( topics.ToArray() );
-
-            Assert.True( client.IsConnected );
-
-            client.Dispose();
         }
 
         [Test]
