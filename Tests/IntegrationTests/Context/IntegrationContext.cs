@@ -35,6 +35,26 @@ namespace IntegrationTests.Context
 
         protected MqttConfiguration Configuration { get; private set; }
 
+        protected virtual IRawTestClient GetRawTestClient()
+        {
+            LoadConfiguration();
+            return new TcpRawTestClient( Configuration );
+        }
+
+        protected virtual async Task<IRawTestClient> GetRawConnectedTestClient()
+        {
+            var client = GetRawTestClient();
+            var ssl = new SslStream(
+                client.Stream,
+                false,
+                (a,b,c,d) =>true,
+                null,
+                EncryptionPolicy.RequireEncryption );
+            await ssl.AuthenticateAsClientAsync( "127.0.0.1" );
+            client.Stream = ssl;
+            return client;
+        }
+
         protected async Task<IMqttServer> GetServerAsync( IMqttAuthenticationProvider authenticationProvider = null )
         {
             try
@@ -46,7 +66,7 @@ namespace IntegrationTests.Context
                     
                 };
                 X509Certificate2Collection collection = new X509Certificate2Collection();
-                var certLocation = TestHelper.TestProjectFolder.AppendPart( "localhost.pfx" );
+                var certLocation = "localhost.pfx";
                 collection.Import( certLocation );
                 X509Certificate2 certificate = null;
                 foreach( X509Certificate2 singleHack in collection )
