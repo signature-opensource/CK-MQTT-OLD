@@ -124,16 +124,32 @@ namespace CK.MQTT.Ssl
             .ObserveOn( NewThreadScheduler.Default )
             .Subscribe( bytes =>
             {
-
-                if( _buffer.TryGetPackets( bytes, out IEnumerable<byte[]> packets ) )
+                try
                 {
-                    foreach( byte[] packet in packets )
-                    {
-                        _tracer.Verbose( "Received packet of {0} bytes", packet.Length );
 
-                        _receiver.OnNext( packet );
+                    if( _buffer.TryGetPackets( bytes, out IEnumerable<byte[]> packets ) )
+                    {
+                        foreach( var packet in packets )
+                        {
+                            _tracer.Verbose( "Received packet of {0} bytes", packet.Length );
+
+                            _receiver.OnNext( packet );
+                        }
                     }
                 }
+                catch( Exception e )
+                {
+                    try
+                    {
+                        _tracer.Warn( e, "Error while processing client data. Closing connection." );
+                        _client.Dispose();
+                    }
+                    catch( Exception F )
+                    {
+                        _tracer.Warn( F, "Error while disposing client connection." );
+                    }
+                }
+
             }, ex =>
             {
                 if( ex is ObjectDisposedException )

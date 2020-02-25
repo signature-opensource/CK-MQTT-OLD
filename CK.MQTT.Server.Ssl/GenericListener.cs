@@ -3,6 +3,7 @@ using System;
 using System.Diagnostics;
 using System.Net.Sockets;
 using System.Reactive.Linq;
+using System.Threading.Tasks;
 
 namespace CK.MQTT.Ssl
 {
@@ -48,10 +49,25 @@ namespace CK.MQTT.Ssl
             }
 
             return Observable
-                .FromAsync( _listener.Value.AcceptClientAsync )
+                .FromAsync( SafeAcceptClient )
                 .Repeat()
                 .Select( client => (IMqttChannel<byte[]>)client );
         }
+        async Task<TChannel> SafeAcceptClient()
+        {
+            while( true )
+            {
+                try
+                {
+                    return await _listener.Value.AcceptClientAsync();
+                }
+                catch( Exception e )
+                {
+                    _tracer.Warn( e, "Error while trying to accept a client." );
+                }
+            }
+        }
+
 
         public void Dispose()
         {
