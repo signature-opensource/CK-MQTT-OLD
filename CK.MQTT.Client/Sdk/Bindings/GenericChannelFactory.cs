@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace CK.MQTT.Sdk.Bindings
 {
-    class GenericChannelFactory : IMqttChannelFactory
+    public class GenericChannelFactory : IMqttChannelFactory
     {
         readonly Func<Task<IChannelClient>> _channelClientFactory;
         readonly MqttConfiguration _configuration;
