@@ -10,25 +10,10 @@ using System.Threading.Tasks;
 
 namespace IntegrationTests
 {
-    public class BadPacketsTests : IntegrationContext, IDisposable
+    public abstract class BadPacketsTests : IntegrationContext, IDisposable
     {
-        IMqttServer _server;
-
-        [SetUp]
-        public void SetUp()
-        {
-            _server = GetServerAsync().Result;
-        }
-
-        [TearDown]
-        public void TearDown()
-        {
-            _server?.Dispose();
-        }
-
-
         [TestCase( "Files/RandomPacketIFoundOnMyPc.bin" )]
-        public async Task mqtt_stay_alive_after_bad_packet_instead_of_ssl_handshake( string packetPath )
+        public async Task mqtt_stay_alive_after_bad_packet_on_raw_channel( string packetPath )
         {
             await AssertServerShouldBeRunning();
             packetPath = Path.Combine( Environment.CurrentDirectory, packetPath );
@@ -41,7 +26,7 @@ namespace IntegrationTests
         }
 
         [TestCase( "Files/RandomPacketIFoundOnMyPc.bin" )]
-        public async Task mqtt_stay_alive_after_bad_packet( string packetPath )
+        public async Task mqtt_stay_alive_after_channel_etablished( string packetPath )
         {
             await AssertServerShouldBeRunning();
             packetPath = Path.Combine( Environment.CurrentDirectory, packetPath );
@@ -69,18 +54,14 @@ namespace IntegrationTests
             }
             using( var correctClient = await GetClientAsync() )
             {
-                _server.ClientConnected += Connected;
+                Server.ClientConnected += Connected;
                 var task = correctClient.ConnectAsync();
                 Task.WaitAny( Task.Delay( 2000 ), task );
                 task.IsCompleted.Should().BeTrue();
                 connected.Should().BeTrue();
-                _server.ClientConnected -= Connected;
+                Server.ClientConnected -= Connected;
             }
         }
 
-        public void Dispose()
-        {
-            _server.Dispose();
-        }
     }
 }

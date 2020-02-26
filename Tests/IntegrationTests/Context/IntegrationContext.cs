@@ -26,27 +26,6 @@ namespace IntegrationTests.Context
             AllowWildcardsInTopicFilters = allowWildcardsInTopicFilters;
             _authenticationProvider = authenticationProvider;
             Configuration = new MqttConfiguration
-        protected virtual IRawTestClient GetRawTestClient()
-        {
-            LoadConfiguration();
-            return new TcpRawTestClient( Configuration );
-        }
-
-        protected virtual async Task<IRawTestClient> GetRawConnectedTestClient()
-        {
-            var client = GetRawTestClient();
-            var ssl = new SslStream(
-                client.Stream,
-                false,
-                (a,b,c,d) =>true,
-                null,
-                EncryptionPolicy.RequireEncryption );
-            await ssl.AuthenticateAsClientAsync( "127.0.0.1" );
-            client.Stream = ssl;
-            return client;
-        }
-
-                var certLocation = "localhost.pfx";
             {
                 BufferSize = 128 * 1024,
                 Port = 25565,
@@ -63,6 +42,10 @@ namespace IntegrationTests.Context
             Server = MqttServer.Create( Configuration, MqttServerBinding, _authenticationProvider );
             Server.Start();
         }
+
+        protected abstract IRawTestClient GetRawTestClient();
+
+        protected abstract Task<IRawTestClient> GetRawConnectedTestClient();
 
         protected MqttConfiguration Configuration { get; }
 

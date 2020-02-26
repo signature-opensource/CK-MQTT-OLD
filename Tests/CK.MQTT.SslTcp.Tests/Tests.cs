@@ -1,11 +1,15 @@
 using CK.MQTT.Sdk.Bindings;
 using CK.MQTT.Ssl;
 using IntegrationTests;
+using IntegrationTests.Context;
 using NUnit.Framework;
 using System;
+using System.IO;
+using System.Net.Security;
 using System.Net.Sockets;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
+using System.Threading.Tasks;
 using static CK.Testing.BasicTestHelper;
 
 namespace CK.MQTT.SslTcp.Tests
@@ -43,6 +47,25 @@ namespace CK.MQTT.SslTcp.Tests
         {
             RemoteCertificateValidationCallback = ( s, c, ch, ssl ) => true
         } );
+
+        public static IRawTestClient GetRawTestClient( MqttConfiguration config )
+        {
+            return new TcpRawTestClient( config );
+        }
+
+        public static async Task<IRawTestClient> ConnectedRawClient( MqttConfiguration config )
+        {
+            var client = GetRawTestClient( config );
+            var ssl = new SslStream(
+                client.Stream,
+                false,
+                ( a, b, c, d ) => true,
+                null,
+                EncryptionPolicy.RequireEncryption );
+            await ssl.AuthenticateAsClientAsync( "127.0.0.1" );
+            client.Stream = ssl;
+            return client;
+        }
     }
 
     [TestFixture]
@@ -51,6 +74,9 @@ namespace CK.MQTT.SslTcp.Tests
         protected override IMqttServerBinding MqttServerBinding => SslTcpHelper.MqttServerBinding;
 
         protected override IMqttBinding MqttBinding => SslTcpHelper.MqttBinding;
+
+        protected override Task<IRawTestClient> GetRawConnectedTestClient() => SslTcpHelper.ConnectedRawClient( Configuration );
+        protected override IRawTestClient GetRawTestClient() => SslTcpHelper.GetRawTestClient( Configuration );
     }
 
     [TestFixture]
@@ -59,6 +85,8 @@ namespace CK.MQTT.SslTcp.Tests
         protected override IMqttServerBinding MqttServerBinding => SslTcpHelper.MqttServerBinding;
 
         protected override IMqttBinding MqttBinding => SslTcpHelper.MqttBinding;
+        protected override Task<IRawTestClient> GetRawConnectedTestClient() => SslTcpHelper.ConnectedRawClient( Configuration );
+        protected override IRawTestClient GetRawTestClient() => SslTcpHelper.GetRawTestClient( Configuration );
     }
 
     [TestFixture]
@@ -67,6 +95,8 @@ namespace CK.MQTT.SslTcp.Tests
         protected override IMqttServerBinding MqttServerBinding => SslTcpHelper.MqttServerBinding;
 
         protected override IMqttBinding MqttBinding => SslTcpHelper.MqttBinding;
+        protected override Task<IRawTestClient> GetRawConnectedTestClient() => SslTcpHelper.ConnectedRawClient( Configuration );
+        protected override IRawTestClient GetRawTestClient() => SslTcpHelper.GetRawTestClient( Configuration );
     }
 
     [TestFixture]
@@ -75,6 +105,8 @@ namespace CK.MQTT.SslTcp.Tests
         protected override IMqttServerBinding MqttServerBinding => SslTcpHelper.MqttServerBinding;
 
         protected override IMqttBinding MqttBinding => SslTcpHelper.MqttBinding;
+        protected override Task<IRawTestClient> GetRawConnectedTestClient() => SslTcpHelper.ConnectedRawClient( Configuration );
+        protected override IRawTestClient GetRawTestClient() => SslTcpHelper.GetRawTestClient( Configuration );
     }
 
     [TestFixture]
@@ -83,6 +115,8 @@ namespace CK.MQTT.SslTcp.Tests
         protected override IMqttServerBinding MqttServerBinding => SslTcpHelper.MqttServerBinding;
 
         protected override IMqttBinding MqttBinding => SslTcpHelper.MqttBinding;
+        protected override Task<IRawTestClient> GetRawConnectedTestClient() => SslTcpHelper.ConnectedRawClient( Configuration );
+        protected override IRawTestClient GetRawTestClient() => SslTcpHelper.GetRawTestClient( Configuration );
     }
 
     [TestFixture]
@@ -91,5 +125,7 @@ namespace CK.MQTT.SslTcp.Tests
         protected override IMqttServerBinding MqttServerBinding => SslTcpHelper.MqttServerBinding;
 
         protected override IMqttBinding MqttBinding => SslTcpHelper.MqttBinding;
+        protected override Task<IRawTestClient> GetRawConnectedTestClient() => SslTcpHelper.ConnectedRawClient( Configuration );
+        protected override IRawTestClient GetRawTestClient() => SslTcpHelper.GetRawTestClient( Configuration );
     }
 }

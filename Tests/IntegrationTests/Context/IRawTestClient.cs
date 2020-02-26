@@ -29,8 +29,6 @@ namespace IntegrationTests.Context
             _stream = _tcpClient.GetStream();
         }
 
-
-
         public ValueTask SendRawBytesAsync( ReadOnlyMemory<byte> bytes )
         {
             return _stream.WriteAsync( bytes );
