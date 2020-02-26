@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using CK.MQTT.Sdk.Packets;
 using System.Text.RegularExpressions;
 using System;
@@ -83,7 +83,7 @@ namespace CK.MQTT.Sdk.Formatters
 				clientId = MqttClient.GetAnonymousClientId ();
 			}
 
-			var connect = new Connect (clientId, cleanSession);
+			var connect = new Connect (clientId, cleanSession, protocolLevel);
 
 			connect.KeepAlive = keepAlive;
 

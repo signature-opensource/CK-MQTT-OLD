@@ -92,7 +92,7 @@ namespace CK.MQTT.Sdk
 
 				await InitializeChannelAsync().ConfigureAwait(continueOnCapturedContext: false);
 
-				var connect = new Connect(Id, cleanSession)
+				var connect = new Connect(Id, cleanSession, 4)
 				{
 					UserName = credentials.UserName,
 					Password = credentials.Password,

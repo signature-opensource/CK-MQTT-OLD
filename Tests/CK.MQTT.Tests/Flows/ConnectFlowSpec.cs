@@ -24,7 +24,7 @@ namespace Tests.Flows
 			var senderFlow = new Mock<IPublishSenderFlow> ();
 
 			var clientId = Guid.NewGuid ().ToString ();
-			var connect = new Connect (clientId, cleanSession: true);
+			var connect = new Connect (clientId, cleanSession: true, 4 );
 			var channel = new Mock<IMqttChannel<IPacket>> ();
 			var sentPacket = default(IPacket);
 
@@ -73,7 +73,7 @@ namespace Tests.Flows
 
 			var senderFlow = new Mock<IPublishSenderFlow> ();
 
-			var connect = new Connect (clientId, cleanSession: false);
+			var connect = new Connect (clientId, cleanSession: false, 4 );
 			var channel = new Mock<IMqttChannel<IPacket>> ();
 			var sentPacket = default(IPacket);
 
@@ -121,7 +121,7 @@ namespace Tests.Flows
 
 			var senderFlow = new Mock<IPublishSenderFlow> ();
 
-			var connect = new Connect (clientId, cleanSession: true);
+			var connect = new Connect (clientId, cleanSession: true, 4 );
 			var channel = new Mock<IMqttChannel<IPacket>> ();
 			var sentPacket = default(IPacket);
 
@@ -167,7 +167,7 @@ namespace Tests.Flows
 
 			var senderFlow = new Mock<IPublishSenderFlow> ();
 
-			var connect = new Connect (clientId, cleanSession: false);
+			var connect = new Connect (clientId, cleanSession: false, 4 );
 			var channel = new Mock<IMqttChannel<IPacket>> ();
 			var sentPacket = default(IPacket);
 
@@ -201,7 +201,7 @@ namespace Tests.Flows
 			var senderFlow = new Mock<IPublishSenderFlow> ();
 
 			var clientId = Guid.NewGuid ().ToString ();
-			var connect = new Connect (clientId, cleanSession: true);
+			var connect = new Connect (clientId, cleanSession: true, 4 );
 
 			var willMessage = new FooWillMessage { Message = "Foo Will Message" };
 			var will = new MqttLastWill ("foo/bar", MqttQualityOfService.AtLeastOnce, retain: true, payload: willMessage.GetPayload());
@@ -247,7 +247,7 @@ namespace Tests.Flows
 			var senderFlow = new Mock<IPublishSenderFlow> ();
 
 			var clientId = Guid.NewGuid ().ToString ();
-			var connect = new Connect (clientId, cleanSession: true);
+			var connect = new Connect (clientId, cleanSession: true, 4 );
 			var channel = new Mock<IMqttChannel<IPacket>> ();
 			var sentPacket = default(IPacket);
 
@@ -335,7 +335,7 @@ namespace Tests.Flows
 				})
 				.Returns(Task.Delay(0));
 
-			var connect = new Connect(clientId, cleanSession: false);
+			var connect = new Connect(clientId, cleanSession: false, 4 );
 			var channel = new Mock<IMqttChannel<IPacket>>();
 			var firstPacket = default(IPacket);
 			var nextPackets = new List<IPacket>();
