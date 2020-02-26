@@ -37,7 +37,7 @@ namespace Tests
 			listener.Listen ();
 
 			var clientId = Guid.NewGuid().ToString();
-			var connect = new Connect (clientId, cleanSession: true);
+			var connect = new Connect (clientId, cleanSession: true, 4);
 			var publish = new Publish (Guid.NewGuid ().ToString (), MqttQualityOfService.AtMostOnce, false, false);
 
 			receiver.OnNext (connect);
@@ -86,7 +86,7 @@ namespace Tests
 			listener.Listen ();
 
 			var clientId = Guid.NewGuid().ToString();
-			var connect = new Connect (clientId, cleanSession: true);
+			var connect = new Connect (clientId, cleanSession: true, 4 );
 
 			receiver.OnNext (connect);
 
@@ -147,7 +147,7 @@ namespace Tests
 			});
 
 			var clientId = Guid.NewGuid().ToString();
-			var connect = new Connect (clientId, cleanSession: true);
+			var connect = new Connect (clientId, cleanSession: true, 4 );
 
 			receiver.OnNext (connect);
 
@@ -211,7 +211,7 @@ namespace Tests
 			});
 
 			var clientId = Guid.NewGuid().ToString();
-			var connect = new Connect (clientId, cleanSession: true);
+			var connect = new Connect (clientId, cleanSession: true, 4 );
 
 			receiver.OnNext (connect);
 			receiver.OnNext (connect);
@@ -258,7 +258,7 @@ namespace Tests
 
 			var clientId = Guid.NewGuid().ToString();
 			var keepAlive = (ushort)1;
-			var connect = new Connect (clientId, cleanSession: true) { KeepAlive = keepAlive };
+			var connect = new Connect (clientId, cleanSession: true, 4 ) { KeepAlive = keepAlive };
 
 			receiver.OnNext (connect);
 
@@ -300,7 +300,7 @@ namespace Tests
 
 			var clientId = Guid.NewGuid().ToString();
 			var keepAlive = (ushort)1;
-			var connect = new Connect (clientId, cleanSession: true) { KeepAlive = keepAlive };
+			var connect = new Connect (clientId, cleanSession: true, 4 ) { KeepAlive = keepAlive };
 
 			receiver.OnNext (connect);
 			packetChannel.Object.SendAsync(new ConnectAck (MqttConnectionStatus.Accepted, existingSession: false)).Wait();
@@ -337,7 +337,7 @@ namespace Tests
 			});
 
 			var clientId = Guid.NewGuid().ToString();
-			var connect = new Connect (clientId, cleanSession: true) { KeepAlive = 0 };
+			var connect = new Connect (clientId, cleanSession: true, 4 ) { KeepAlive = 0 };
 
 			receiver.OnNext (connect);
 			packetChannel.Object.SendAsync(new ConnectAck (MqttConnectionStatus.Accepted, existingSession: false)).Wait();
