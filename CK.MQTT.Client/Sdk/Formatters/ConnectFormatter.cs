@@ -229,12 +229,7 @@ namespace CK.MQTT.Sdk.Formatters
 
 		bool IsValidClientId (string clientId)
 		{
-			if (string.IsNullOrEmpty (clientId))
-				return true;
-
-			var regex = new Regex ("^[a-zA-Z0-9]+$");
-
-			return regex.IsMatch (clientId);
+		    return true;
 		}
 	}
 }
