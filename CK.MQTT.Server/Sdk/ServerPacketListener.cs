@@ -258,7 +258,7 @@ namespace CK.MQTT.Sdk
         {
             _tracer.Error( exception, ServerProperties.ServerPacketListener_Error( _clientId ?? "N/A" ) );
 
-            _listenerDisposable.Dispose();
+            _listenerDisposable?.Dispose ();
             RemoveClient();
             await SendLastWillAsync();
             _packets.OnError( exception );

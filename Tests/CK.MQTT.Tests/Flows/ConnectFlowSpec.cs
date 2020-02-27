@@ -24,7 +24,7 @@ namespace Tests.Flows
             Mock<IPublishSenderFlow> senderFlow = new Mock<IPublishSenderFlow>();
 
             string clientId = Guid.NewGuid().ToString();
-            Connect connect = new Connect( clientId, cleanSession: true );
+            Connect connect = new Connect( clientId, cleanSession: true, MqttProtocol.SupportedLevel);
             Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
             IPacket sentPacket = default;
 
@@ -72,7 +72,7 @@ namespace Tests.Flows
 
             Mock<IPublishSenderFlow> senderFlow = new Mock<IPublishSenderFlow>();
 
-            Connect connect = new Connect( clientId, cleanSession: false );
+            Connect connect = new Connect( clientId, cleanSession: false, MqttProtocol.SupportedLevel );
             Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
             IPacket sentPacket = default;
 
@@ -119,7 +119,7 @@ namespace Tests.Flows
 
             Mock<IPublishSenderFlow> senderFlow = new Mock<IPublishSenderFlow>();
 
-            Connect connect = new Connect( clientId, cleanSession: true );
+            Connect connect = new Connect( clientId, cleanSession: true, MqttProtocol.SupportedLevel );
             Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
             IPacket sentPacket = default;
 
@@ -164,7 +164,7 @@ namespace Tests.Flows
 
             Mock<IPublishSenderFlow> senderFlow = new Mock<IPublishSenderFlow>();
 
-            Connect connect = new Connect( clientId, cleanSession: false );
+            Connect connect = new Connect( clientId, cleanSession: false, MqttProtocol.SupportedLevel );
             Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
             IPacket sentPacket = default;
 
@@ -197,7 +197,7 @@ namespace Tests.Flows
             Mock<IPublishSenderFlow> senderFlow = new Mock<IPublishSenderFlow>();
 
             string clientId = Guid.NewGuid().ToString();
-            Connect connect = new Connect( clientId, cleanSession: true );
+            Connect connect = new Connect( clientId, cleanSession: true, MqttProtocol.SupportedLevel );
 
             FooWillMessage willMessage = new FooWillMessage { Message = "Foo Will Message" };
             MqttLastWill will = new MqttLastWill( "foo/bar", MqttQualityOfService.AtLeastOnce, retain: true, payload: willMessage.GetPayload() );
@@ -242,7 +242,7 @@ namespace Tests.Flows
             Mock<IPublishSenderFlow> senderFlow = new Mock<IPublishSenderFlow>();
 
             string clientId = Guid.NewGuid().ToString();
-            Connect connect = new Connect( clientId, cleanSession: true );
+            Connect connect = new Connect( clientId, cleanSession: true, MqttProtocol.SupportedLevel );
             Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
             IPacket sentPacket = default;
 
@@ -330,7 +330,7 @@ namespace Tests.Flows
                  } )
                 .Returns( Task.Delay( 0 ) );
 
-            Connect connect = new Connect( clientId, cleanSession: false );
+            Connect connect = new Connect( clientId, cleanSession: false, MqttProtocol.SupportedLevel );
             Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
             IPacket firstPacket = default;
             List<IPacket> nextPackets = new List<IPacket>();

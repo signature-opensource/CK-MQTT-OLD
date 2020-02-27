@@ -1,4 +1,5 @@
 using CK.MQTT.Sdk;
+using CK.MQTT.Sdk.Bindings;
 using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;

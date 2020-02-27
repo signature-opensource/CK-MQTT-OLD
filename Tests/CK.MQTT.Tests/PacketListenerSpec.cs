@@ -37,7 +37,7 @@ namespace Tests
             listener.Listen();
 
             string clientId = Guid.NewGuid().ToString();
-            Connect connect = new Connect( clientId, cleanSession: true );
+            Connect connect = new Connect( clientId, cleanSession: true, MqttProtocol.SupportedLevel );
             Publish publish = new Publish( Guid.NewGuid().ToString(), MqttQualityOfService.AtMostOnce, false, false );
 
             receiver.OnNext( connect );
@@ -91,7 +91,7 @@ namespace Tests
             listener.Listen();
 
             string clientId = Guid.NewGuid().ToString();
-            Connect connect = new Connect( clientId, cleanSession: true );
+            Connect connect = new Connect( clientId, cleanSession: true, MqttProtocol.SupportedLevel );
 
             receiver.OnNext( connect );
 
@@ -154,7 +154,7 @@ namespace Tests
             } );
 
             string clientId = Guid.NewGuid().ToString();
-            Connect connect = new Connect( clientId, cleanSession: true );
+            Connect connect = new Connect( clientId, cleanSession: true, MqttProtocol.SupportedLevel );
 
             receiver.OnNext( connect );
 
@@ -220,7 +220,7 @@ namespace Tests
             } );
 
             string clientId = Guid.NewGuid().ToString();
-            Connect connect = new Connect( clientId, cleanSession: true );
+            Connect connect = new Connect( clientId, cleanSession: true, MqttProtocol.SupportedLevel );
 
             receiver.OnNext( connect );
             receiver.OnNext( connect );
@@ -268,7 +268,7 @@ namespace Tests
 
             string clientId = Guid.NewGuid().ToString();
             ushort keepAlive = 1;
-            Connect connect = new Connect( clientId, cleanSession: true ) { KeepAlive = keepAlive };
+            Connect connect = new Connect( clientId, cleanSession: true, MqttProtocol.SupportedLevel ) { KeepAlive = keepAlive };
 
             receiver.OnNext( connect );
 
@@ -311,7 +311,7 @@ namespace Tests
 
             string clientId = Guid.NewGuid().ToString();
             ushort keepAlive = 1;
-            Connect connect = new Connect( clientId, cleanSession: true ) { KeepAlive = keepAlive };
+            Connect connect = new Connect( clientId, cleanSession: true, MqttProtocol.SupportedLevel ) { KeepAlive = keepAlive };
 
             receiver.OnNext( connect );
             packetChannel.Object.SendAsync( new ConnectAck( MqttConnectionStatus.Accepted, existingSession: false ) ).Wait();
@@ -349,7 +349,7 @@ namespace Tests
             } );
 
             string clientId = Guid.NewGuid().ToString();
-            Connect connect = new Connect( clientId, cleanSession: true ) { KeepAlive = 0 };
+            Connect connect = new Connect( clientId, cleanSession: true, MqttProtocol.SupportedLevel ) { KeepAlive = 0 };
 
             receiver.OnNext( connect );
             packetChannel.Object.SendAsync( new ConnectAck( MqttConnectionStatus.Accepted, existingSession: false ) ).Wait();

@@ -11,9 +11,9 @@ using System.Threading.Tasks;
 namespace IntegrationTests
 {
     public abstract class BadPacketsTests : IntegrationContext, IDisposable
-    {
+        {
         [TestCase( "Files/RandomPacketIFoundOnMyPc.bin" )]
-        public async Task mqtt_stay_alive_after_bad_packet_on_raw_channel( string packetPath )
+        public async Task mqtt_stay_alive_after_bad_packet_instead_of_ssl_handshake( string packetPath )
         {
             await AssertServerShouldBeRunning();
             packetPath = Path.Combine( Environment.CurrentDirectory, packetPath );

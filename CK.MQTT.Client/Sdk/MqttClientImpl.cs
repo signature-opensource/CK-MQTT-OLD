@@ -85,7 +85,7 @@ namespace CK.MQTT.Sdk
 
                 await InitializeChannelAsync();
 
-                Connect connect = new Connect( Id, cleanSession )
+                Connect connect = new Connect( Id, cleanSession, MqttProtocol.SupportedLevel )
                 {
                     UserName = credentials.UserName,
                     Password = credentials.Password,

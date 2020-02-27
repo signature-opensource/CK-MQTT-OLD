@@ -4,12 +4,12 @@ namespace CK.MQTT.Sdk.Packets
 {
     internal class Connect : IPacket, IEquatable<Connect>
     {
-        public Connect( string clientId, bool cleanSession )
+		public Connect (string clientId, bool cleanSession, byte protocolLevel )
         {
             if( string.IsNullOrEmpty( clientId ) ) throw new ArgumentNullException( nameof( clientId ) );
-
             ClientId = clientId;
             CleanSession = cleanSession;
+            ProtocolLelvel = protocolLevel;
             KeepAlive = 0;
         }
 
@@ -24,6 +24,8 @@ namespace CK.MQTT.Sdk.Packets
         public string ClientId { get; set; }
 
         public bool CleanSession { get; set; }
+
+        public byte ProtocolLelvel { get; }
 
         public ushort KeepAlive { get; set; }
 

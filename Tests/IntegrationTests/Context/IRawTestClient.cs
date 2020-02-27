@@ -14,30 +14,4 @@ namespace IntegrationTests.Context
         Stream Stream { get; set; }
         ValueTask SendRawBytesAsync( ReadOnlyMemory<byte> bytes );
     }
-
-    public class TcpRawTestClient : IRawTestClient
-    {
-        readonly TcpClient _tcpClient;
-        Stream _stream;
-
-
-        public Stream Stream { get => _stream; set => _stream = value; }
-
-        public TcpRawTestClient( MqttConfiguration conf )
-        {
-            _tcpClient = new TcpClient( "127.0.0.1", conf.Port );
-            _stream = _tcpClient.GetStream();
-        }
-
-        public ValueTask SendRawBytesAsync( ReadOnlyMemory<byte> bytes )
-        {
-            return _stream.WriteAsync( bytes );
-        }
-
-        public void Dispose()
-        {
-            _tcpClient.Dispose();
-            _stream.Dispose();
-        }
-    }
 }

@@ -248,21 +248,6 @@ namespace IntegrationTests
         }
 
         [Test]
-        public async Task when_connecting_client_with_invalid_id_then_fails()
-        {
-            IMqttClient client = await GetClientAsync();
-            string clientId = "#invalid*client-id";
-
-            AggregateException ex = Assert.Throws<AggregateException>( () => client.ConnectAsync( new MqttClientCredentials( clientId ) ).Wait() );
-
-            Assert.NotNull( ex );
-            Assert.NotNull( ex.InnerException );
-            Assert.True( ex.InnerException is MqttClientException );
-            Assert.NotNull( ex.InnerException.InnerException );
-            Assert.True( ex.InnerException.InnerException is MqttException );
-        }
-
-        [Test]
         public async Task when_connecting_client_with_empty_id_then_succeeds()
         {
             IMqttClient client = await GetClientAsync();

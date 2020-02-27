@@ -49,21 +49,6 @@ namespace Tests.Formatters
         }
 
         [Theory]
-        [TestCase( "Files/Binaries/Connect_Invalid_ClientIdEmptyAndNoCleanSession.packet" )]
-        [TestCase( "Files/Binaries/Connect_Invalid_ClientIdBadFormat.packet" )]
-        public void when_reading_invalid_client_id_in_connect_packet_then_fails( string packetPath )
-        {
-            packetPath = Path.Combine( Environment.CurrentDirectory, packetPath );
-
-            ConnectFormatter formatter = new ConnectFormatter();
-            byte[] packet = Packet.ReadAllBytes( packetPath );
-
-            AggregateException ex = Assert.Throws<AggregateException>( () => formatter.FormatAsync( packet ).Wait() );
-
-            Assert.True( ex.InnerException is MqttConnectionException );
-        }
-
-        [Theory]
         [TestCase( "Files/Packets/Connect_Full.json", "Files/Binaries/Connect_Full.packet" )]
         [TestCase( "Files/Packets/Connect_Min.json", "Files/Binaries/Connect_Min.packet" )]
         public async Task when_writing_connect_packet_then_succeeds( string jsonPath, string packetPath )
@@ -80,9 +65,7 @@ namespace Tests.Formatters
             expectedPacket.Should().BeEquivalentTo( result );
         }
 
-        [Theory]
         [TestCase( "Files/Packets/Connect_Invalid_UserNamePassword.json" )]
-        [TestCase( "Files/Packets/Connect_Invalid_ClientIdBadFormat.json" )]
         [TestCase( "Files/Packets/Connect_Invalid_ClientIdInvalidLength.json" )]
         public void when_writing_invalid_connect_packet_then_fails( string jsonPath )
         {

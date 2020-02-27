@@ -86,7 +86,7 @@ namespace CK.MQTT.Sdk.Formatters
                 clientId = MqttClient.GetAnonymousClientId();
             }
 
-            Connect connect = new Connect( clientId, cleanSession )
+            Connect connect = new Connect( clientId, cleanSession, protocolLevel )
             {
                 KeepAlive = keepAlive
             };
@@ -238,12 +238,7 @@ namespace CK.MQTT.Sdk.Formatters
 
         bool IsValidClientId( string clientId )
         {
-            if( string.IsNullOrEmpty( clientId ) )
-                return true;
-
-            Regex regex = new Regex( "^[a-zA-Z0-9]+$" );
-
-            return regex.IsMatch( clientId );
+		    return true;
         }
     }
 }

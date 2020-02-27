@@ -68,7 +68,6 @@ namespace CK.MQTT.Ssl
             }
         }
 
-
         public void Dispose()
         {
             if( _disposed ) return;
