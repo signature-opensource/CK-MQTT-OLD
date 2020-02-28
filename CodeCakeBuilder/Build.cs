@@ -2,6 +2,7 @@ using Cake.Common.IO;
 using Cake.Core;
 using Cake.Core.Diagnostics;
 using SimpleGitVersion;
+using System.Linq;
 
 namespace CodeCake
 {
@@ -51,7 +52,9 @@ namespace CodeCake
                                      || Cake.ReadInteractiveOption( "RunUnitTests", "Run Unit Tests?", 'Y', 'N' ) == 'Y' )
                .Does( () =>
                 {
-                    globalInfo.GetDotnetSolution().Test();
+                    //Disabling integration test for now.
+                    var testProjects = globalInfo.GetDotnetSolution().Projects.Where( p => p.Name.EndsWith( "CK.MQTT.Tests" ) );
+                    globalInfo.GetDotnetSolution().Test( testProjects );
                 } );
 
 
