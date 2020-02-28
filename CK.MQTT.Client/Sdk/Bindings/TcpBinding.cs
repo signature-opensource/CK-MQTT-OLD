@@ -16,6 +16,6 @@ namespace CK.MQTT.Sdk.Bindings
         /// </param>
         /// <returns>A factory for creating MQTT channels on top of TCP</returns>
 		public IMqttChannelFactory GetChannelFactory( string hostAddress, MqttConfiguration configuration )
-            => new TcpChannelFactory( hostAddress, configuration );
+            =>  TcpChannelClientFactory.MqttChannelFactory( hostAddress, configuration );
     }
 }

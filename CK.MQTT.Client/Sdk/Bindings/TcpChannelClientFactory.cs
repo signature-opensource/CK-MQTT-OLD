@@ -6,20 +6,20 @@ using System.Threading.Tasks;
 
 namespace CK.MQTT.Sdk.Bindings
 {
-    internal class TcpChannelFactory : IMqttChannelFactory
+    internal class TcpChannelClientFactory
     {
-        static readonly ITracer _tracer = Tracer.Get<TcpChannelFactory>();
+        static readonly ITracer _tracer = Tracer.Get<TcpChannelClientFactory>();
 
         readonly string _hostAddress;
         readonly MqttConfiguration _configuration;
 
-        public TcpChannelFactory( string hostAddress, MqttConfiguration configuration )
+        public TcpChannelClientFactory( string hostAddress, MqttConfiguration configuration )
         {
             _hostAddress = hostAddress;
             _configuration = configuration;
         }
 
-        public async Task<IMqttChannel<byte[]>> CreateAsync()
+        public async Task<IChannelClient> CreateAsync()
         {
             TcpClient tcpClient = new TcpClient();
 
@@ -31,12 +31,15 @@ namespace CK.MQTT.Sdk.Bindings
                     .WhenAny( connectTask, timeoutTask );
 
                 if( resultTask == timeoutTask )
+                {
                     throw new TimeoutException();
+                }
 
                 if( resultTask.IsFaulted )
+                {
                     ExceptionDispatchInfo.Capture( resultTask.Exception.InnerException ).Throw();
-
-                return new TcpChannel( tcpClient, new PacketBuffer(), _configuration );
+                }
+                return new TcpChannelClient( tcpClient );
             }
             catch( SocketException socketEx )
             {
@@ -63,5 +66,8 @@ namespace CK.MQTT.Sdk.Bindings
                 throw new MqttException( message, timeoutEx );
             }
         }
+
+        public static IMqttChannelFactory MqttChannelFactory( string hostName, MqttConfiguration config )
+            => new GenericChannelFactory( new TcpChannelClientFactory( hostName, config ).CreateAsync, config );
     }
 }

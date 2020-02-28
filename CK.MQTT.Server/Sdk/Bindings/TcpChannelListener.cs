@@ -3,57 +3,36 @@ using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Reactive.Linq;
+using System.Threading.Tasks;
 
 namespace CK.MQTT.Sdk.Bindings
 {
-    internal class TcpChannelListener : IMqttChannelListener
+    internal class TcpChannelListener : IListener<GenericChannel>
     {
-        static readonly ITracer _tracer = Tracer.Get<TcpChannelListener>();
-
         readonly MqttConfiguration _configuration;
-        readonly Lazy<TcpListener> _listener;
+        readonly TcpListener _listener;
         bool _disposed;
 
         public TcpChannelListener( MqttConfiguration configuration )
         {
             _configuration = configuration;
-            _listener = new Lazy<TcpListener>( () =>
-            {
-                TcpListener tcpListener = new TcpListener( IPAddress.Any, _configuration.Port );
-
-                try
-                {
-                    tcpListener.Start();
-                }
-                catch( SocketException socketEx )
-                {
-                    _tracer.Error( socketEx, ServerProperties.TcpChannelProvider_TcpListener_Failed );
-
-                    throw new MqttException( ServerProperties.TcpChannelProvider_TcpListener_Failed, socketEx );
-                }
-
-                return tcpListener;
-            } );
+            _listener = new TcpListener( IPAddress.Any, _configuration.Port );
         }
 
-        public IObservable<IMqttChannel<byte[]>> GetChannelStream()
-        {
-            if( _disposed )
-            {
-                throw new ObjectDisposedException( GetType().FullName );
-            }
+        public async Task<GenericChannel> AcceptClientAsync()
+            => new GenericChannel(
+                new TcpChannelClient( await _listener.AcceptTcpClientAsync() ),
+                new PacketBuffer(),
+                _configuration );
 
-            return Observable
-                .FromAsync( _listener.Value.AcceptTcpClientAsync )
-                .Repeat()
-                .Select( client => new TcpChannel( client, new PacketBuffer(), _configuration ) );
-        }
+        public void Start() => _listener.Start();
+
+        public void Stop() => _listener.Stop();
 
         public void Dispose()
         {
             if( _disposed ) return;
-
-            _listener.Value.Stop();
+            _listener.Stop();
             _disposed = true;
         }
     }

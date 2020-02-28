@@ -1,7 +1,7 @@
 using CK.MQTT.Sdk;
 using System.Threading.Tasks;
 
-namespace CK.MQTT.Ssl
+namespace CK.MQTT.Sdk.Bindings
 {
     public interface IListener<TChannel> where TChannel : IMqttChannel<byte[]>
     {

@@ -5,7 +5,7 @@ using System.Net.Sockets;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 
-namespace CK.MQTT.Ssl
+namespace CK.MQTT.Sdk.Bindings
 {
     public class GenericListener<TChannel> : IMqttChannelListener
         where TChannel : IMqttChannel<byte[]>
