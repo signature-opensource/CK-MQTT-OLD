@@ -53,14 +53,13 @@ namespace CK.MQTT.Sdk
 
         public event EventHandler<string> ClientDisconnected;
 
-        public int ActiveConnections { get { return _channels.Where( c => c.IsConnected ).Count(); } }
+        public int ActiveConnections => _channels.Where( c => c.IsConnected ).Count();
 
-        public IEnumerable<string> ActiveClients { get { return _connectionProvider.ActiveClients; } }
+        public IEnumerable<string> ActiveClients => _connectionProvider.ActiveClients;
 
         public void Start()
         {
-            if( _disposed )
-                throw new ObjectDisposedException( nameof( MqttServerImpl ) );
+            if( _disposed ) throw new ObjectDisposedException( nameof( MqttServerImpl ) );
 
             IEnumerable<IObservable<IMqttChannel<byte[]>>> channelStreams = _binaryChannelListeners.Select( listener => listener.GetChannelStream() );
 

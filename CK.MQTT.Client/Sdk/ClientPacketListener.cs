@@ -22,7 +22,7 @@ namespace CK.MQTT.Sdk
         IDisposable _listenerDisposable;
         bool _disposed;
         string _clientId = string.Empty;
-        Timer _keepAliveTimer;
+        IDisposable _keepAliveMonitor;
 
         public ClientPacketListener( IMqttChannel<IPacket> channel,
             IProtocolFlowProvider flowProvider,
@@ -141,41 +141,30 @@ namespace CK.MQTT.Sdk
         void StartKeepAliveMonitor()
         {
             int interval = _configuration.KeepAliveSecs * 1000;
+            _keepAliveMonitor = _channel.SenderStream
+                .Buffer( new TimeSpan( 0, 0, _configuration.KeepAliveSecs ), 1 )
+                .Where( p => p.Count == 0 )
+                .Subscribe( p =>
+                 {
+                     try
+                     {
+                         _tracer.Warn( ClientProperties.ClientPacketListener_SendingKeepAlive( _clientId, _configuration.KeepAliveSecs ) );
 
-            _keepAliveTimer = new Timer
-            {
-                AutoReset = true,
-                IntervalMillisecs = interval
-            };
-            _keepAliveTimer.Elapsed += async ( sender, e ) =>
-            {
-                try
-                {
-                    _tracer.Warn( ClientProperties.ClientPacketListener_SendingKeepAlive( _clientId, _configuration.KeepAliveSecs ) );
+                         PingRequest ping = new PingRequest();
 
-                    PingRequest ping = new PingRequest();
-
-                    await _channel.SendAsync( ping );
-                }
-                catch( Exception ex )
-                {
-                    NotifyError( ex );
-                }
-            };
-            _keepAliveTimer.Start();
-
-            _channel.SenderStream.Subscribe( p =>
-            {
-                _keepAliveTimer.IntervalMillisecs = interval;
-            } );
+                         _channel.SendAsync( ping );
+                         _channel.ReceiverStream.OfType<PingResponse>().Timeout( TimeSpan.FromSeconds( _configuration.WaitTimeoutSecs ) );
+                     }
+                     catch( Exception ex )
+                     {
+                         NotifyError( ex );
+                     }
+                 } );
         }
 
         void StopKeepAliveMonitor()
         {
-            if( _keepAliveTimer != null )
-            {
-                _keepAliveTimer.Stop();
-            }
+            _keepAliveMonitor.Dispose();
         }
 
         async Task DispatchPacketAsync( IPacket packet )
