@@ -8,6 +8,8 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 
+using static CK.Testing.MonitorTestHelper;
+
 namespace Tests
 {
     public class InitializerSpec
@@ -57,7 +59,7 @@ namespace Tests
             };
             TcpBinding binding = new TcpBinding();
             MqttClientFactory initializer = new MqttClientFactory( IPAddress.Loopback.ToString(), binding );
-            IMqttClient client = await initializer.CreateClientAsync( configuration );
+            IMqttClient client = await initializer.CreateClientAsync( TestHelper.Monitor, configuration );
 
             Assert.NotNull( client );
 

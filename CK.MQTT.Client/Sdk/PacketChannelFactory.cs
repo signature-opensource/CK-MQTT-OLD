@@ -1,3 +1,4 @@
+using CK.MQTT.Client.Abstractions;
 using CK.MQTT.Sdk.Formatters;
 using CK.MQTT.Sdk.Packets;
 using System.Collections.Generic;

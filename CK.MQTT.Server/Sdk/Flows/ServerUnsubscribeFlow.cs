@@ -1,3 +1,5 @@
+using CK.Core;
+using CK.MQTT.Client.Abstractions;
 using CK.MQTT.Sdk.Packets;
 using CK.MQTT.Sdk.Storage;
 using System.Linq;
@@ -14,7 +16,7 @@ namespace CK.MQTT.Sdk.Flows
             _sessionRepository = sessionRepository;
         }
 
-        public async Task ExecuteAsync( string clientId, IPacket input, IMqttChannel<IPacket> channel )
+        public async Task ExecuteAsync( IActivityMonitor m, string clientId, IPacket input, IMqttChannel<IPacket> channel )
         {
             if( input.Type != MqttPacketType.Unsubscribe )
             {
@@ -41,7 +43,7 @@ namespace CK.MQTT.Sdk.Flows
 
             _sessionRepository.Update( session );
 
-            await channel.SendAsync( new UnsubscribeAck( unsubscribe.PacketId ) );
+            await channel.SendAsync( new Monitored<IPacket>( m, new UnsubscribeAck( unsubscribe.PacketId ) ) );
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+using CK.Core;
+using System.ComponentModel;
 using System.Threading.Tasks;
 
 namespace CK.MQTT
@@ -18,6 +19,6 @@ namespace CK.MQTT
 		/// method from the interface.
         /// </summary>
         [EditorBrowsable( EditorBrowsableState.Never )]
-        new Task<SessionState> ConnectAsync( MqttClientCredentials credentials, MqttLastWill will = null, bool cleanSession = false );
+        new Task<SessionState> ConnectAsync( IActivityMonitor m, MqttClientCredentials credentials, MqttLastWill will = null, bool cleanSession = false );
     }
 }

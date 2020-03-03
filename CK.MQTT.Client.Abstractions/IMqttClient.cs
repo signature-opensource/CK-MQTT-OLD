@@ -1,4 +1,6 @@
-﻿using System;
+using CK.Core;
+using CK.MQTT.Client.Abstractions;
+using System;
 using System.Threading.Tasks;
 
 namespace CK.MQTT
@@ -19,14 +21,14 @@ namespace CK.MQTT
         /// <summary>
         /// Id of the connected Client.
         /// This Id correspond to the <see cref="MqttClientCredentials.ClientId"/> parameter passed to 
-        /// <see cref="ConnectAsync (MqttClientCredentials, MqttLastWill, bool)"/> method
+        /// <see cref="ConnectAsync (IActivityMonitor, MqttClientCredentials, MqttLastWill, bool)"/> method
         /// </summary>
         string Id { get; }
 
         /// <summary>
         /// Indicates if the Client is connected by protocol.
         /// This means that a CONNECT packet has been sent, 
-        /// by calling <see cref="ConnectAsync (MqttClientCredentials, MqttLastWill, bool)"/> method
+        /// by calling <see cref="ConnectAsync ( IActivityMonitor, MqttClientCredentials, MqttLastWill, bool)"/> method
         /// </summary>
         bool IsConnected { get; }
 
@@ -41,7 +43,7 @@ namespace CK.MQTT
         /// an error or a remote disconnection produced by the Server.
         /// The stream subscritpions should be created again if the client is intended to be re-connected
         /// </remarks>
-        IObservable<MqttApplicationMessage> MessageStream { get; }
+        IObservable<Monitored<MqttApplicationMessage>> MessageStream { get; }
 
         /// <summary>
         /// Represents the protocol connection, which consists of sending a CONNECT packet
@@ -68,7 +70,7 @@ namespace CK.MQTT
         /// See <a href="http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/mqtt-v3.1.1.html#_Toc442180841">MQTT Connect</a>
         /// for more details about the protocol connection
         /// </remarks>
-        Task<SessionState> ConnectAsync( MqttClientCredentials credentials, MqttLastWill will = null, bool cleanSession = false );
+        Task<SessionState> ConnectAsync( IActivityMonitor m, MqttClientCredentials credentials, MqttLastWill will = null, bool cleanSession = false );
 
         /// <summary>
         /// Represents the protocol connection, which consists of sending a CONNECT packet
@@ -89,7 +91,7 @@ namespace CK.MQTT
         /// See <a href="http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/mqtt-v3.1.1.html#_Toc442180841">MQTT Connect</a>
         /// for more details about the protocol connection
         /// </remarks>
-        Task<SessionState> ConnectAsync( MqttLastWill will = null );
+        Task<SessionState> ConnectAsync( IActivityMonitor m, MqttLastWill will = null );
 
         /// <summary>
         /// Represents the protocol subscription, which consists of sending a SUBSCRIBE packet
@@ -109,7 +111,7 @@ namespace CK.MQTT
         /// See <a href="http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/mqtt-v3.1.1.html#_Toc442180876">MQTT Subscribe</a>
         /// for more details about the protocol subscription
         /// </remarks>
-        Task SubscribeAsync( string topicFilter, MqttQualityOfService qos );
+        Task SubscribeAsync( IActivityMonitor m, string topicFilter, MqttQualityOfService qos );
 
         /// <summary>
         /// Represents the protocol publish, which consists of sending a PUBLISH packet
@@ -132,7 +134,7 @@ namespace CK.MQTT
         /// See <a href="http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/mqtt-v3.1.1.html#_Toc442180850">MQTT Publish</a>
         /// for more details about the protocol publish
         /// </remarks>
-        Task PublishAsync( MqttApplicationMessage message, MqttQualityOfService qos, bool retain = false );
+        Task PublishAsync( IActivityMonitor m, MqttApplicationMessage message, MqttQualityOfService qos, bool retain = false );
 
         /// <summary>
         /// Represents the protocol unsubscription, which consists of sending an UNSUBSCRIBE packet
@@ -147,7 +149,7 @@ namespace CK.MQTT
         /// See <a href="http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/mqtt-v3.1.1.html#_Toc442180885">MQTT Unsubscribe</a>
         /// for more details about the protocol unsubscription
         /// </remarks>
-        Task UnsubscribeAsync( params string[] topics );
+        Task UnsubscribeAsync( IActivityMonitor m, params string[] topics );
 
         /// <summary>
         /// Represents the protocol disconnection, which consists of sending a DISCONNECT packet to the Server
@@ -158,6 +160,6 @@ namespace CK.MQTT
         /// See <a href="http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/mqtt-v3.1.1.html#_Toc442180903">MQTT Disconnect</a>
         /// for more details about the protocol disconnection
         /// </remarks>
-        Task DisconnectAsync();
+        Task DisconnectAsync( IActivityMonitor m );
     }
 }

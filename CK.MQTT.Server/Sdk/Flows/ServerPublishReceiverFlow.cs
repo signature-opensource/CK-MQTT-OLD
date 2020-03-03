@@ -1,3 +1,4 @@
+using CK.Core;
 using CK.MQTT.Sdk.Packets;
 using CK.MQTT.Sdk.Storage;
 using System.Diagnostics;
@@ -35,7 +36,7 @@ namespace CK.MQTT.Sdk.Flows
             _undeliveredMessagesListener = undeliveredMessagesListener;
         }
 
-        public async Task SendWillAsync( string clientId )
+        public async Task SendWillAsync( IActivityMonitor m, string clientId )
         {
             ConnectionWill will = _willRepository.Read( clientId );
 
@@ -48,11 +49,11 @@ namespace CK.MQTT.Sdk.Flows
 
                 _tracer.Info( ServerProperties.ServerPublishReceiverFlow_SendingWill( clientId, willPublish.Topic ) );
 
-                await DispatchAsync( willPublish, clientId, isWill: true );
+                await DispatchAsync( m, willPublish, clientId, isWill: true );
             }
         }
 
-        protected override async Task ProcessPublishAsync( Publish publish, string clientId )
+        protected override async Task ProcessPublishAsync( IActivityMonitor m, Publish publish, string clientId )
         {
             if( publish.Retain )
             {
@@ -73,7 +74,7 @@ namespace CK.MQTT.Sdk.Flows
                 }
             }
 
-            await DispatchAsync( publish, clientId );
+            await DispatchAsync( m, publish, clientId );
         }
 
         protected override void Validate( Publish publish, string clientId )
@@ -86,7 +87,7 @@ namespace CK.MQTT.Sdk.Flows
             }
         }
 
-        async Task DispatchAsync( Publish publish, string clientId, bool isWill = false )
+        async Task DispatchAsync( IActivityMonitor m, Publish publish, string clientId, bool isWill = false )
         {
             System.Collections.Generic.IEnumerable<ClientSubscription> subscriptions = sessionRepository
                 .ReadAll().ToList()
@@ -103,12 +104,12 @@ namespace CK.MQTT.Sdk.Flows
             {
                 foreach( ClientSubscription subscription in subscriptions )
                 {
-                    await DispatchAsync( publish, subscription, isWill );
+                    await DispatchAsync( m, publish, subscription, isWill );
                 }
             }
         }
 
-        async Task DispatchAsync( Publish publish, ClientSubscription subscription, bool isWill = false )
+        async Task DispatchAsync( IActivityMonitor m, Publish publish, ClientSubscription subscription, bool isWill = false )
         {
             MqttQualityOfService requestedQos = isWill ? publish.QualityOfService : subscription.MaximumQualityOfService;
             MqttQualityOfService supportedQos = configuration.GetSupportedQos( requestedQos );
@@ -120,7 +121,7 @@ namespace CK.MQTT.Sdk.Flows
             };
             IMqttChannel<IPacket> clientChannel = _connectionProvider.GetConnection( subscription.ClientId );
 
-            await _senderFlow.SendPublishAsync( subscription.ClientId, subscriptionPublish, clientChannel );
+            await _senderFlow.SendPublishAsync( m, subscription.ClientId, subscriptionPublish, clientChannel );
         }
     }
 }

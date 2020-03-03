@@ -7,11 +7,11 @@ namespace CK.MQTT.Sdk.Formatters
 {
     internal class SubscribeFormatter : Formatter<Subscribe>
     {
-        readonly IMqttTopicEvaluator topicEvaluator;
+        readonly IMqttTopicEvaluator _topicEvaluator;
 
         public SubscribeFormatter( IMqttTopicEvaluator topicEvaluator )
         {
-            this.topicEvaluator = topicEvaluator;
+            _topicEvaluator = topicEvaluator;
         }
 
         public override MqttPacketType PacketType { get { return MqttPacketType.Subscribe; } }
@@ -87,7 +87,7 @@ namespace CK.MQTT.Sdk.Formatters
                     throw new MqttProtocolViolationException( ClientProperties.SubscribeFormatter_MissingTopicFilterQosPair );
                 }
 
-                if( !topicEvaluator.IsValidTopicFilter( subscription.TopicFilter ) )
+                if( !_topicEvaluator.IsValidTopicFilter( subscription.TopicFilter ) )
                 {
                     throw new MqttException( ClientProperties.SubscribeFormatter_InvalidTopicFilter( subscription.TopicFilter ) );
                 }
@@ -113,7 +113,7 @@ namespace CK.MQTT.Sdk.Formatters
             {
                 string topicFilter = bytes.GetString( index, out index );
 
-                if( !topicEvaluator.IsValidTopicFilter( topicFilter ) )
+                if( !_topicEvaluator.IsValidTopicFilter( topicFilter ) )
                 {
                     throw new MqttException( ClientProperties.SubscribeFormatter_InvalidTopicFilter( topicFilter ) );
                 }

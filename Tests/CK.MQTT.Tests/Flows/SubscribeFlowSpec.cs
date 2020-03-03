@@ -1,4 +1,5 @@
 using CK.MQTT;
+using CK.MQTT.Client.Abstractions;
 using CK.MQTT.Sdk;
 using CK.MQTT.Sdk.Flows;
 using CK.MQTT.Sdk.Packets;
@@ -11,6 +12,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
+using static CK.Testing.MonitorTestHelper;
 
 namespace Tests.Flows
 {
@@ -46,7 +49,7 @@ namespace Tests.Flows
 
             IPacket response = default;
 
-            channel.Setup( c => c.SendAsync( It.IsAny<IPacket>() ) )
+            channel.Setup( c => c.SendAsync( It.IsAny<Monitored<IPacket>>() ) )
                 .Callback<IPacket>( p => response = p )
                 .Returns( Task.Delay( 0 ) );
 
@@ -59,7 +62,7 @@ namespace Tests.Flows
             ServerSubscribeFlow flow = new ServerSubscribeFlow( topicEvaluator.Object, sessionRepository.Object,
                 retainedMessageRepository, packetIdProvider, senderFlow, configuration );
 
-            await flow.ExecuteAsync( clientId, subscribe, channel.Object );
+            await flow.ExecuteAsync(TestHelper.Monitor, clientId, subscribe, channel.Object );
 
             sessionRepository.Verify( r => r.Update( It.Is<ClientSession>( s => s.Id == clientId && s.Subscriptions.Count == 2
                 && s.Subscriptions.All( x => x.TopicFilter == fooTopic || x.TopicFilter == barTopic ) ) ) );
@@ -106,7 +109,7 @@ namespace Tests.Flows
 
             IPacket response = default;
 
-            channel.Setup( c => c.SendAsync( It.IsAny<IPacket>() ) )
+            channel.Setup( c => c.SendAsync( It.IsAny<Monitored<IPacket>>() ) )
                 .Callback<IPacket>( p => response = p )
                 .Returns( Task.Delay( 0 ) );
 
@@ -120,7 +123,7 @@ namespace Tests.Flows
                 retainedMessageRepository, packetIdProvider,
                 senderFlow, configuration );
 
-            await flow.ExecuteAsync( clientId, subscribe, channel.Object );
+            await flow.ExecuteAsync(TestHelper.Monitor, clientId, subscribe, channel.Object );
 
             sessionRepository.Verify( r => r.Update( It.Is<ClientSession>( s => s.Id == clientId && s.Subscriptions.Count == 1
                 && s.Subscriptions.Any( x => x.TopicFilter == fooTopic && x.MaximumQualityOfService == fooQoS ) ) ) );
@@ -161,7 +164,7 @@ namespace Tests.Flows
 
             IPacket response = default;
 
-            channel.Setup( c => c.SendAsync( It.IsAny<IPacket>() ) )
+            channel.Setup( c => c.SendAsync( It.IsAny<Monitored<IPacket>>() ) )
                 .Callback<IPacket>( p => response = p )
                 .Returns( Task.Delay( 0 ) );
 
@@ -175,7 +178,7 @@ namespace Tests.Flows
                 retainedMessageRepository, packetIdProvider,
                 senderFlow, configuration );
 
-            await flow.ExecuteAsync( clientId, subscribe, channel.Object );
+            await flow.ExecuteAsync(TestHelper.Monitor, clientId, subscribe, channel.Object );
 
             Assert.NotNull( response );
 
@@ -232,9 +235,9 @@ namespace Tests.Flows
                 sessionRepository.Object, retainedMessageRepository.Object,
                 packetIdProvider, senderFlow.Object, configuration );
 
-            await flow.ExecuteAsync( clientId, subscribe, channel.Object );
+            await flow.ExecuteAsync(TestHelper.Monitor, clientId, subscribe, channel.Object );
 
-            senderFlow.Verify( f => f.SendPublishAsync( It.Is<string>( s => s == clientId ),
+            senderFlow.Verify( f => f.SendPublishAsync(TestHelper.Monitor, It.Is<string>( s => s == clientId ),
                 It.Is<Publish>( p => p.Topic == retainedTopic &&
                     p.QualityOfService == fooQoS &&
                     p.Payload.ToList().SequenceEqual( retainedPayload ) &&

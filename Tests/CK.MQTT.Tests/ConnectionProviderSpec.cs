@@ -1,4 +1,5 @@
 using CK.MQTT;
+using CK.MQTT.Client.Abstractions;
 using CK.MQTT.Sdk;
 using CK.MQTT.Sdk.Packets;
 using FluentAssertions;
@@ -129,13 +130,13 @@ namespace Tests
         {
             ConnectionProvider provider = new ConnectionProvider();
 
-            Subject<IPacket> receiver1 = new Subject<IPacket>();
+            Subject<Monitored<IPacket>> receiver1 = new Subject<Monitored<IPacket>>();
             Mock<IMqttChannel<IPacket>> channel1 = new Mock<IMqttChannel<IPacket>>();
 
             channel1.Setup( c => c.ReceiverStream ).Returns( receiver1 );
             channel1.Setup( c => c.IsConnected ).Returns( true );
 
-            Subject<IPacket> receiver2 = new Subject<IPacket>();
+            Subject<Monitored<IPacket>> receiver2 = new Subject<Monitored<IPacket>>();
             Mock<IMqttChannel<IPacket>> channel2 = new Mock<IMqttChannel<IPacket>>();
 
             channel2.Setup( c => c.ReceiverStream ).Returns( receiver2 );

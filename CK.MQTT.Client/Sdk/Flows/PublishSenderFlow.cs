@@ -1,3 +1,5 @@
+using CK.Core;
+using CK.MQTT.Client.Abstractions;
 using CK.MQTT.Sdk.Packets;
 using CK.MQTT.Sdk.Storage;
 using System;
@@ -23,7 +25,7 @@ namespace CK.MQTT.Sdk.Flows
             DefineSenderRules();
         }
 
-        public override async Task ExecuteAsync( string clientId, IPacket input, IMqttChannel<IPacket> channel )
+        public override async Task ExecuteAsync( IActivityMonitor m, string clientId, IPacket input, IMqttChannel<IPacket> channel )
         {
             if( !_senderRules.TryGetValue( input.Type, out Func<string, ushort, IFlowPacket> senderRule ) )
             {
@@ -36,11 +38,11 @@ namespace CK.MQTT.Sdk.Flows
 
             if( ackPacket != default( IFlowPacket ) )
             {
-                await SendAckAsync( clientId, ackPacket, channel );
+                await SendAckAsync( m, clientId, ackPacket, channel );
             }
         }
 
-        public async Task SendPublishAsync( string clientId, Publish message, IMqttChannel<IPacket> channel, PendingMessageStatus status = PendingMessageStatus.PendingToSend )
+        public async Task SendPublishAsync( IActivityMonitor m, string clientId, Publish message, IMqttChannel<IPacket> channel, PendingMessageStatus status = PendingMessageStatus.PendingToSend )
         {
             if( channel == null || !channel.IsConnected )
             {
@@ -55,15 +57,15 @@ namespace CK.MQTT.Sdk.Flows
                 SaveMessage( message, clientId, PendingMessageStatus.PendingToAcknowledge );
             }
 
-            await channel.SendAsync( message );
+            await channel.SendAsync( new Monitored<IPacket>( m, message ) );
 
             if( qos == MqttQualityOfService.AtLeastOnce )
             {
-                await MonitorAckAsync<PublishAck>( message, clientId, channel );
+                await MonitorAckAsync<PublishAck>( m, message, clientId, channel );
             }
             else if( qos == MqttQualityOfService.ExactlyOnce )
             {
-                await MonitorAckAsync<PublishReceived>( message, clientId, channel );
+                await MonitorAckAsync<PublishReceived>( m, message, clientId, channel );
                 await channel
                     .ReceiverStream
                     .ObserveOn( NewThreadScheduler.Default )
@@ -90,7 +92,7 @@ namespace CK.MQTT.Sdk.Flows
             sessionRepository.Update( session );
         }
 
-        protected async Task MonitorAckAsync<T>( Publish sentMessage, string clientId, IMqttChannel<IPacket> channel )
+        protected async Task MonitorAckAsync<T>( IActivityMonitor m, Publish sentMessage, string clientId, IMqttChannel<IPacket> channel )
             where T : IFlowPacket
         {
             using( IDisposable intervalSubscription = Observable
@@ -107,7 +109,7 @@ namespace CK.MQTT.Sdk.Flows
                             Payload = sentMessage.Payload
                         };
 
-                        await channel.SendAsync( duplicated );
+                        await channel.SendAsync( new Monitored<IPacket>( m, duplicated ) );
                     }
                 } ) )
             {

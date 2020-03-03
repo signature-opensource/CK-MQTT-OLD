@@ -1,3 +1,4 @@
+using CK.Core;
 using CK.MQTT.Sdk.Packets;
 using CK.MQTT.Sdk.Storage;
 using System.Linq;
@@ -20,23 +21,23 @@ namespace CK.MQTT.Sdk.Flows
             this.retainedRepository = retainedRepository;
         }
 
-        public override async Task ExecuteAsync( string clientId, IPacket input, IMqttChannel<IPacket> channel )
+        public override async Task ExecuteAsync( IActivityMonitor m, string clientId, IPacket input, IMqttChannel<IPacket> channel )
         {
             if( input.Type == MqttPacketType.Publish )
             {
                 Publish publish = input as Publish;
 
-                await HandlePublishAsync( clientId, publish, channel );
+                await HandlePublishAsync( m, clientId, publish, channel );
             }
             else if( input.Type == MqttPacketType.PublishRelease )
             {
                 PublishRelease publishRelease = input as PublishRelease;
 
-                await HandlePublishReleaseAsync( clientId, publishRelease, channel );
+                await HandlePublishReleaseAsync( m, clientId, publishRelease, channel );
             }
         }
 
-        protected virtual Task ProcessPublishAsync( Publish publish, string clientId )
+        protected virtual Task ProcessPublishAsync( IActivityMonitor m, Publish publish, string clientId )
         {
             return Task.Delay( 0 );
         }
@@ -54,7 +55,7 @@ namespace CK.MQTT.Sdk.Flows
             }
         }
 
-        async Task HandlePublishAsync( string clientId, Publish publish, IMqttChannel<IPacket> channel )
+        async Task HandlePublishAsync( IActivityMonitor m, string clientId, Publish publish, IMqttChannel<IPacket> channel )
         {
             Validate( publish, clientId );
 
@@ -68,23 +69,23 @@ namespace CK.MQTT.Sdk.Flows
 
             if( qos == MqttQualityOfService.ExactlyOnce && session.GetPendingAcknowledgements().Any( ack => ack.Type == MqttPacketType.PublishReceived && ack.PacketId == publish.PacketId.Value ) )
             {
-                await SendQosAck( clientId, qos, publish, channel );
+                await SendQosAck( m, clientId, qos, publish, channel );
 
                 return;
             }
 
-            await SendQosAck( clientId, qos, publish, channel );
-            await ProcessPublishAsync( publish, clientId );
+            await SendQosAck( m, clientId, qos, publish, channel );
+            await ProcessPublishAsync( m, publish, clientId );
         }
 
-        async Task HandlePublishReleaseAsync( string clientId, PublishRelease publishRelease, IMqttChannel<IPacket> channel )
+        async Task HandlePublishReleaseAsync( IActivityMonitor m, string clientId, PublishRelease publishRelease, IMqttChannel<IPacket> channel )
         {
             RemovePendingAcknowledgement( clientId, publishRelease.PacketId, MqttPacketType.PublishReceived );
 
-            await SendAckAsync( clientId, new PublishComplete( publishRelease.PacketId ), channel );
+            await SendAckAsync( m, clientId, new PublishComplete( publishRelease.PacketId ), channel );
         }
 
-        async Task SendQosAck( string clientId, MqttQualityOfService qos, Publish publish, IMqttChannel<IPacket> channel )
+        async Task SendQosAck( IActivityMonitor m, string clientId, MqttQualityOfService qos, Publish publish, IMqttChannel<IPacket> channel )
         {
             if( qos == MqttQualityOfService.AtMostOnce )
             {
@@ -92,11 +93,11 @@ namespace CK.MQTT.Sdk.Flows
             }
             else if( qos == MqttQualityOfService.AtLeastOnce )
             {
-                await SendAckAsync( clientId, new PublishAck( publish.PacketId.Value ), channel );
+                await SendAckAsync( m, clientId, new PublishAck( publish.PacketId.Value ), channel );
             }
             else
             {
-                await SendAckAsync( clientId, new PublishReceived( publish.PacketId.Value ), channel );
+                await SendAckAsync( m, clientId, new PublishReceived( publish.PacketId.Value ), channel );
             }
         }
     }

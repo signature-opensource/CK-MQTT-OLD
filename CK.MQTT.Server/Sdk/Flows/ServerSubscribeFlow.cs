@@ -1,3 +1,5 @@
+using CK.Core;
+using CK.MQTT.Client.Abstractions;
 using CK.MQTT.Sdk.Packets;
 using CK.MQTT.Sdk.Storage;
 using System.Collections.Generic;
@@ -33,7 +35,7 @@ namespace CK.MQTT.Sdk.Flows
             _configuration = configuration;
         }
 
-        public async Task ExecuteAsync( string clientId, IPacket input, IMqttChannel<IPacket> channel )
+        public async Task ExecuteAsync( IActivityMonitor m, string clientId, IPacket input, IMqttChannel<IPacket> channel )
         {
             if( input.Type != MqttPacketType.Subscribe ) return;
 
@@ -79,7 +81,7 @@ namespace CK.MQTT.Sdk.Flows
                         session.AddSubscription( clientSubscription );
                     }
 
-                    await SendRetainedMessagesAsync( clientSubscription, channel );
+                    await SendRetainedMessagesAsync( m, clientSubscription, channel );
 
                     MqttQualityOfService supportedQos = _configuration.GetSupportedQos( subscription.MaximumQualityOfService );
                     SubscribeReturnCode returnCode = supportedQos.ToReturnCode();
@@ -96,10 +98,10 @@ namespace CK.MQTT.Sdk.Flows
 
             _sessionRepository.Update( session );
 
-            await channel.SendAsync( new SubscribeAck( subscribe.PacketId, returnCodes.ToArray() ) );
+            await channel.SendAsync( new Monitored<IPacket>( m, new SubscribeAck( subscribe.PacketId, returnCodes.ToArray() ) ) );
         }
 
-        async Task SendRetainedMessagesAsync( ClientSubscription subscription, IMqttChannel<IPacket> channel )
+        async Task SendRetainedMessagesAsync( IActivityMonitor m, ClientSubscription subscription, IMqttChannel<IPacket> channel )
         {
             IEnumerable<RetainedMessage> retainedMessages = _retainedRepository
                 .ReadAll()
@@ -118,7 +120,7 @@ namespace CK.MQTT.Sdk.Flows
                         Payload = retainedMessage.Payload
                     };
 
-                    await _senderFlow.SendPublishAsync( subscription.ClientId, publish, channel );
+                    await _senderFlow.SendPublishAsync( m, subscription.ClientId, publish, channel );
                 }
             }
         }

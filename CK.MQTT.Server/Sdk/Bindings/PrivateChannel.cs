@@ -1,3 +1,4 @@
+using CK.MQTT.Client.Abstractions;
 using System;
 using System.Diagnostics;
 using System.Reactive.Concurrency;
@@ -15,26 +16,26 @@ namespace CK.MQTT.Sdk.Bindings
 
         readonly PrivateStream _stream;
         readonly EndpointIdentifier _identifier;
-        readonly ReplaySubject<byte[]> _receiver;
-        readonly ReplaySubject<byte[]> _sender;
+        readonly ReplaySubject<Monitored<byte[]>> _receiver;
+        readonly ReplaySubject<Monitored<byte[]>> _sender;
         readonly IDisposable _streamSubscription;
 
         public PrivateChannel( PrivateStream stream, EndpointIdentifier identifier, MqttConfiguration configuration )
         {
             _stream = stream;
             _identifier = identifier;
-            _receiver = new ReplaySubject<byte[]>( window: TimeSpan.FromSeconds( configuration.WaitTimeoutSecs ) );
-            _sender = new ReplaySubject<byte[]>( window: TimeSpan.FromSeconds( configuration.WaitTimeoutSecs ) );
+            _receiver = new ReplaySubject<Monitored<byte[]>>( window: TimeSpan.FromSeconds( configuration.WaitTimeoutSecs ) );
+            _sender = new ReplaySubject<Monitored<byte[]>>( window: TimeSpan.FromSeconds( configuration.WaitTimeoutSecs ) );
             _streamSubscription = SubscribeStream();
         }
 
         public bool IsConnected => !_stream.IsDisposed;
 
-        public IObservable<byte[]> ReceiverStream => _receiver;
+        public IObservable<Monitored<byte[]>> ReceiverStream => _receiver;
 
-        public IObservable<byte[]> SenderStream => _sender;
+        public IObservable<Monitored<byte[]>> SenderStream => _sender;
 
-        public Task SendAsync( byte[] message )
+        public Task SendAsync( Monitored<byte[]> message )
         {
             if( _disposed ) throw new ObjectDisposedException( nameof( PrivateChannel ) );
 
@@ -44,7 +45,7 @@ namespace CK.MQTT.Sdk.Bindings
 
             try
             {
-                _tracer.Verbose( ClientProperties.MqttChannel_SendingPacket( message.Length ) );
+                _tracer.Verbose( ClientProperties.MqttChannel_SendingPacket( message.Item.Length ) );
                 _stream.Send( message, _identifier );
                 return Task.FromResult( true );
             }
@@ -78,7 +79,7 @@ namespace CK.MQTT.Sdk.Bindings
                 .ObserveOn( NewThreadScheduler.Default )
                 .Subscribe( packet =>
                 {
-                    _tracer.Verbose( ClientProperties.MqttChannel_ReceivedPacket( packet.Length ) );
+                    _tracer.Verbose( ClientProperties.MqttChannel_ReceivedPacket( packet.Item.Length ) );
 
                     _receiver.OnNext( packet );
                 }, ex =>

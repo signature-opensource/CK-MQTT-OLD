@@ -1,3 +1,4 @@
+using CK.Core;
 using CK.MQTT.Sdk.Bindings;
 using CK.MQTT.Sdk.Flows;
 using CK.MQTT.Sdk.Storage;
@@ -20,7 +21,7 @@ namespace CK.MQTT.Sdk
             _privateStreamListener = privateStreamListener;
         }
 
-        public async Task<IMqttConnectedClient> CreateClientAsync( MqttConfiguration configuration )
+        public async Task<IMqttConnectedClient> CreateClientAsync( IActivityMonitor m, MqttConfiguration configuration )
         {
             try
             {
@@ -37,7 +38,7 @@ namespace CK.MQTT.Sdk
                 InMemoryRepositoryProvider repositoryProvider = new InMemoryRepositoryProvider();
                 ClientProtocolFlowProvider flowProvider = new ClientProtocolFlowProvider( topicEvaluator, repositoryProvider, configuration );
 
-                return new MqttConnectedClient( channelFactory, flowProvider, repositoryProvider, packetIdProvider, configuration );
+                return new MqttConnectedClient( m, channelFactory, flowProvider, repositoryProvider, packetIdProvider, configuration );
             }
             catch( Exception ex )
             {
@@ -50,12 +51,13 @@ namespace CK.MQTT.Sdk
 
     class MqttConnectedClient : MqttClientImpl, IMqttConnectedClient
     {
-        internal MqttConnectedClient( IPacketChannelFactory channelFactory,
+        internal MqttConnectedClient( IActivityMonitor m,
+            IPacketChannelFactory channelFactory,
             IProtocolFlowProvider flowProvider,
             IRepositoryProvider repositoryProvider,
             IPacketIdProvider packetIdProvider,
             MqttConfiguration configuration )
-            : base( channelFactory, flowProvider, repositoryProvider, packetIdProvider, configuration )
+            : base( m, channelFactory, flowProvider, repositoryProvider, packetIdProvider, configuration )
         {
         }
     }

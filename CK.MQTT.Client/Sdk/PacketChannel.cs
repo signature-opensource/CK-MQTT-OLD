@@ -1,3 +1,5 @@
+using CK.Core;
+using CK.MQTT.Client.Abstractions;
 using CK.MQTT.Sdk.Packets;
 using System;
 using System.Diagnostics;
@@ -14,8 +16,8 @@ namespace CK.MQTT.Sdk
 
         readonly IMqttChannel<byte[]> _innerChannel;
         readonly IPacketManager _manager;
-        readonly ReplaySubject<IPacket> _receiver;
-        readonly ReplaySubject<IPacket> _sender;
+        readonly ReplaySubject<Monitored<IPacket>> _receiver;
+        readonly ReplaySubject<Monitored<IPacket>> _sender;
         readonly IDisposable _subscription;
 
         public PacketChannel( IMqttChannel<byte[]> innerChannel,
@@ -25,15 +27,15 @@ namespace CK.MQTT.Sdk
             _innerChannel = innerChannel;
             _manager = manager;
 
-            _receiver = new ReplaySubject<IPacket>( window: TimeSpan.FromSeconds( configuration.WaitTimeoutSecs ) );
-            _sender = new ReplaySubject<IPacket>( window: TimeSpan.FromSeconds( configuration.WaitTimeoutSecs ) );
+            _receiver = new ReplaySubject<Monitored<IPacket>>( window: TimeSpan.FromSeconds( configuration.WaitTimeoutSecs ) );
+            _sender = new ReplaySubject<Monitored<IPacket>>( window: TimeSpan.FromSeconds( configuration.WaitTimeoutSecs ) );
             _subscription = innerChannel
                 .ReceiverStream
                 .Subscribe( async bytes =>
                 {
                     try
                     {
-                        IPacket packet = await _manager.GetPacketAsync( bytes );
+                        Monitored<IPacket> packet = await _manager.GetPacketAsync( bytes );
 
                         _receiver.OnNext( packet );
                     }
@@ -46,18 +48,17 @@ namespace CK.MQTT.Sdk
 
         public bool IsConnected => _innerChannel != null && _innerChannel.IsConnected;
 
-        public IObservable<IPacket> ReceiverStream => _receiver;
+        public IObservable<Monitored<IPacket>> ReceiverStream => _receiver;
 
-        public IObservable<IPacket> SenderStream => _sender;
+        public IObservable<Monitored<IPacket>> SenderStream => _sender;
 
-        public async Task SendAsync( IPacket packet )
+        public async Task SendAsync( Monitored<IPacket> packet )
         {
             if( _disposed )
             {
                 throw new ObjectDisposedException( GetType().FullName );
             }
-
-            byte[] bytes = await _manager.GetBytesAsync( packet );
+            var bytes = await _manager.GetBytesAsync( packet );
 
             _sender.OnNext( packet );
 

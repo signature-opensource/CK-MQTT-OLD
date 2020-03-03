@@ -1,3 +1,4 @@
+using CK.MQTT.Client.Abstractions;
 using CK.MQTT.Sdk.Formatters;
 using CK.MQTT.Sdk.Packets;
 using System.Collections.Generic;
@@ -8,7 +9,7 @@ namespace CK.MQTT.Sdk
 {
     internal class PacketManager : IPacketManager
     {
-        readonly IDictionary<MqttPacketType, IFormatter> formatters;
+        readonly IDictionary<MqttPacketType, IFormatter> _formatters;
 
         public PacketManager( params IFormatter[] formatters )
             : this( (IEnumerable<IFormatter>)formatters )
@@ -17,28 +18,28 @@ namespace CK.MQTT.Sdk
 
         public PacketManager( IEnumerable<IFormatter> formatters )
         {
-            this.formatters = formatters.ToDictionary( f => f.PacketType );
+            _formatters = formatters.ToDictionary( f => f.PacketType );
         }
 
-        public async Task<IPacket> GetPacketAsync( byte[] bytes )
+        public async Task<Monitored<IPacket>> GetPacketAsync( Monitored<byte[]> bytes )
         {
-            MqttPacketType packetType = (MqttPacketType)bytes.Byte( 0 ).Bits( 4 );
-            if( !formatters.TryGetValue( packetType, out IFormatter formatter ) )
+            MqttPacketType packetType = (MqttPacketType)bytes.Item.Byte( 0 ).Bits( 4 );
+            if( !_formatters.TryGetValue( packetType, out IFormatter formatter ) )
                 throw new MqttException( ClientProperties.PacketManager_PacketUnknown );
 
-            IPacket packet = await formatter.FormatAsync( bytes );
+            IPacket packet = await formatter.FormatAsync( bytes.Item );
 
-            return packet;
+            return new Monitored<IPacket>( bytes.Monitor, packet );
         }
 
-        public async Task<byte[]> GetBytesAsync( IPacket packet )
+        public async Task<Monitored<byte[]>> GetBytesAsync( Monitored<IPacket> packet )
         {
-            if( !formatters.TryGetValue( packet.Type, out IFormatter formatter ) )
+            if( !_formatters.TryGetValue( packet.Item.Type, out IFormatter formatter ) )
                 throw new MqttException( ClientProperties.PacketManager_PacketUnknown );
 
-            byte[] bytes = await formatter.FormatAsync( packet );
+            byte[] bytes = await formatter.FormatAsync( packet.Item );
 
-            return bytes;
+            return new Monitored<byte[]>( packet.Monitor, bytes );
         }
     }
 }

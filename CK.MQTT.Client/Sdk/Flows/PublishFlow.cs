@@ -1,3 +1,5 @@
+using CK.Core;
+using CK.MQTT.Client.Abstractions;
 using CK.MQTT.Sdk.Packets;
 using CK.MQTT.Sdk.Storage;
 using System;
@@ -23,9 +25,9 @@ namespace CK.MQTT.Sdk.Flows
             this.configuration = configuration;
         }
 
-        public abstract Task ExecuteAsync( string clientId, IPacket input, IMqttChannel<IPacket> channel );
+        public abstract Task ExecuteAsync( IActivityMonitor m, string clientId, IPacket input, IMqttChannel<IPacket> channel );
 
-        public async Task SendAckAsync( string clientId, IFlowPacket ack, IMqttChannel<IPacket> channel, PendingMessageStatus status = PendingMessageStatus.PendingToSend )
+        public async Task SendAckAsync( IActivityMonitor m, string clientId, IFlowPacket ack, IMqttChannel<IPacket> channel, PendingMessageStatus status = PendingMessageStatus.PendingToSend )
         {
             if( (ack.Type == MqttPacketType.PublishReceived || ack.Type == MqttPacketType.PublishRelease) &&
                 status == PendingMessageStatus.PendingToSend )
@@ -38,15 +40,15 @@ namespace CK.MQTT.Sdk.Flows
                 return;
             }
 
-            await channel.SendAsync( ack );
+            await channel.SendAsync( new Monitored<IPacket>( m, ack ) );
 
             if( ack.Type == MqttPacketType.PublishReceived )
             {
-                await MonitorAckAsync<PublishRelease>( ack, clientId, channel );
+                await MonitorAckAsync<PublishRelease>( m, ack, clientId, channel );
             }
             else if( ack.Type == MqttPacketType.PublishRelease )
             {
-                await MonitorAckAsync<PublishComplete>( ack, clientId, channel );
+                await MonitorAckAsync<PublishComplete>( m, ack, clientId, channel );
             }
         }
 
@@ -68,7 +70,7 @@ namespace CK.MQTT.Sdk.Flows
             sessionRepository.Update( session );
         }
 
-        protected async Task MonitorAckAsync<T>( IFlowPacket sentMessage, string clientId, IMqttChannel<IPacket> channel )
+        protected async Task MonitorAckAsync<T>( IActivityMonitor m, IFlowPacket sentMessage, string clientId, IMqttChannel<IPacket> channel )
             where T : IFlowPacket
         {
             using( IDisposable intervalSubscription = Observable
@@ -79,7 +81,7 @@ namespace CK.MQTT.Sdk.Flows
                     {
                         _tracer.Warn( ClientProperties.PublishFlow_RetryingQoSFlow( sentMessage.Type, clientId ) );
 
-                        await channel.SendAsync( sentMessage );
+                        await channel.SendAsync( new Monitored<IPacket>( m, sentMessage ) );
                     }
                 } ) )
             {

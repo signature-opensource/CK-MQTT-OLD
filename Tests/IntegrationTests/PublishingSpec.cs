@@ -12,6 +12,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using static CK.Testing.MonitorTestHelper;
+
 namespace IntegrationTests
 {
     public abstract class PublishingSpec : ConnectedContext
@@ -31,7 +33,7 @@ namespace IntegrationTests
                     TestMessage testMessage = GetTestMessage( i );
                     MqttApplicationMessage message = new MqttApplicationMessage( topic, Serializer.Serialize( testMessage ) );
 
-                    tasks.Add( client.PublishAsync( message, MqttQualityOfService.AtMostOnce ) );
+                    tasks.Add( client.PublishAsync(TestHelper.Monitor, message, MqttQualityOfService.AtMostOnce ) );
                 }
 
                 await Task.WhenAll( tasks );
@@ -57,7 +59,7 @@ namespace IntegrationTests
                    .ReceiverStream
                    .Subscribe( packet =>
                    {
-                       if( packet is PublishAck )
+                       if( packet.Item is PublishAck )
                        {
                            Interlocked.Increment( ref publishAckPackets );
                        }
@@ -68,7 +70,7 @@ namespace IntegrationTests
                     TestMessage testMessage = GetTestMessage( i );
                     MqttApplicationMessage message = new MqttApplicationMessage( topic, Serializer.Serialize( testMessage ) );
 
-                    tasks.Add( client.PublishAsync( message, MqttQualityOfService.AtLeastOnce ) );
+                    tasks.Add( client.PublishAsync(TestHelper.Monitor, message, MqttQualityOfService.AtLeastOnce ) );
                 }
 
                 await Task.WhenAll( tasks );
@@ -95,11 +97,11 @@ namespace IntegrationTests
                     .ReceiverStream
                     .Subscribe( packet =>
                     {
-                        if( packet is PublishReceived )
+                        if( packet.Item is PublishReceived )
                         {
                             Interlocked.Increment( ref publishReceivedPackets );
                         }
-                        else if( packet is PublishComplete )
+                        else if( packet.Item is PublishComplete )
                         {
                             Interlocked.Increment( ref publishCompletePackets );
                         }
@@ -110,7 +112,7 @@ namespace IntegrationTests
                     TestMessage testMessage = GetTestMessage( i );
                     MqttApplicationMessage message = new MqttApplicationMessage( topic, Serializer.Serialize( testMessage ) );
 
-                    tasks.Add( client.PublishAsync( message, MqttQualityOfService.ExactlyOnce ) );
+                    tasks.Add( client.PublishAsync(TestHelper.Monitor, message, MqttQualityOfService.ExactlyOnce ) );
                 }
 
                 await Task.WhenAll( tasks );
@@ -139,13 +141,13 @@ namespace IntegrationTests
             int subscriber1Received = 0;
             int subscriber2Received = 0;
 
-            await subscriber1.SubscribeAsync( topicFilter, MqttQualityOfService.AtMostOnce );
-            await subscriber2.SubscribeAsync( topicFilter, MqttQualityOfService.AtMostOnce );
+            await subscriber1.SubscribeAsync( TestHelper.Monitor, topicFilter, MqttQualityOfService.AtMostOnce );
+            await subscriber2.SubscribeAsync( TestHelper.Monitor, topicFilter, MqttQualityOfService.AtMostOnce );
 
             subscriber1.MessageStream
                 .Subscribe( m =>
                 {
-                    if( m.Topic == topic )
+                    if( m.Item.Topic == topic )
                     {
                         Interlocked.Increment( ref subscriber1Received );
 
@@ -157,7 +159,7 @@ namespace IntegrationTests
             subscriber2.MessageStream
                 .Subscribe( m =>
                 {
-                    if( m.Topic == topic )
+                    if( m.Item.Topic == topic )
                     {
                         Interlocked.Increment( ref subscriber2Received );
 
@@ -173,7 +175,7 @@ namespace IntegrationTests
                 TestMessage testMessage = GetTestMessage( i );
                 MqttApplicationMessage message = new MqttApplicationMessage( topic, Serializer.Serialize( testMessage ) );
 
-                tasks.Add( publisher.PublishAsync( message, MqttQualityOfService.AtMostOnce ) );
+                tasks.Add( publisher.PublishAsync(TestHelper.Monitor, message, MqttQualityOfService.AtMostOnce ) );
             }
 
             await Task.WhenAll( tasks );
@@ -184,8 +186,8 @@ namespace IntegrationTests
             count.Should().Be( subscriber2Received );
             Assert.True( completed );
 
-            await subscriber1.UnsubscribeAsync( topicFilter );
-            await subscriber2.UnsubscribeAsync( topicFilter );
+            await subscriber1.UnsubscribeAsync( TestHelper.Monitor, topicFilter );
+            await subscriber2.UnsubscribeAsync( TestHelper.Monitor, topicFilter );
 
             subscriber1.Dispose();
             subscriber2.Dispose();
@@ -218,7 +220,7 @@ namespace IntegrationTests
                 TestMessage testMessage = GetTestMessage( i );
                 MqttApplicationMessage message = new MqttApplicationMessage( topic, Serializer.Serialize( testMessage ) );
 
-                tasks.Add( publisher.PublishAsync( message, MqttQualityOfService.AtMostOnce ) );
+                tasks.Add( publisher.PublishAsync(TestHelper.Monitor, message, MqttQualityOfService.AtMostOnce ) );
             }
 
             await Task.WhenAll( tasks );
@@ -245,26 +247,26 @@ namespace IntegrationTests
             ManualResetEventSlim subscriberDone = new ManualResetEventSlim();
             int subscriberReceived = 0;
 
-            await subscriber.SubscribeAsync( requestTopic, MqttQualityOfService.AtMostOnce );
-            await publisher.SubscribeAsync( responseTopic, MqttQualityOfService.AtMostOnce );
+            await subscriber.SubscribeAsync( TestHelper.Monitor, requestTopic, MqttQualityOfService.AtMostOnce );
+            await publisher.SubscribeAsync( TestHelper.Monitor, responseTopic, MqttQualityOfService.AtMostOnce );
 
             subscriber.MessageStream
                 .Subscribe( async m =>
                 {
-                    if( m.Topic == requestTopic )
+                    if( m.Item.Topic == requestTopic )
                     {
-                        RequestMessage request = Serializer.Deserialize<RequestMessage>( m.Payload );
+                        RequestMessage request = Serializer.Deserialize<RequestMessage>( m.Item.Payload );
                         ResponseMessage response = GetResponseMessage( request );
                         MqttApplicationMessage message = new MqttApplicationMessage( responseTopic, Serializer.Serialize( response ) );
 
-                        await subscriber.PublishAsync( message, MqttQualityOfService.AtMostOnce );
+                        await subscriber.PublishAsync(TestHelper.Monitor, message, MqttQualityOfService.AtMostOnce );
                     }
                 } );
 
             publisher.MessageStream
                 .Subscribe( m =>
                 {
-                    if( m.Topic == responseTopic )
+                    if( m.Item.Topic == responseTopic )
                     {
                         Interlocked.Increment( ref subscriberReceived );
 
@@ -280,7 +282,7 @@ namespace IntegrationTests
                 RequestMessage request = GetRequestMessage();
                 MqttApplicationMessage message = new MqttApplicationMessage( requestTopic, Serializer.Serialize( request ) );
 
-                tasks.Add( publisher.PublishAsync( message, MqttQualityOfService.AtMostOnce ) );
+                tasks.Add( publisher.PublishAsync(TestHelper.Monitor, message, MqttQualityOfService.AtMostOnce ) );
             }
 
             await Task.WhenAll( tasks );
@@ -290,8 +292,8 @@ namespace IntegrationTests
             subscriberReceived.Should().Be( count );
             Assert.True( completed );
 
-            await subscriber.UnsubscribeAsync( requestTopic );
-            await publisher.UnsubscribeAsync( responseTopic );
+            await subscriber.UnsubscribeAsync( TestHelper.Monitor, requestTopic );
+            await publisher.UnsubscribeAsync( TestHelper.Monitor, responseTopic );
 
             subscriber.Dispose();
             publisher.Dispose();
@@ -306,8 +308,8 @@ namespace IntegrationTests
             for( int i = 1; i <= count; i++ )
             {
                 Task<Task> subscribePublishTask = client
-                    .SubscribeAsync( Guid.NewGuid().ToString(), MqttQualityOfService.AtMostOnce )
-                    .ContinueWith( t => client.PublishAsync( new MqttApplicationMessage( Guid.NewGuid().ToString(), Encoding.UTF8.GetBytes( "Foo Message" ) ), MqttQualityOfService.AtMostOnce ) );
+                    .SubscribeAsync( TestHelper.Monitor, Guid.NewGuid().ToString(), MqttQualityOfService.AtMostOnce )
+                    .ContinueWith( t => client.PublishAsync(TestHelper.Monitor, new MqttApplicationMessage( Guid.NewGuid().ToString(), Encoding.UTF8.GetBytes( "Foo Message" ) ), MqttQualityOfService.AtMostOnce ) );
 
                 tasks.Add( subscribePublishTask );
             }
@@ -327,8 +329,8 @@ namespace IntegrationTests
             for( int i = 1; i <= count; i++ )
             {
                 Task<Task> subscribePublishTask = client
-                    .SubscribeAsync( Guid.NewGuid().ToString(), MqttQualityOfService.AtLeastOnce )
-                    .ContinueWith( t => client.PublishAsync( new MqttApplicationMessage( Guid.NewGuid().ToString(), Encoding.UTF8.GetBytes( "Foo Message" ) ), MqttQualityOfService.AtLeastOnce ) );
+                    .SubscribeAsync( TestHelper.Monitor, Guid.NewGuid().ToString(), MqttQualityOfService.AtLeastOnce )
+                    .ContinueWith( t => client.PublishAsync(TestHelper.Monitor, new MqttApplicationMessage( Guid.NewGuid().ToString(), Encoding.UTF8.GetBytes( "Foo Message" ) ), MqttQualityOfService.AtLeastOnce ) );
 
                 tasks.Add( subscribePublishTask );
             }
@@ -348,8 +350,8 @@ namespace IntegrationTests
             for( int i = 1; i <= count; i++ )
             {
                 Task<Task> subscribePublishTask = client
-                        .SubscribeAsync( Guid.NewGuid().ToString(), MqttQualityOfService.ExactlyOnce )
-                        .ContinueWith( t => client.PublishAsync( new MqttApplicationMessage( Guid.NewGuid().ToString(), Encoding.UTF8.GetBytes( "Foo Message" ) ), MqttQualityOfService.ExactlyOnce ), TaskContinuationOptions.OnlyOnRanToCompletion );
+                        .SubscribeAsync( TestHelper.Monitor, Guid.NewGuid().ToString(), MqttQualityOfService.ExactlyOnce )
+                        .ContinueWith( t => client.PublishAsync(TestHelper.Monitor, new MqttApplicationMessage( Guid.NewGuid().ToString(), Encoding.UTF8.GetBytes( "Foo Message" ) ), MqttQualityOfService.ExactlyOnce ), TaskContinuationOptions.OnlyOnRanToCompletion );
 
                 tasks.Add( subscribePublishTask );
             }
@@ -377,7 +379,7 @@ namespace IntegrationTests
                     }
                 };
 
-                await client.PublishAsync( message, MqttQualityOfService.ExactlyOnce );
+                await client.PublishAsync(TestHelper.Monitor, message, MqttQualityOfService.ExactlyOnce );
 
                 bool clientRemoteDisconnected = clientDisconnectedEvent.Wait( 2000 );
 
@@ -404,12 +406,12 @@ namespace IntegrationTests
                 int messagesBeforeDisconnect = 3;
                 int messagesAfterReconnect = 2;
 
-                await client1.SubscribeAsync( topic, MqttQualityOfService.AtLeastOnce );
-                await client2.SubscribeAsync( topic, MqttQualityOfService.AtLeastOnce );
+                await client1.SubscribeAsync( TestHelper.Monitor, topic, MqttQualityOfService.AtLeastOnce );
+                await client2.SubscribeAsync( TestHelper.Monitor, topic, MqttQualityOfService.AtLeastOnce );
 
                 IDisposable subscription1 = client1
                     .MessageStream
-                    .Where( m => m.Topic == topic )
+                    .Where( m => m.Item.Topic == topic )
                     .Subscribe( m =>
                     {
                         Interlocked.Increment( ref client1Received );
@@ -420,7 +422,7 @@ namespace IntegrationTests
 
                 IDisposable subscription2 = client2
                     .MessageStream
-                    .Where( m => m.Topic == topic )
+                    .Where( m => m.Item.Topic == topic )
                     .Subscribe( m =>
                     {
                         Interlocked.Increment( ref client2Received );
@@ -434,7 +436,7 @@ namespace IntegrationTests
                     TestMessage testMessage = GetTestMessage( i );
                     MqttApplicationMessage message = new MqttApplicationMessage( topic, Serializer.Serialize( testMessage ) );
 
-                    await client1.PublishAsync( message, MqttQualityOfService.AtLeastOnce, retain: false );
+                    await client1.PublishAsync(TestHelper.Monitor, message, MqttQualityOfService.AtLeastOnce, retain: false );
                 }
 
                 bool completed = WaitHandle.WaitAll( new WaitHandle[] { client1Done.WaitHandle, client2Done.WaitHandle }, TimeSpan.FromSeconds( Configuration.WaitTimeoutSecs ) );
@@ -443,7 +445,7 @@ namespace IntegrationTests
                 messagesBeforeDisconnect.Should().Be( client1Received );
                 messagesBeforeDisconnect.Should().Be( client2Received );
 
-                await client2.DisconnectAsync();
+                await client2.DisconnectAsync( TestHelper.Monitor);
 
                 subscription1.Dispose();
                 client1Received = 0;
@@ -457,10 +459,10 @@ namespace IntegrationTests
 
                 subscription1 = client1
                     .MessageStream
-                    .Where( m => m.Topic == topic )
+                    .Where( m => m.Item.Topic == topic )
                     .Subscribe( m =>
                     {
-                        TestMessage testMessage = Serializer.Deserialize<TestMessage>( m.Payload );
+                        TestMessage testMessage = Serializer.Deserialize<TestMessage>( m.Item.Payload );
 
                         if( testMessage.Id > messagesBeforeDisconnect )
                             Interlocked.Increment( ref client1Received );
@@ -473,10 +475,10 @@ namespace IntegrationTests
 
                 subscription2 = client2
                     .MessageStream
-                    .Where( m => m.Topic == topic )
+                    .Where( m => m.Item.Topic == topic )
                     .Subscribe( m =>
                     {
-                        TestMessage testMessage = Serializer.Deserialize<TestMessage>( m.Payload );
+                        TestMessage testMessage = Serializer.Deserialize<TestMessage>( m.Item.Payload );
 
                         if( testMessage.Id > messagesBeforeDisconnect )
                             Interlocked.Increment( ref client2Received );
@@ -492,10 +494,10 @@ namespace IntegrationTests
                     TestMessage testMessage = GetTestMessage( i );
                     MqttApplicationMessage message = new MqttApplicationMessage( topic, Serializer.Serialize( testMessage ) );
 
-                    await client1.PublishAsync( message, MqttQualityOfService.AtLeastOnce, retain: false );
+                    await client1.PublishAsync(TestHelper.Monitor, message, MqttQualityOfService.AtLeastOnce, retain: false );
                 }
 
-                await client2.ConnectAsync( new MqttClientCredentials( client2Id ), cleanSession: false );
+                await client2.ConnectAsync( TestHelper.Monitor, new MqttClientCredentials( client2Id ), cleanSession: false );
 
                 completed = WaitHandle.WaitAll( new WaitHandle[] { client1Done.WaitHandle, client2Done.WaitHandle }, TimeSpan.FromSeconds( Configuration.WaitTimeoutSecs ) );
 
@@ -505,8 +507,8 @@ namespace IntegrationTests
                 0.Should().Be( client1OldMessagesReceived );
                 0.Should().Be( client2OldMessagesReceived );
 
-                await client1.UnsubscribeAsync( topic );
-                await client2.UnsubscribeAsync( topic );
+                await client1.UnsubscribeAsync( TestHelper.Monitor, topic );
+                await client2.UnsubscribeAsync( TestHelper.Monitor, topic );
             }
         }
 
@@ -525,11 +527,11 @@ namespace IntegrationTests
                 int subscriberReceived = 0;
 
                 await subscriber
-                    .SubscribeAsync( topic, MqttQualityOfService.AtMostOnce );
+                    .SubscribeAsync( TestHelper.Monitor, topic, MqttQualityOfService.AtMostOnce );
 
                 subscriber
                     .MessageStream
-                    .Where( m => m.Topic == topic )
+                    .Where( m => m.Item.Topic == topic )
                     .Subscribe( m =>
                     {
                         Interlocked.Increment( ref subscriberReceived );
@@ -540,13 +542,13 @@ namespace IntegrationTests
                         }
                     } );
 
-                await subscriber.DisconnectAsync();
+                await subscriber.DisconnectAsync( TestHelper.Monitor);
 
-                SessionState sessionState = await subscriber.ConnectAsync( new MqttClientCredentials( subscriberId ), cleanSession: false );
+                SessionState sessionState = await subscriber.ConnectAsync( TestHelper.Monitor, new MqttClientCredentials( subscriberId ), cleanSession: false );
 
                 subscriber
                     .MessageStream
-                    .Where( m => m.Topic == topic )
+                    .Where( m => m.Item.Topic == topic )
                     .Subscribe( m =>
                     {
                         Interlocked.Increment( ref subscriberReceived );
@@ -563,7 +565,7 @@ namespace IntegrationTests
                     TestMessage testMessage = GetTestMessage( i );
                     MqttApplicationMessage message = new MqttApplicationMessage( topic, Serializer.Serialize( testMessage ) );
 
-                    tasks.Add( publisher.PublishAsync( message, MqttQualityOfService.AtMostOnce ) );
+                    tasks.Add( publisher.PublishAsync(TestHelper.Monitor, message, MqttQualityOfService.AtMostOnce ) );
                 }
 
                 await Task.WhenAll( tasks );
@@ -574,7 +576,7 @@ namespace IntegrationTests
                 SessionState.SessionPresent.Should().Be( sessionState );
                 count.Should().Be( subscriberReceived );
 
-                await subscriber.UnsubscribeAsync( topic );
+                await subscriber.UnsubscribeAsync( TestHelper.Monitor, topic );
             }
         }
 
@@ -596,11 +598,11 @@ namespace IntegrationTests
                 int subscriberReceived = 0;
 
                 await subscriber
-                    .SubscribeAsync( topic, MqttQualityOfService.AtMostOnce );
+                    .SubscribeAsync( TestHelper.Monitor, topic, MqttQualityOfService.AtMostOnce );
 
                 subscriber
                     .MessageStream
-                    .Where( m => m.Topic == topic )
+                    .Where( m => m.Item.Topic == topic )
                     .Subscribe( m =>
                     {
                         Interlocked.Increment( ref subscriberReceived );
@@ -609,8 +611,8 @@ namespace IntegrationTests
                             subscriberDone.Set();
                     } );
 
-                await subscriber.DisconnectAsync();
-                SessionState sessionState = await subscriber.ConnectAsync( new MqttClientCredentials( subscriberId ), cleanSession: true );
+                await subscriber.DisconnectAsync( TestHelper.Monitor);
+                SessionState sessionState = await subscriber.ConnectAsync( TestHelper.Monitor, new MqttClientCredentials( subscriberId ), cleanSession: true );
 
                 List<Task> tasks = new List<Task>();
 
@@ -619,7 +621,7 @@ namespace IntegrationTests
                     TestMessage testMessage = GetTestMessage( i );
                     MqttApplicationMessage message = new MqttApplicationMessage( topic, Serializer.Serialize( testMessage ) );
 
-                    tasks.Add( publisher.PublishAsync( message, MqttQualityOfService.AtMostOnce ) );
+                    tasks.Add( publisher.PublishAsync(TestHelper.Monitor, message, MqttQualityOfService.AtMostOnce ) );
                 }
 
                 await Task.WhenAll( tasks );
@@ -630,7 +632,7 @@ namespace IntegrationTests
                 SessionState.CleanSession.Should().Be( sessionState );
                 0.Should().Be( subscriberReceived );
 
-                await subscriber.UnsubscribeAsync( topic );
+                await subscriber.UnsubscribeAsync( TestHelper.Monitor, topic );
 
             }
         }
@@ -649,13 +651,13 @@ namespace IntegrationTests
                 ManualResetEventSlim goalAchieved = new ManualResetEventSlim();
                 int received = 0;
 
-                await subscriber.SubscribeAsync( topic, MqttQualityOfService.AtMostOnce );
+                await subscriber.SubscribeAsync( TestHelper.Monitor, topic, MqttQualityOfService.AtMostOnce );
 
                 subscriber
                     .MessageStream
                     .Subscribe( m =>
                     {
-                        if( m.Topic == topic )
+                        if( m.Item.Topic == topic )
                         {
                             Interlocked.Increment( ref received );
 
@@ -673,7 +675,7 @@ namespace IntegrationTests
                     TestMessage testMessage = GetTestMessage( i );
                     MqttApplicationMessage message = new MqttApplicationMessage( topic, Serializer.Serialize( testMessage ) );
 
-                    tasks.Add( publisher.PublishAsync( message, MqttQualityOfService.AtMostOnce ) );
+                    tasks.Add( publisher.PublishAsync(TestHelper.Monitor, message, MqttQualityOfService.AtMostOnce ) );
                 }
 
                 await Task.WhenAll( tasks );
@@ -683,21 +685,21 @@ namespace IntegrationTests
                 Assert.True( completed );
                 goal.Should().Be( received );
 
-                await subscriber.DisconnectAsync();
+                await subscriber.DisconnectAsync( TestHelper.Monitor);
 
                 goal = 3;
                 goalAchieved.Reset();
                 received = 0;
                 completed = false;
 
-                await subscriber.ConnectAsync( new MqttClientCredentials( subscriberId ), cleanSession: false );
+                await subscriber.ConnectAsync( TestHelper.Monitor, new MqttClientCredentials( subscriberId ), cleanSession: false );
 
                 for( int i = 1; i <= goal; i++ )
                 {
                     TestMessage testMessage = GetTestMessage( i );
                     MqttApplicationMessage message = new MqttApplicationMessage( topic, Serializer.Serialize( testMessage ) );
 
-                    tasks.Add( publisher.PublishAsync( message, MqttQualityOfService.AtMostOnce ) );
+                    tasks.Add( publisher.PublishAsync(TestHelper.Monitor, message, MqttQualityOfService.AtMostOnce ) );
                 }
 
                 completed = goalAchieved.Wait( TimeSpan.FromSeconds( Configuration.WaitTimeoutSecs ) );
@@ -705,7 +707,7 @@ namespace IntegrationTests
                 Assert.False( completed );
                 0.Should().Be( received );
 
-                await subscriber.UnsubscribeAsync( topic );
+                await subscriber.UnsubscribeAsync( TestHelper.Monitor, topic );
 
             }
         }

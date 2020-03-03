@@ -1,3 +1,4 @@
+using CK.Core;
 using CK.MQTT.Sdk.Bindings;
 using CK.MQTT.Sdk.Flows;
 using CK.MQTT.Sdk.Storage;
@@ -52,7 +53,7 @@ namespace CK.MQTT.Sdk
         /// </param>
         /// <returns>A new MQTT Client</returns>
         /// <exception cref="MqttClientException">MqttClientException</exception>
-        public async Task<IMqttClient> CreateClientAsync( MqttConfiguration configuration )
+        public async Task<IMqttClient> CreateClientAsync( IActivityMonitor m, MqttConfiguration configuration )//TODO: make it synchronous.
         {
             try
             {
@@ -68,7 +69,7 @@ namespace CK.MQTT.Sdk
                 InMemoryRepositoryProvider repositoryProvider = new InMemoryRepositoryProvider();
                 ClientProtocolFlowProvider flowProvider = new ClientProtocolFlowProvider( topicEvaluator, repositoryProvider, configuration );
 
-                return new MqttClientImpl( channelFactory, flowProvider, repositoryProvider, packetIdProvider, configuration );
+                return new MqttClientImpl( m, channelFactory, flowProvider, repositoryProvider, packetIdProvider, configuration );
             }
             catch( Exception ex )
             {

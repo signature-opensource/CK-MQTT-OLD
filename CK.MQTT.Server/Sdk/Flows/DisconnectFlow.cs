@@ -1,3 +1,4 @@
+using CK.Core;
 using CK.MQTT.Sdk.Packets;
 using CK.MQTT.Sdk.Storage;
 using System.Diagnostics;
@@ -22,7 +23,7 @@ namespace CK.MQTT.Sdk.Flows
             _willRepository = willRepository;
         }
 
-        public async Task ExecuteAsync( string clientId, IPacket input, IMqttChannel<IPacket> channel )
+        public async Task ExecuteAsync( IActivityMonitor m, string clientId, IPacket input, IMqttChannel<IPacket> channel )
         {
             if( input.Type != MqttPacketType.Disconnect ) return;
 

@@ -1,3 +1,5 @@
+using CK.Core;
+using CK.MQTT.Client.Abstractions;
 using CK.MQTT.Sdk.Flows;
 using CK.MQTT.Sdk.Packets;
 using System;
@@ -17,7 +19,7 @@ namespace CK.MQTT.Sdk
         readonly IMqttChannel<IPacket> _channel;
         readonly IProtocolFlowProvider _flowProvider;
         readonly MqttConfiguration _configuration;
-        readonly ReplaySubject<IPacket> _packets;
+        readonly ReplaySubject<Monitored<IPacket>> _packets;
         readonly TaskRunner _flowRunner;
         IDisposable _listenerDisposable;
         bool _disposed;
@@ -31,11 +33,11 @@ namespace CK.MQTT.Sdk
             _channel = channel;
             _flowProvider = flowProvider;
             _configuration = configuration;
-            _packets = new ReplaySubject<IPacket>( window: TimeSpan.FromSeconds( configuration.WaitTimeoutSecs ) );
+            _packets = new ReplaySubject<Monitored<IPacket>>( window: TimeSpan.FromSeconds( configuration.WaitTimeoutSecs ) );
             _flowRunner = TaskRunner.Get();
         }
 
-        public IObservable<IPacket> PacketStream { get { return _packets; } }
+        public IObservable<Monitored<IPacket>> PacketStream => _packets;
 
         public void Listen()
         {
@@ -80,9 +82,9 @@ namespace CK.MQTT.Sdk
                         return;
                     }
 
-                    _tracer.Info( ClientProperties.ClientPacketListener_FirstPacketReceived( _clientId, packet.Type ) );
+                    _tracer.Info( ClientProperties.ClientPacketListener_FirstPacketReceived( _clientId, packet.Item.Type ) );
 
-                    if( !(packet is ConnectAck connectAck) )
+                    if( !(packet.Item is ConnectAck connectAck) )
                     {
                         NotifyError( ClientProperties.ClientPacketListener_FirstReceivedPacketMustBeConnectAck );
                         return;
@@ -140,6 +142,7 @@ namespace CK.MQTT.Sdk
 
         void StartKeepAliveMonitor()
         {
+            var monitor = new ActivityMonitor();
             int interval = _configuration.KeepAliveSecs * 1000;
             _keepAliveMonitor = _channel.SenderStream
                 .Buffer( new TimeSpan( 0, 0, _configuration.KeepAliveSecs ), 1 )
@@ -152,7 +155,7 @@ namespace CK.MQTT.Sdk
 
                          PingRequest ping = new PingRequest();
 
-                         _channel.SendAsync( ping );
+                         _channel.SendAsync( new Monitored<IPacket>( monitor, ping ));
                          _channel.ReceiverStream.OfType<PingResponse>().Timeout( TimeSpan.FromSeconds( _configuration.WaitTimeoutSecs ) );
                      }
                      catch( Exception ex )
@@ -167,9 +170,9 @@ namespace CK.MQTT.Sdk
             _keepAliveMonitor.Dispose();
         }
 
-        async Task DispatchPacketAsync( IPacket packet )
+        async Task DispatchPacketAsync( Monitored<IPacket> packet )
         {
-            IProtocolFlow flow = _flowProvider.GetFlow( packet.Type );
+            IProtocolFlow flow = _flowProvider.GetFlow( packet.Item.Type );
 
             if( flow != null )
             {
@@ -179,18 +182,18 @@ namespace CK.MQTT.Sdk
 
                     await _flowRunner.Run( async () =>
                     {
-                        Publish publish = packet as Publish;
+                        Publish publish = packet.Item as Publish;
 
                         if( publish == null )
                         {
-                            _tracer.Info( ClientProperties.ClientPacketListener_DispatchingMessage( _clientId, packet.Type, flow.GetType().Name ) );
+                            _tracer.Info( ClientProperties.ClientPacketListener_DispatchingMessage( _clientId, packet.Item.Type, flow.GetType().Name ) );
                         }
                         else
                         {
                             _tracer.Info( ClientProperties.ClientPacketListener_DispatchingPublish( _clientId, flow.GetType().Name, publish.Topic ) );
                         }
 
-                        await flow.ExecuteAsync( _clientId, packet, _channel );
+                        await flow.ExecuteAsync(packet.Monitor, _clientId, packet.Item, _channel );
                     } );
                 }
                 catch( Exception ex )

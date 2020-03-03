@@ -1,9 +1,12 @@
 using CK.MQTT;
+using CK.MQTT.Client.Abstractions;
 using CK.MQTT.Sdk.Bindings;
 using FluentAssertions;
 using NUnit.Framework;
 using System;
 using System.Threading.Tasks;
+
+using static CK.Testing.MonitorTestHelper;
 
 namespace Tests
 {
@@ -50,11 +53,11 @@ namespace Tests
                     packetsReceived++;
                 } );
 
-            await channel.SendAsync( new byte[255] );
-            await channel.SendAsync( new byte[10] );
-            await channel.SendAsync( new byte[34] );
-            await channel.SendAsync( new byte[100] );
-            await channel.SendAsync( new byte[50] );
+            await channel.SendAsync( new Monitored<byte[]>( TestHelper.Monitor, new byte[255] ) );
+            await channel.SendAsync( new Monitored<byte[]>( TestHelper.Monitor, new byte[10] ) );
+            await channel.SendAsync( new Monitored<byte[]>( TestHelper.Monitor, new byte[34] ) );
+            await channel.SendAsync( new Monitored<byte[]>( TestHelper.Monitor, new byte[100] ) );
+            await channel.SendAsync( new Monitored<byte[]>( TestHelper.Monitor, new byte[50] ) );
 
             await Task.Delay( TimeSpan.FromMilliseconds( 1000 ) );
 
@@ -75,11 +78,11 @@ namespace Tests
                 packetsReceived++;
             } );
 
-            stream.Send( new byte[255], EndpointIdentifier.Client );
-            stream.Send( new byte[10], EndpointIdentifier.Client );
-            stream.Send( new byte[34], EndpointIdentifier.Client );
-            stream.Send( new byte[100], EndpointIdentifier.Client );
-            stream.Send( new byte[50], EndpointIdentifier.Client );
+            stream.Send( new Monitored<byte[]>( TestHelper.Monitor, new byte[255] ), EndpointIdentifier.Client );
+            stream.Send( new Monitored<byte[]>( TestHelper.Monitor, new byte[10] ), EndpointIdentifier.Client );
+            stream.Send( new Monitored<byte[]>( TestHelper.Monitor, new byte[34] ), EndpointIdentifier.Client );
+            stream.Send( new Monitored<byte[]>( TestHelper.Monitor, new byte[100] ), EndpointIdentifier.Client );
+            stream.Send( new Monitored<byte[]>( TestHelper.Monitor, new byte[50] ), EndpointIdentifier.Client );
 
             await Task.Delay( TimeSpan.FromMilliseconds( 1000 ) );
 

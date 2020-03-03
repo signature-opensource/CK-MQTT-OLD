@@ -1,3 +1,4 @@
+using CK.MQTT.Client.Abstractions;
 using CK.MQTT.Sdk;
 using CK.MQTT.Sdk.Flows;
 using CK.MQTT.Sdk.Packets;
@@ -6,6 +7,8 @@ using Moq;
 using NUnit.Framework;
 using System;
 using System.Threading.Tasks;
+
+using static CK.Testing.MonitorTestHelper;
 
 namespace Tests.Flows
 {
@@ -18,13 +21,13 @@ namespace Tests.Flows
             Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
             IPacket sentPacket = default;
 
-            channel.Setup( c => c.SendAsync( It.IsAny<IPacket>() ) )
+            channel.Setup( c => c.SendAsync( It.IsAny<Monitored<IPacket>>() ) )
                 .Callback<IPacket>( packet => sentPacket = packet )
                 .Returns( Task.Delay( 0 ) );
 
             PingFlow flow = new PingFlow();
 
-            await flow.ExecuteAsync( clientId, new PingRequest(), channel.Object );
+            await flow.ExecuteAsync(TestHelper.Monitor, clientId, new PingRequest(), channel.Object );
 
             PingResponse pingResponse = sentPacket as PingResponse;
 

@@ -1,4 +1,5 @@
 using CK.Core;
+using CK.MQTT.Client.Abstractions;
 using Microsoft.Extensions.Hosting;
 using System;
 using System.Collections.Generic;
@@ -37,12 +38,12 @@ namespace CK.MQTT.Proxy.FakeClient
             _pf.SendPayload( RelayHeader.Disconnected, e );
         }
 
-        void MessageReceived( MqttApplicationMessage msg )
+        void MessageReceived( Monitored<MqttApplicationMessage> msg )
         {
-            _pf.SendPayload( RelayHeader.MessageEvent, msg );
+            _pf.SendPayload( RelayHeader.MessageEvent, msg.Item );
         }
 
-        async Task Run( CancellationToken cancellationToken )
+        async Task Run( IActivityMonitor m, CancellationToken cancellationToken )
         {
             while( !cancellationToken.IsCancellationRequested )
             {
@@ -51,36 +52,36 @@ namespace CK.MQTT.Proxy.FakeClient
                 switch( clientHeader )
                 {
                     case StubClientHeader.Disconnect:
-                        await _client.DisconnectAsync();
+                        await _client.DisconnectAsync(m);
                         _m.Warn( $"Disconnect should have empty payload, but the payload contain ${payload.Count} objects." );
                         break;
                     case StubClientHeader.Connect:
                         SessionState state;
                         if( payload.Count == 1 )
                         {
-                            state = await _client.ConnectAsync( (MqttLastWill)payload.Dequeue() );
+                            state = await _client.ConnectAsync( m,(MqttLastWill)payload.Dequeue() );
                         }
                         else if( payload.Count == 3 )
                         {
-                            state = await _client.ConnectAsync( (MqttClientCredentials)payload.Dequeue(), (MqttLastWill)payload.Dequeue(), (bool)payload.Dequeue() );
+                            state = await _client.ConnectAsync( m,(MqttClientCredentials)payload.Dequeue(), (MqttLastWill)payload.Dequeue(), (bool)payload.Dequeue() );
                         }
                         else
                         {
                             throw new InvalidOperationException( "Payload count is incorrect." );
                         }
-                        await _pf.SendPayloadAsync( state );
+                        await _pf.SendPayloadAsync(m, state );
                         break;
                     case StubClientHeader.Publish:
-                        await _client.PublishAsync( (MqttApplicationMessage)payload.Dequeue(), (MqttQualityOfService)payload.Dequeue(), (bool)payload.Dequeue() );
+                        await _client.PublishAsync(m, (MqttApplicationMessage)payload.Dequeue(), (MqttQualityOfService)payload.Dequeue(), (bool)payload.Dequeue() );
                         break;
                     case StubClientHeader.Subscribe:
-                        await _client.SubscribeAsync( (string)payload.Dequeue(), (MqttQualityOfService)payload.Dequeue() );
+                        await _client.SubscribeAsync(m, (string)payload.Dequeue(), (MqttQualityOfService)payload.Dequeue() );
                         break;
                     case StubClientHeader.Unsubscribe:
-                        await _client.UnsubscribeAsync( (string[])payload.Dequeue() );
+                        await _client.UnsubscribeAsync(m, (string[])payload.Dequeue() );
                         break;
                     case StubClientHeader.IsConnected:
-                        await _pf.SendPayloadAsync( _client.IsConnected );
+                        await _pf.SendPayloadAsync( m, _client.IsConnected );
                         break;
                     default:
                         throw new InvalidOperationException( "Unknown ClientHeader." );
@@ -90,8 +91,8 @@ namespace CK.MQTT.Proxy.FakeClient
 
         public async Task StartAsync( CancellationToken cancellationToken )
         {
-            await _client.ConnectAsync( _credentials, _lastWill, _cleanSession );
-            _task = Run( _tokenSource.Token );
+            await _client.ConnectAsync( _m, _credentials, _lastWill, _cleanSession );
+            _task = Run( _m, _tokenSource.Token );
         }
 
         public async Task StopAsync( CancellationToken cancellationToken )

@@ -1,3 +1,4 @@
+using CK.Core;
 using CK.MQTT.Sdk.Bindings;
 using CK.MQTT.Sdk.Flows;
 using CK.MQTT.Sdk.Packets;
@@ -80,7 +81,7 @@ namespace CK.MQTT.Sdk
             _started = true;
         }
 
-        public async Task<IMqttConnectedClient> CreateClientAsync()
+        public async Task<IMqttConnectedClient> CreateClientAsync( IActivityMonitor m )
         {
             if( _disposed )
                 throw new ObjectDisposedException( nameof( MqttServerImpl ) );
@@ -90,11 +91,11 @@ namespace CK.MQTT.Sdk
 
             MqttConnectedClientFactory factory = new MqttConnectedClientFactory( _privateStreamListener );
             IMqttConnectedClient client = await factory
-                .CreateClientAsync( _configuration );
+                .CreateClientAsync( m, _configuration );
             string clientId = GetPrivateClientId();
 
             await client
-                .ConnectAsync( new MqttClientCredentials( clientId ) );
+                .ConnectAsync( m, new MqttClientCredentials( clientId ) );
 
             _connectionProvider.RegisterPrivateClient( clientId );
 

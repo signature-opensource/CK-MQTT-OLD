@@ -1,3 +1,5 @@
+using CK.Core;
+using CK.MQTT.Client.Abstractions;
 using CK.MQTT.Sdk;
 using System;
 using System.Collections.Generic;
@@ -19,8 +21,8 @@ namespace CK.MQTT.Sdk.Bindings
 
         readonly IChannelClient _client;
         readonly IPacketBuffer _buffer;
-        readonly ReplaySubject<byte[]> _receiver;
-        readonly ReplaySubject<byte[]> _sender;
+        readonly ReplaySubject<Monitored<byte[]>> _receiver;
+        readonly ReplaySubject<Monitored<byte[]>> _sender;
         readonly IDisposable _streamSubscription;
 
         public GenericChannel(
@@ -32,8 +34,8 @@ namespace CK.MQTT.Sdk.Bindings
             _client.PreferedReceiveBufferSize = configuration.BufferSize;
             _client.PreferedSendBufferSize = configuration.BufferSize;
             _buffer = buffer;
-            _receiver = new ReplaySubject<byte[]>( window: TimeSpan.FromSeconds( configuration.WaitTimeoutSecs ) );
-            _sender = new ReplaySubject<byte[]>( window: TimeSpan.FromSeconds( configuration.WaitTimeoutSecs ) );
+            _receiver = new ReplaySubject<Monitored<byte[]>>( window: TimeSpan.FromSeconds( configuration.WaitTimeoutSecs ) );
+            _sender = new ReplaySubject<Monitored<byte[]>>( window: TimeSpan.FromSeconds( configuration.WaitTimeoutSecs ) );
             _streamSubscription = SubscribeStream();
         }
 
@@ -56,11 +58,11 @@ namespace CK.MQTT.Sdk.Bindings
             }
         }
 
-        public IObservable<byte[]> ReceiverStream => _receiver;
+        public IObservable<Monitored<byte[]>> ReceiverStream => _receiver;
 
-        public IObservable<byte[]> SenderStream => _sender;
+        public IObservable<Monitored<byte[]>> SenderStream => _sender;
 
-        public async Task SendAsync( byte[] message )
+        public async Task SendAsync( Monitored<byte[]> message )
         {
             if( _disposed )
             {
@@ -76,10 +78,10 @@ namespace CK.MQTT.Sdk.Bindings
 
             try
             {
-                _tracer.Verbose( "Sending packet of {0} bytes", message.Length );
+                _tracer.Verbose( "Sending packet of {0} bytes", message.Item.Length );
 
                 await _client.GetStream()
-                    .WriteAsync( message, 0, message.Length );
+                    .WriteAsync( message.Item, 0, message.Item.Length );
             }
             catch( ObjectDisposedException disposedEx )
             {
@@ -109,6 +111,7 @@ namespace CK.MQTT.Sdk.Bindings
 
         IDisposable SubscribeStream()
         {
+            IActivityMonitor m = new ActivityMonitor();
             return Observable.Defer( () =>
             {
                 byte[] buffer = new byte[_client.PreferedReceiveBufferSize];
@@ -133,7 +136,7 @@ namespace CK.MQTT.Sdk.Bindings
                         {
                             _tracer.Verbose( "Received packet of {0} bytes", packet.Length );
 
-                            _receiver.OnNext( packet );
+                            _receiver.OnNext( new Monitored<byte[]>( m, packet ) );
                         }
                     }
                 }

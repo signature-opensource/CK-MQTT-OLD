@@ -6,6 +6,8 @@ using System.Diagnostics;
 using System.Net;
 using System.Threading.Tasks;
 
+using static CK.Testing.MonitorTestHelper;
+
 namespace IntegrationTests.Context
 {
     public abstract class IntegrationContext : IDisposable
@@ -57,7 +59,7 @@ namespace IntegrationTests.Context
 
         protected virtual async Task<IMqttClient> GetClientAsync()
         {
-            return await MqttClient.CreateAsync( IPAddress.Loopback.ToString(), Configuration, MqttBinding );
+            return await MqttClient.CreateAsync( TestHelper.Monitor, IPAddress.Loopback.ToString(), Configuration, MqttBinding );
         }
 
         [TearDown]

@@ -1,4 +1,5 @@
-﻿using System;
+using CK.Core;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -64,7 +65,7 @@ namespace CK.MQTT
         /// See <see cref="IMqttConnectedClient" /> for more details about in process clients 
         /// </summary>
         /// <returns>Returns a connected client ready to use</returns>
-        Task<IMqttConnectedClient> CreateClientAsync();
+        Task<IMqttConnectedClient> CreateClientAsync( IActivityMonitor m );
 
         /// <summary>
         /// Stops the server and disposes it.

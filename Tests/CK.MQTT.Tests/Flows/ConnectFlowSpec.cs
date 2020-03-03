@@ -1,4 +1,5 @@
 using CK.MQTT;
+using CK.MQTT.Client.Abstractions;
 using CK.MQTT.Sdk;
 using CK.MQTT.Sdk.Flows;
 using CK.MQTT.Sdk.Packets;
@@ -10,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using static CK.Testing.MonitorTestHelper;
 
 namespace Tests.Flows
 {
@@ -24,11 +26,11 @@ namespace Tests.Flows
             Mock<IPublishSenderFlow> senderFlow = new Mock<IPublishSenderFlow>();
 
             string clientId = Guid.NewGuid().ToString();
-            Connect connect = new Connect( clientId, cleanSession: true, MqttProtocol.SupportedLevel);
+            Connect connect = new Connect( clientId, cleanSession: true, MqttProtocol.SupportedLevel );
             Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
             IPacket sentPacket = default;
 
-            channel.Setup( c => c.SendAsync( It.IsAny<IPacket>() ) )
+            channel.Setup( c => c.SendAsync( It.IsAny<Monitored<IPacket>>() ) )
                 .Callback<IPacket>( packet => sentPacket = packet )
                 .Returns( Task.Delay( 0 ) );
 
@@ -40,7 +42,7 @@ namespace Tests.Flows
 
             ServerConnectFlow flow = new ServerConnectFlow( authenticationProvider, sessionRepository.Object, willRepository.Object, senderFlow.Object );
 
-            await flow.ExecuteAsync( clientId, connect, channel.Object );
+            await flow.ExecuteAsync( TestHelper.Monitor, clientId, connect, channel.Object );
 
             sessionRepository.Verify( r => r.Create( It.Is<ClientSession>( s => s.Id == clientId && s.Clean == true ) ) );
             sessionRepository.Verify( r => r.Delete( It.IsAny<string>() ), Times.Never );
@@ -76,7 +78,7 @@ namespace Tests.Flows
             Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
             IPacket sentPacket = default;
 
-            channel.Setup( c => c.SendAsync( It.IsAny<IPacket>() ) )
+            channel.Setup( c => c.SendAsync( It.IsAny<Monitored<IPacket>>() ) )
                 .Callback<IPacket>( packet => sentPacket = packet )
                 .Returns( Task.Delay( 0 ) );
 
@@ -88,7 +90,7 @@ namespace Tests.Flows
 
             ServerConnectFlow flow = new ServerConnectFlow( authenticationProvider, sessionRepository.Object, willRepository.Object, senderFlow.Object );
 
-            await flow.ExecuteAsync( clientId, connect, channel.Object );
+            await flow.ExecuteAsync( TestHelper.Monitor, clientId, connect, channel.Object );
 
             sessionRepository.Verify( r => r.Create( It.IsAny<ClientSession>() ), Times.Never );
             sessionRepository.Verify( r => r.Delete( It.IsAny<string>() ), Times.Never );
@@ -123,7 +125,7 @@ namespace Tests.Flows
             Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
             IPacket sentPacket = default;
 
-            channel.Setup( c => c.SendAsync( It.IsAny<IPacket>() ) )
+            channel.Setup( c => c.SendAsync( It.IsAny<Monitored<IPacket>>() ) )
                 .Callback<IPacket>( packet => sentPacket = packet )
                 .Returns( Task.Delay( 0 ) );
 
@@ -135,7 +137,7 @@ namespace Tests.Flows
 
             ServerConnectFlow flow = new ServerConnectFlow( authenticationProvider, sessionRepository.Object, willRepository.Object, senderFlow.Object );
 
-            await flow.ExecuteAsync( clientId, connect, channel.Object );
+            await flow.ExecuteAsync( TestHelper.Monitor, clientId, connect, channel.Object );
 
             ConnectAck connectAck = sentPacket as ConnectAck;
 
@@ -168,7 +170,7 @@ namespace Tests.Flows
             Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
             IPacket sentPacket = default;
 
-            channel.Setup( c => c.SendAsync( It.IsAny<IPacket>() ) )
+            channel.Setup( c => c.SendAsync( It.IsAny<Monitored<IPacket>>() ) )
                 .Callback<IPacket>( packet => sentPacket = packet )
                 .Returns( Task.Delay( 0 ) );
 
@@ -180,7 +182,7 @@ namespace Tests.Flows
 
             ServerConnectFlow flow = new ServerConnectFlow( authenticationProvider, sessionRepository.Object, willRepository.Object, senderFlow.Object );
 
-            await flow.ExecuteAsync( clientId, connect, channel.Object );
+            await flow.ExecuteAsync( TestHelper.Monitor, clientId, connect, channel.Object );
 
             ConnectAck connectAck = sentPacket as ConnectAck;
 
@@ -207,7 +209,7 @@ namespace Tests.Flows
             Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
             IPacket sentPacket = default;
 
-            channel.Setup( c => c.SendAsync( It.IsAny<IPacket>() ) )
+            channel.Setup( c => c.SendAsync( It.IsAny<Monitored<IPacket>>() ) )
                 .Callback<IPacket>( packet => sentPacket = packet )
                 .Returns( Task.Delay( 0 ) );
 
@@ -219,7 +221,7 @@ namespace Tests.Flows
 
             ServerConnectFlow flow = new ServerConnectFlow( authenticationProvider, sessionRepository.Object, willRepository.Object, senderFlow.Object );
 
-            await flow.ExecuteAsync( clientId, connect, channel.Object );
+            await flow.ExecuteAsync( TestHelper.Monitor, clientId, connect, channel.Object );
 
             ConnectAck connectAck = sentPacket as ConnectAck;
 
@@ -246,7 +248,7 @@ namespace Tests.Flows
             Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
             IPacket sentPacket = default;
 
-            channel.Setup( c => c.SendAsync( It.IsAny<IPacket>() ) )
+            channel.Setup( c => c.SendAsync( It.IsAny<Monitored<IPacket>>() ) )
                 .Callback<IPacket>( packet => sentPacket = packet )
                 .Returns( Task.Delay( 0 ) );
 
@@ -258,7 +260,7 @@ namespace Tests.Flows
 
             ServerConnectFlow flow = new ServerConnectFlow( authenticationProvider, sessionRepository.Object, willRepository.Object, senderFlow.Object );
 
-            AggregateException aggregateEx = Assert.Throws<AggregateException>( () => flow.ExecuteAsync( clientId, connect, channel.Object ).Wait() );
+            AggregateException aggregateEx = Assert.Throws<AggregateException>( () => flow.ExecuteAsync( TestHelper.Monitor, clientId, connect, channel.Object ).Wait() );
 
             Assert.NotNull( aggregateEx.InnerException );
             Assert.True( aggregateEx.InnerException is MqttConnectionException );
@@ -315,18 +317,18 @@ namespace Tests.Flows
             Mock<IPublishSenderFlow> senderFlow = new Mock<IPublishSenderFlow>();
 
             senderFlow
-                .Setup( f => f.SendPublishAsync( It.IsAny<string>(), It.IsAny<Publish>(), It.IsAny<IMqttChannel<IPacket>>(), It.IsAny<PendingMessageStatus>() ) )
+                .Setup( f => f.SendPublishAsync( TestHelper.Monitor, It.IsAny<string>(), It.IsAny<Publish>(), It.IsAny<IMqttChannel<IPacket>>(), It.IsAny<PendingMessageStatus>() ) )
                 .Callback<string, Publish, IMqttChannel<IPacket>, PendingMessageStatus>( async ( id, pub, ch, stat ) =>
                  {
-                     await ch.SendAsync( pub );
+                     await ch.SendAsync( new Monitored<IPacket>( TestHelper.Monitor, pub ) );
                  } )
                 .Returns( Task.Delay( 0 ) );
 
             senderFlow
-                .Setup( f => f.SendAckAsync( It.IsAny<string>(), It.IsAny<IFlowPacket>(), It.IsAny<IMqttChannel<IPacket>>(), It.IsAny<PendingMessageStatus>() ) )
+                .Setup( f => f.SendAckAsync( TestHelper.Monitor, It.IsAny<string>(), It.IsAny<IFlowPacket>(), It.IsAny<IMqttChannel<IPacket>>(), It.IsAny<PendingMessageStatus>() ) )
                 .Callback<string, IFlowPacket, IMqttChannel<IPacket>, PendingMessageStatus>( async ( id, pack, ch, stat ) =>
                  {
-                     await ch.SendAsync( pack );
+                     await ch.SendAsync( new Monitored<IPacket>( TestHelper.Monitor, pack ) );
                  } )
                 .Returns( Task.Delay( 0 ) );
 
@@ -336,7 +338,7 @@ namespace Tests.Flows
             List<IPacket> nextPackets = new List<IPacket>();
 
             channel
-                .Setup( c => c.SendAsync( It.IsAny<IPacket>() ) )
+                .Setup( c => c.SendAsync( It.IsAny<Monitored<IPacket>>() ) )
                 .Callback<IPacket>( packet =>
                  {
                      if( firstPacket == default( IPacket ) )
@@ -358,17 +360,17 @@ namespace Tests.Flows
 
             ServerConnectFlow flow = new ServerConnectFlow( authenticationProvider, sessionRepository.Object, willRepository.Object, senderFlow.Object );
 
-            await flow.ExecuteAsync( clientId, connect, channel.Object );
+            await flow.ExecuteAsync( TestHelper.Monitor, clientId, connect, channel.Object );
 
             sessionRepository.Verify( r => r.Create( It.IsAny<ClientSession>() ), Times.Never );
             sessionRepository.Verify( r => r.Delete( It.IsAny<string>() ), Times.Never );
             sessionRepository.Verify( r => r.Update( It.IsAny<ClientSession>() ), Times.Once );
             willRepository.Verify( r => r.Create( It.IsAny<ConnectionWill>() ), Times.Never );
-            senderFlow.Verify( f => f.SendPublishAsync( It.Is<string>( x => x == existingSession.Id ),
+            senderFlow.Verify( f => f.SendPublishAsync( TestHelper.Monitor, It.Is<string>( x => x == existingSession.Id ),
                  It.Is<Publish>( x => x.Topic == topic && x.QualityOfService == qos && x.PacketId == packetId ),
                  It.IsAny<IMqttChannel<IPacket>>(),
                  It.IsAny<PendingMessageStatus>() ), Times.Exactly( 2 ) );
-            senderFlow.Verify( f => f.SendAckAsync( It.Is<string>( x => x == existingSession.Id ),
+            senderFlow.Verify( f => f.SendAckAsync( TestHelper.Monitor, It.Is<string>( x => x == existingSession.Id ),
                  It.Is<IFlowPacket>( x => x.Type == MqttPacketType.PublishReceived && x.PacketId == packetId ),
                  It.IsAny<IMqttChannel<IPacket>>(),
                  It.Is<PendingMessageStatus>( x => x == PendingMessageStatus.PendingToAcknowledge ) ), Times.Once );

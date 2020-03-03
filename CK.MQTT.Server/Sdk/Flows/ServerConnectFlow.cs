@@ -1,3 +1,5 @@
+using CK.Core;
+using CK.MQTT.Client.Abstractions;
 using CK.MQTT.Sdk.Packets;
 using CK.MQTT.Sdk.Storage;
 using System.Diagnostics;
@@ -25,7 +27,7 @@ namespace CK.MQTT.Sdk.Flows
             _senderFlow = senderFlow;
         }
 
-        public async Task ExecuteAsync( string clientId, IPacket input, IMqttChannel<IPacket> channel )
+        public async Task ExecuteAsync( IActivityMonitor m, string clientId, IPacket input, IMqttChannel<IPacket> channel )
         {
             if( input.Type != MqttPacketType.Connect )
                 return;
@@ -72,16 +74,16 @@ namespace CK.MQTT.Sdk.Flows
                 _willRepository.Create( connectionWill );
             }
 
-            await channel.SendAsync( new ConnectAck( MqttConnectionStatus.Accepted, sessionPresent ) );
+            await channel.SendAsync( new Monitored<IPacket>( m, new ConnectAck( MqttConnectionStatus.Accepted, sessionPresent ) ) );
 
             if( sendPendingMessages )
             {
-                await SendPendingMessagesAsync( session, channel );
-                await SendPendingAcknowledgementsAsync( session, channel );
+                await SendPendingMessagesAsync(m, session, channel );
+                await SendPendingAcknowledgementsAsync(m, session, channel );
             }
         }
 
-        async Task SendPendingMessagesAsync( ClientSession session, IMqttChannel<IPacket> channel )
+        async Task SendPendingMessagesAsync( IActivityMonitor m, ClientSession session, IMqttChannel<IPacket> channel )
         {
             foreach( PendingMessage pendingMessage in session.GetPendingMessages() )
             {
@@ -96,16 +98,16 @@ namespace CK.MQTT.Sdk.Flows
                     session.RemovePendingMessage( pendingMessage );
                     _sessionRepository.Update( session );
 
-                    await _senderFlow.SendPublishAsync( session.Id, publish, channel );
+                    await _senderFlow.SendPublishAsync( m, session.Id, publish, channel );
                 }
                 else
                 {
-                    await _senderFlow.SendPublishAsync( session.Id, publish, channel, PendingMessageStatus.PendingToAcknowledge );
+                    await _senderFlow.SendPublishAsync(m, session.Id, publish, channel, PendingMessageStatus.PendingToAcknowledge );
                 }
             }
         }
 
-        async Task SendPendingAcknowledgementsAsync( ClientSession session, IMqttChannel<IPacket> channel )
+        async Task SendPendingAcknowledgementsAsync( IActivityMonitor m, ClientSession session, IMqttChannel<IPacket> channel )
         {
             foreach( PendingAcknowledgement pendingAcknowledgement in session.GetPendingAcknowledgements() )
             {
@@ -116,7 +118,7 @@ namespace CK.MQTT.Sdk.Flows
                 else if( pendingAcknowledgement.Type == MqttPacketType.PublishRelease )
                     ack = new PublishRelease( pendingAcknowledgement.PacketId );
 
-                await _senderFlow.SendAckAsync( session.Id, ack, channel, PendingMessageStatus.PendingToAcknowledge );
+                await _senderFlow.SendAckAsync( m, session.Id, ack, channel, PendingMessageStatus.PendingToAcknowledge );
             }
         }
     }

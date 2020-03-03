@@ -13,7 +13,7 @@ namespace CK.MQTT.Sdk.Formatters
 
         protected abstract byte[] Write( T packet );
 
-        public async Task<IPacket> FormatAsync( byte[] bytes )
+        public Task<IPacket> FormatAsync( byte[] bytes )//TODO: make it synchronous.
         {
             MqttPacketType actualType = (MqttPacketType)bytes.Byte( 0 ).Bits( 4 );
 
@@ -21,13 +21,10 @@ namespace CK.MQTT.Sdk.Formatters
             {
                 throw new MqttException( ClientProperties.Formatter_InvalidPacket( typeof( T ).Name ) );
             }
-
-            T packet = await Task.Run( () => Read( bytes ) );
-
-            return packet;
+            return Task.FromResult<IPacket>( Read( bytes ) );
         }
 
-        public async Task<byte[]> FormatAsync( IPacket packet )
+        public Task<byte[]> FormatAsync( IPacket packet )//TODO: make it synchronous.
         {
             if( packet.Type != PacketType )
             {
@@ -35,10 +32,7 @@ namespace CK.MQTT.Sdk.Formatters
 
                 throw new MqttException( error );
             }
-
-            byte[] bytes = await Task.Run( () => Write( packet as T ) );
-
-            return bytes;
+            return Task.FromResult( Write( packet as T ) );
         }
 
         protected void ValidateHeaderFlag( byte[] bytes, Func<MqttPacketType, bool> packetTypePredicate, int expectedFlag )

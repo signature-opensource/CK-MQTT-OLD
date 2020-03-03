@@ -1,3 +1,4 @@
+using CK.Core;
 using Microsoft.IO;
 using System;
 using System.Buffers;
@@ -23,7 +24,7 @@ namespace CK.MQTT.Proxy.FakeClient
             _bufferManager = new RecyclableMemoryStreamManager();
             _pipe = pipeStream;
         }
-        public async Task SendPayloadAsync( params object[] objs )
+        public async Task SendPayloadAsync( IActivityMonitor m, params object[] objs )
         {
             using( MemoryStream ms = _bufferManager.GetStream() ) // We need to send this in a single message; ie: in a single write.
             {

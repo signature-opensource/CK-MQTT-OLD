@@ -8,6 +8,8 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 
+using static CK.Testing.MonitorTestHelper;
+
 namespace IntegrationTests
 {
     public abstract class BadPacketsTests : IntegrationContext, IDisposable
@@ -55,7 +57,7 @@ namespace IntegrationTests
             using( var correctClient = await GetClientAsync() )
             {
                 Server.ClientConnected += Connected;
-                var task = correctClient.ConnectAsync();
+                var task = correctClient.ConnectAsync( TestHelper.Monitor);
                 Task.WaitAny( Task.Delay( 2000 ), task );
                 task.IsCompleted.Should().BeTrue();
                 connected.Should().BeTrue();

@@ -1,3 +1,5 @@
+using CK.Core;
+using CK.MQTT.Client.Abstractions;
 using CK.MQTT.Sdk.Packets;
 using System.Threading.Tasks;
 
@@ -5,11 +7,11 @@ namespace CK.MQTT.Sdk.Flows
 {
     internal class PingFlow : IProtocolFlow
     {
-        public async Task ExecuteAsync( string clientId, IPacket input, IMqttChannel<IPacket> channel )
+        public async Task ExecuteAsync( IActivityMonitor m, string clientId, IPacket input, IMqttChannel<IPacket> channel )
         {
             if( input.Type != MqttPacketType.PingRequest ) return;
 
-            await channel.SendAsync( new PingResponse() );
+            await channel.SendAsync( new Monitored<IPacket>( m, new PingResponse() ) );
         }
     }
 }

@@ -1,4 +1,5 @@
 using CK.MQTT;
+using CK.MQTT.Client.Abstractions;
 using CK.MQTT.Sdk;
 using CK.MQTT.Sdk.Formatters;
 using CK.MQTT.Sdk.Packets;
@@ -9,6 +10,8 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+
+using static CK.Testing.MonitorTestHelper;
 
 namespace Tests
 {
@@ -46,11 +49,11 @@ namespace Tests
 
             formatter
                 .Setup( f => f.FormatAsync( It.Is<byte[]>( b => b.ToList().SequenceEqual( bytes ) ) ) )
-                .Returns( Task.FromResult<IPacket>( (IPacket)packet ) );
+                .Returns( Task.FromResult( (IPacket)packet ) );
 
             PacketManager packetManager = new PacketManager( formatter.Object );
-            IPacket result = await packetManager.GetPacketAsync( bytes );
-            packet.Should().Be( result );
+            var result = await packetManager.GetPacketAsync( new Monitored<byte[]>( TestHelper.Monitor, bytes ) );
+            packet.Should().Be( result.Item );
         }
 
         [TestCase( "Files/Binaries/Connect_Full.packet", "Files/Packets/Connect_Full.json", typeof( Connect ), MqttPacketType.Connect )]
@@ -87,7 +90,7 @@ namespace Tests
                 .Returns( Task.FromResult( bytes ) );
 
             PacketManager packetManager = new PacketManager( formatter.Object );
-            byte[] result = await packetManager.GetBytesAsync( packet );
+            var result = await packetManager.GetBytesAsync( new Monitored<IPacket>( TestHelper.Monitor, packet ) );
             bytes.Should().BeEquivalentTo( result );
         }
 
@@ -111,7 +114,7 @@ namespace Tests
                 .Returns( Task.FromResult( bytes ) );
 
             PacketManager packetManager = new PacketManager( formatter.Object );
-            byte[] result = await packetManager.GetBytesAsync( packet );
+            var result = await packetManager.GetBytesAsync( new Monitored<IPacket>( TestHelper.Monitor, packet ) );
 
             bytes.Should().BeEquivalentTo( result );
         }
@@ -144,7 +147,7 @@ namespace Tests
             Mock<IFormatter> formatter = new Mock<IFormatter>();
             PacketManager packetManager = new PacketManager( formatter.Object );
 
-            AggregateException ex = Assert.Throws<AggregateException>( () => packetManager.GetPacketAsync( packet ).Wait() );
+            AggregateException ex = Assert.Throws<AggregateException>( () => packetManager.GetPacketAsync( new Monitored<byte[]>( TestHelper.Monitor, packet ) ).Wait() );
 
             ex.InnerException.Should().BeOfType<MqttException>();
         }
@@ -174,7 +177,7 @@ namespace Tests
             Mock<IFormatter> formatter = new Mock<IFormatter>();
             PacketManager packetManager = new PacketManager( formatter.Object );
 
-            AggregateException ex = Assert.Throws<AggregateException>( () => packetManager.GetBytesAsync( packet ).Wait() );
+            AggregateException ex = Assert.Throws<AggregateException>( () => packetManager.GetBytesAsync( new Monitored<IPacket>( TestHelper.Monitor, packet ) ).Wait() );
 
             Assert.True( ex.InnerException is MqttException );
         }

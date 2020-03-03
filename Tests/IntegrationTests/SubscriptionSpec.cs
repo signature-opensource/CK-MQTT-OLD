@@ -6,6 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
+using static CK.Testing.MonitorTestHelper;
+
 namespace IntegrationTests
 {
     public abstract class SubscriptionSpec : ConnectedContext
@@ -17,7 +19,7 @@ namespace IntegrationTests
 
             Server.Stop();
 
-            AggregateException aggregateException = Assert.Throws<AggregateException>( () => client.SubscribeAsync( "test\foo", MqttQualityOfService.AtLeastOnce ).Wait() );
+            AggregateException aggregateException = Assert.Throws<AggregateException>( () => client.SubscribeAsync( TestHelper.Monitor, "test\foo", MqttQualityOfService.AtLeastOnce ).Wait() );
 
             Assert.NotNull( aggregateException );
             Assert.NotNull( aggregateException.InnerException );
@@ -31,11 +33,11 @@ namespace IntegrationTests
             {
                 string topicFilter = Guid.NewGuid().ToString() + "/#";
 
-                await client.SubscribeAsync( topicFilter, MqttQualityOfService.AtMostOnce );
+                await client.SubscribeAsync( TestHelper.Monitor, topicFilter, MqttQualityOfService.AtMostOnce );
 
                 Assert.True( client.IsConnected );
 
-                await client.UnsubscribeAsync( topicFilter );
+                await client.UnsubscribeAsync( TestHelper.Monitor, topicFilter );
             }
         }
 
@@ -52,7 +54,7 @@ namespace IntegrationTests
                 {
                     string topicFilter = Guid.NewGuid().ToString();
 
-                    tasks.Add( client.SubscribeAsync( topicFilter, MqttQualityOfService.AtMostOnce ) );
+                    tasks.Add( client.SubscribeAsync( TestHelper.Monitor, topicFilter, MqttQualityOfService.AtMostOnce ) );
                     topics.Add( topicFilter );
                 }
 
@@ -60,7 +62,7 @@ namespace IntegrationTests
 
                 Assert.True( client.IsConnected );
 
-                await client.UnsubscribeAsync( topics.ToArray() );
+                await client.UnsubscribeAsync( TestHelper.Monitor, topics.ToArray() );
             }
         }
 
@@ -73,7 +75,7 @@ namespace IntegrationTests
         {
             IMqttClient client = await GetClientAsync();
 
-            AggregateException ex = Assert.Throws<AggregateException>( () => client.SubscribeAsync( topicFilter, MqttQualityOfService.AtMostOnce ).Wait() );
+            AggregateException ex = Assert.Throws<AggregateException>( () => client.SubscribeAsync( TestHelper.Monitor, topicFilter, MqttQualityOfService.AtMostOnce ).Wait() );
 
             Assert.NotNull( ex );
             Assert.NotNull( ex.InnerException );
@@ -88,7 +90,7 @@ namespace IntegrationTests
         {
             IMqttClient client = await GetClientAsync();
 
-            AggregateException ex = Assert.Throws<AggregateException>( () => client.SubscribeAsync( string.Empty, MqttQualityOfService.AtMostOnce ).Wait() );
+            AggregateException ex = Assert.Throws<AggregateException>( () => client.SubscribeAsync( TestHelper.Monitor, string.Empty, MqttQualityOfService.AtMostOnce ).Wait() );
 
             Assert.NotNull( ex );
             Assert.NotNull( ex.InnerException );
@@ -111,12 +113,12 @@ namespace IntegrationTests
                 {
                     string topicFilter = Guid.NewGuid().ToString();
 
-                    tasks.Add( client.SubscribeAsync( topicFilter, MqttQualityOfService.AtMostOnce ) );
+                    tasks.Add( client.SubscribeAsync( TestHelper.Monitor, topicFilter, MqttQualityOfService.AtMostOnce ) );
                     topics.Add( topicFilter );
                 }
 
                 await Task.WhenAll( tasks );
-                await client.UnsubscribeAsync( topics.ToArray() );
+                await client.UnsubscribeAsync( TestHelper.Monitor, topics.ToArray() );
 
                 Assert.True( client.IsConnected );
             }
@@ -127,7 +129,7 @@ namespace IntegrationTests
         {
             IMqttClient client = await GetClientAsync();
 
-            AggregateException ex = Assert.Throws<AggregateException>( () => client.UnsubscribeAsync( null ).Wait() );
+            AggregateException ex = Assert.Throws<AggregateException>( () => client.UnsubscribeAsync( TestHelper.Monitor, null ).Wait() );
 
             Assert.NotNull( ex );
             Assert.NotNull( ex.InnerException );

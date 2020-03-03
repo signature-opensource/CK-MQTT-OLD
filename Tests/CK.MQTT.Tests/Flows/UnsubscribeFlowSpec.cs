@@ -1,4 +1,5 @@
 using CK.MQTT;
+using CK.MQTT.Client.Abstractions;
 using CK.MQTT.Sdk;
 using CK.MQTT.Sdk.Flows;
 using CK.MQTT.Sdk.Packets;
@@ -9,6 +10,8 @@ using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+
+using static CK.Testing.MonitorTestHelper;
 
 namespace Tests.Flows
 {
@@ -39,7 +42,7 @@ namespace Tests.Flows
 
             IPacket response = default;
 
-            channel.Setup( c => c.SendAsync( It.IsAny<IPacket>() ) )
+            channel.Setup( c => c.SendAsync( It.IsAny<Monitored<IPacket>>() ) )
                 .Callback<IPacket>( p => response = p )
                 .Returns( Task.Delay( 0 ) );
 
@@ -51,7 +54,7 @@ namespace Tests.Flows
 
             ServerUnsubscribeFlow flow = new ServerUnsubscribeFlow( sessionRepository.Object );
 
-            await flow.ExecuteAsync( clientId, unsubscribe, channel.Object );
+            await flow.ExecuteAsync(TestHelper.Monitor, clientId, unsubscribe, channel.Object );
 
             Assert.NotNull( response );
             0.Should().Be( updatedSession.Subscriptions.Count );
@@ -78,7 +81,7 @@ namespace Tests.Flows
 
             IPacket response = default;
 
-            channel.Setup( c => c.SendAsync( It.IsAny<IPacket>() ) )
+            channel.Setup( c => c.SendAsync( It.IsAny<Monitored<IPacket>>() ) )
                 .Callback<IPacket>( p => response = p )
                 .Returns( Task.Delay( 0 ) );
 
@@ -90,7 +93,7 @@ namespace Tests.Flows
 
             ServerUnsubscribeFlow flow = new ServerUnsubscribeFlow( sessionRepository.Object );
 
-            await flow.ExecuteAsync( clientId, unsubscribe, channel.Object );
+            await flow.ExecuteAsync(TestHelper.Monitor, clientId, unsubscribe, channel.Object );
 
             sessionRepository.Verify( r => r.Delete( It.IsAny<string>() ), Times.Never );
             Assert.NotNull( response );

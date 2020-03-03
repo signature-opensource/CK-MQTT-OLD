@@ -1,3 +1,5 @@
+using CK.Core;
+using CK.MQTT.Client.Abstractions;
 using CK.MQTT.Sdk.Flows;
 using CK.MQTT.Sdk.Packets;
 using CK.MQTT.Sdk.Storage;
@@ -19,8 +21,8 @@ namespace CK.MQTT.Sdk
         bool _isProtocolConnected;
         IPacketListener _packetListener;
         IDisposable _packetsSubscription;
-        Subject<MqttApplicationMessage> _receiver;
-
+        Subject<Monitored<MqttApplicationMessage>> _receiver;
+        readonly IActivityMonitor _m;
         readonly IPacketChannelFactory _channelFactory;
         readonly IProtocolFlowProvider _flowProvider;
         readonly IRepository<ClientSession> _sessionRepository;
@@ -28,13 +30,15 @@ namespace CK.MQTT.Sdk
         readonly MqttConfiguration _configuration;
         readonly TaskRunner _clientSender;
 
-        internal MqttClientImpl( IPacketChannelFactory channelFactory,
+        internal MqttClientImpl( IActivityMonitor m,
+            IPacketChannelFactory channelFactory,
             IProtocolFlowProvider flowProvider,
             IRepositoryProvider repositoryProvider,
             IPacketIdProvider packetIdProvider,
             MqttConfiguration configuration )
         {
-            _receiver = new Subject<MqttApplicationMessage>();
+            _receiver = new Subject<Monitored<MqttApplicationMessage>>();
+            _m = m;
             _channelFactory = channelFactory;
             _flowProvider = flowProvider;
             _sessionRepository = repositoryProvider.GetRepository<ClientSession>();
@@ -57,11 +61,11 @@ namespace CK.MQTT.Sdk
             private set => _isProtocolConnected = value;
         }
 
-        public IObservable<MqttApplicationMessage> MessageStream => _receiver;
+        public IObservable<Monitored<MqttApplicationMessage>> MessageStream => _receiver;
 
         internal IMqttChannel<IPacket> Channel { get; private set; }
 
-        public async Task<SessionState> ConnectAsync( MqttClientCredentials credentials, MqttLastWill will = null, bool cleanSession = false )
+        public async Task<SessionState> ConnectAsync( IActivityMonitor m, MqttClientCredentials credentials, MqttLastWill will = null, bool cleanSession = false )
         {
             if( _disposed ) throw new ObjectDisposedException( GetType().FullName );
 
@@ -93,7 +97,7 @@ namespace CK.MQTT.Sdk
                     KeepAlive = _configuration.KeepAliveSecs
                 };
 
-                await SendPacketAsync( connect );
+                await SendPacketAsync( new Monitored<IPacket>( m, connect ) );
 
                 TimeSpan connectTimeout = TimeSpan.FromSeconds( _configuration.WaitTimeoutSecs );
                 ConnectAck ack = await _packetListener
@@ -141,10 +145,10 @@ namespace CK.MQTT.Sdk
             }
         }
 
-        public Task<SessionState> ConnectAsync( MqttLastWill will = null ) =>
-            ConnectAsync( new MqttClientCredentials(), will, cleanSession: true );
+        public Task<SessionState> ConnectAsync( IActivityMonitor m, MqttLastWill will = null ) =>
+            ConnectAsync( m, new MqttClientCredentials(), will, cleanSession: true );
 
-        public async Task SubscribeAsync( string topicFilter, MqttQualityOfService qos )
+        public async Task SubscribeAsync( IActivityMonitor m, string topicFilter, MqttQualityOfService qos )
         {
             if( _disposed )
             {
@@ -159,7 +163,7 @@ namespace CK.MQTT.Sdk
                 SubscribeAck ack = default;
                 TimeSpan subscribeTimeout = TimeSpan.FromSeconds( _configuration.WaitTimeoutSecs );
 
-                await SendPacketAsync( subscribe );
+                await SendPacketAsync( new Monitored<IPacket>( m, subscribe ) );
 
                 ack = await _packetListener
                     .PacketStream
@@ -209,7 +213,7 @@ namespace CK.MQTT.Sdk
             }
         }
 
-        public async Task PublishAsync( MqttApplicationMessage message, MqttQualityOfService qos, bool retain = false )
+        public async Task PublishAsync( IActivityMonitor m, MqttApplicationMessage message, MqttQualityOfService qos, bool retain = false )
         {
             if( _disposed )
             {
@@ -228,7 +232,7 @@ namespace CK.MQTT.Sdk
 
                 await _clientSender.Run( async () =>
                  {
-                     await senderFlow.SendPublishAsync( Id, publish, Channel );
+                     await senderFlow.SendPublishAsync( m, Id, publish, Channel );
                  } );
             }
             catch( Exception ex )
@@ -238,7 +242,7 @@ namespace CK.MQTT.Sdk
             }
         }
 
-        public async Task UnsubscribeAsync( params string[] topics )
+        public async Task UnsubscribeAsync( IActivityMonitor m, params string[] topics )
         {
             if( _disposed ) throw new ObjectDisposedException( GetType().FullName );
 
@@ -252,7 +256,7 @@ namespace CK.MQTT.Sdk
                 UnsubscribeAck ack = default;
                 TimeSpan unsubscribeTimeout = TimeSpan.FromSeconds( _configuration.WaitTimeoutSecs );
 
-                await SendPacketAsync( unsubscribe );
+                await SendPacketAsync( new Monitored<IPacket>( m, unsubscribe ) );
 
                 ack = await _packetListener
                     .PacketStream
@@ -297,7 +301,7 @@ namespace CK.MQTT.Sdk
             }
         }
 
-        public async Task DisconnectAsync()
+        public async Task DisconnectAsync( IActivityMonitor m )
         {
             try
             {
@@ -308,7 +312,7 @@ namespace CK.MQTT.Sdk
 
                 _packetsSubscription?.Dispose();
 
-                await SendPacketAsync( new Disconnect() );
+                await SendPacketAsync( new Monitored<IPacket>( m, new Disconnect() ) );
 
                 await _packetListener
                     .PacketStream
@@ -324,11 +328,11 @@ namespace CK.MQTT.Sdk
 
         void IDisposable.Dispose()
         {
-            DisposeAsync( disposing: true ).Wait();
+            DisposeAsync( _m, disposing: true ).Wait();
             GC.SuppressFinalize( this );
         }
 
-        protected virtual async Task DisposeAsync( bool disposing )
+        protected virtual async Task DisposeAsync( IActivityMonitor m, bool disposing )
         {
             if( _disposed ) return;
 
@@ -336,7 +340,7 @@ namespace CK.MQTT.Sdk
             {
                 if( IsConnected )
                 {
-                    await DisconnectAsync();
+                    await DisconnectAsync( m );
                 }
 
                 (_clientSender as IDisposable)?.Dispose();
@@ -414,7 +418,7 @@ namespace CK.MQTT.Sdk
             }
         }
 
-        async Task SendPacketAsync( IPacket packet )
+        async Task SendPacketAsync( Monitored<IPacket> packet )
         {
             await _clientSender.Run( async () => await Channel.SendAsync( packet ) );
         }
@@ -434,12 +438,12 @@ namespace CK.MQTT.Sdk
                 .ObserveOn( NewThreadScheduler.Default )
                 .Subscribe( packet =>
                  {
-                     if( packet.Type == MqttPacketType.Publish )
+                     if( packet.Item.Type == MqttPacketType.Publish )
                      {
-                         Publish publish = packet as Publish;
+                         Publish publish = packet.Item as Publish;
                          MqttApplicationMessage message = new MqttApplicationMessage( publish.Topic, publish.Payload );
 
-                         _receiver.OnNext( message );
+                         _receiver.OnNext( new Monitored<MqttApplicationMessage>( packet.Monitor, message ) );
                          _tracer.Info( ClientProperties.Client_NewApplicationMessageReceived( Id, publish.Topic ) );
                      }
                  }, ex =>
@@ -455,7 +459,7 @@ namespace CK.MQTT.Sdk
         void ResetReceiver()
         {
             _receiver?.OnCompleted();
-            _receiver = new Subject<MqttApplicationMessage>();
+            _receiver = new Subject<Monitored<MqttApplicationMessage>>();
         }
     }
 }

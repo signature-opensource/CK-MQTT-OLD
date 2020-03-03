@@ -7,6 +7,8 @@ using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
+using static CK.Testing.MonitorTestHelper;
+
 namespace IntegrationTests
 {
     public abstract class ConnectionSpecWithKeepAlive : IntegrationContext
@@ -21,7 +23,7 @@ namespace IntegrationTests
         {
             IMqttClient client = await GetClientAsync();
 
-            await client.ConnectAsync( new MqttClientCredentials( MqttTestHelper.GetClientId() ) );
+            await client.ConnectAsync( TestHelper.Monitor, new MqttClientCredentials( MqttTestHelper.GetClientId() ) );
 
             string clientId = client.Id;
             bool existClientAfterConnect = Server.ActiveClients.Any( c => c == clientId );
@@ -73,7 +75,7 @@ namespace IntegrationTests
             IMqttClient client = await GetClientAsync();
             string clientId = MqttTestHelper.GetClientId();
 
-            await client.ConnectAsync( new MqttClientCredentials( clientId ) );
+            await client.ConnectAsync( TestHelper.Monitor, new MqttClientCredentials( clientId ) );
 
             await Task.Delay( TimeSpan.FromSeconds( KeepAliveSecs * 5 ) );
 

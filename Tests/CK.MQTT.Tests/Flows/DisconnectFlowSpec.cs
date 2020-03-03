@@ -7,6 +7,8 @@ using NUnit.Framework;
 using System;
 using System.Threading.Tasks;
 
+using static CK.Testing.MonitorTestHelper;
+
 namespace Tests.Flows
 {
     public class DisconnectFlowSpec
@@ -32,7 +34,7 @@ namespace Tests.Flows
 
             sessionRepository.Setup( r => r.Read( It.IsAny<string>() ) ).Returns( session );
 
-            await flow.ExecuteAsync( clientId, disconnect, channel.Object );
+            await flow.ExecuteAsync(TestHelper.Monitor, clientId, disconnect, channel.Object );
 
             willRepository.Verify( r => r.Delete( It.IsAny<string>() ) );
             sessionRepository.Verify( r => r.Delete( It.Is<string>( s => s == session.Id ) ) );
@@ -59,7 +61,7 @@ namespace Tests.Flows
 
             sessionRepository.Setup( r => r.Read( It.IsAny<string>() ) ).Returns( session );
 
-            await flow.ExecuteAsync( clientId, disconnect, channel.Object );
+            await flow.ExecuteAsync(TestHelper.Monitor, clientId, disconnect, channel.Object );
 
             willRepository.Verify( r => r.Delete( It.IsAny<string>() ) );
             sessionRepository.Verify( r => r.Delete( It.Is<string>( s => s == session.Id ) ), Times.Never );

@@ -5,6 +5,8 @@ using NUnit.Framework;
 using System;
 using System.Threading.Tasks;
 
+using static CK.Testing.MonitorTestHelper;
+
 namespace IntegrationTests
 {
 
@@ -21,7 +23,7 @@ namespace IntegrationTests
             string password = "foo123456";
             IMqttClient client = await GetClientAsync();
 
-            AggregateException aggregateEx = Assert.Throws<AggregateException>( () => client.ConnectAsync( new MqttClientCredentials( MqttTestHelper.GetClientId(), username, password ) ).Wait() );
+            AggregateException aggregateEx = Assert.Throws<AggregateException>( () => client.ConnectAsync( TestHelper.Monitor, new MqttClientCredentials( MqttTestHelper.GetClientId(), username, password ) ).Wait() );
 
             Assert.NotNull( aggregateEx.InnerException );
             Assert.True( aggregateEx.InnerException is MqttClientException );
@@ -38,7 +40,7 @@ namespace IntegrationTests
             string password = "foo123";
             IMqttClient client = await GetClientAsync();
 
-            await client.ConnectAsync( new MqttClientCredentials( MqttTestHelper.GetClientId(), username, password ) );
+            await client.ConnectAsync( TestHelper.Monitor, new MqttClientCredentials( MqttTestHelper.GetClientId(), username, password ) );
 
             Assert.True( client.IsConnected );
             Assert.False( string.IsNullOrEmpty( client.Id ) );

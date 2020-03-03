@@ -1,6 +1,8 @@
 using CK.MQTT;
 using System.Threading.Tasks;
 
+using static CK.Testing.MonitorTestHelper;
+
 namespace IntegrationTests.Context
 {
     public abstract class ConnectedContext : IntegrationContext
@@ -14,7 +16,7 @@ namespace IntegrationTests.Context
         protected override async Task<IMqttClient> GetClientAsync()
         {
             IMqttClient client = await base.GetClientAsync();
-            await client.ConnectAsync( new MqttClientCredentials( MqttTestHelper.GetClientId() ), cleanSession: CleanSession );
+            await client.ConnectAsync( TestHelper.Monitor, new MqttClientCredentials( MqttTestHelper.GetClientId() ), cleanSession: CleanSession );
             return client;
         }
     }
