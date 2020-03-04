@@ -38,7 +38,7 @@ namespace IntegrationTests
 
                 await Task.WhenAll( tasks );
 
-                Assert.True( client.IsConnected );
+                Assert.True( client.IsConnected( TestHelper.Monitor ) );
             }
         }
 
@@ -75,7 +75,7 @@ namespace IntegrationTests
 
                 await Task.WhenAll( tasks );
 
-                Assert.True( client.IsConnected );
+                Assert.True( client.IsConnected( TestHelper.Monitor ) );
                 Assert.True( publishAckPackets >= count );
             }
         }
@@ -117,7 +117,7 @@ namespace IntegrationTests
 
                 await Task.WhenAll( tasks );
 
-                Assert.True( client.IsConnected );
+                Assert.True( client.IsConnected( TestHelper.Monitor ) );
                 Assert.True( publishReceivedPackets >= count );
                 Assert.True( publishCompletePackets >= count );
             }
@@ -316,7 +316,7 @@ namespace IntegrationTests
 
             await Task.WhenAll( tasks );
 
-            Assert.True( client.IsConnected );
+            Assert.True( client.IsConnected( TestHelper.Monitor ) );
         }
 
         [TestCase( 100 )]
@@ -337,7 +337,7 @@ namespace IntegrationTests
 
             await Task.WhenAll( tasks );
 
-            Assert.True( client.IsConnected );
+            Assert.True( client.IsConnected( TestHelper.Monitor ) );
         }
 
         [TestCase( 100 )]
@@ -358,7 +358,7 @@ namespace IntegrationTests
 
             await Task.WhenAll( tasks );
 
-            Assert.True( client.IsConnected );
+            Assert.True( client.IsConnected( TestHelper.Monitor ) );
         }
 
         [Test]

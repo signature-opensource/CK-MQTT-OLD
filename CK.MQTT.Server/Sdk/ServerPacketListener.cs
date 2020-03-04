@@ -77,33 +77,30 @@ namespace CK.MQTT.Sdk
                 .Timeout( packetDueTime )
                 .Subscribe( async packet =>
                 {
-                    try
+                    if( packet == default( IPacket ) )
                     {
-                        if( packet == default( IPacket ) )
-                        {
-                            return;
-                        }
-
-                        Connect connect = packet.Item as Connect;
-
-                        if( connect == null )
-                        {
-                            await NotifyErrorAsync( packet.Monitor, ServerProperties.ServerPacketListener_FirstPacketMustBeConnect );
-                            return;
-                        }
-
-                        _clientId = connect.ClientId;
-                        _keepAlive = connect.KeepAlive;
-                        _connectionProvider.AddConnection( packet.Monitor, _clientId, _channel );
-
-                        packet.Monitor.Info( ServerProperties.ServerPacketListener_ConnectPacketReceived( _clientId ) );
-
-                        await DispatchPacketAsync( new Monitored<IPacket>( packet.Monitor, connect ) );
+                        return;
                     }
-                    catch( Exception e )
+
+                    Connect connect = packet.Item as Connect;
+
+                    if( connect == null )
                     {
-                        await HandleConnectionExceptionAsync( packet.Monitor, e );
+                        await NotifyErrorAsync( packet.Monitor, ServerProperties.ServerPacketListener_FirstPacketMustBeConnect );
+                        return;
                     }
+
+                    _clientId = connect.ClientId;
+                    _keepAlive = connect.KeepAlive;
+                    _connectionProvider.AddConnection( packet.Monitor, _clientId, _channel );
+
+                    packet.Monitor.Info( ServerProperties.ServerPacketListener_ConnectPacketReceived( _clientId ) );
+
+                    await DispatchPacketAsync( new Monitored<IPacket>( packet.Monitor, connect ) );
+                }, async ( e ) =>
+                {
+                    var m = new ActivityMonitor();
+                    await HandleConnectionExceptionAsync( m, e );
                 } );
         }
 
@@ -139,13 +136,13 @@ namespace CK.MQTT.Sdk
                     {
                         var m = new ActivityMonitor();//TODO: avoid creating a new monitor in the OnComplete.
                         await SendLastWillAsync( m );
-                        CompletePacketStream(m);
+                        CompletePacketStream( m );
                     }
                 );
 
         IDisposable ListenSentPackets()
             => _channel.SenderStream
-                .OfType<ConnectAck>()
+                .OfType<Monitored<ConnectAck>>()
                 .FirstAsync()
                 .Subscribe( connectAck =>
                 {
@@ -269,10 +266,10 @@ namespace CK.MQTT.Sdk
             m.Error( ServerProperties.ServerPacketListener_Error( _clientId ?? "N/A" ), exception );
 
             _listenerDisposable?.Dispose();
-            RemoveClient(m);
+            RemoveClient( m );
             await SendLastWillAsync( m );
             _packets.OnError( exception );
-            CompletePacketStream(m);
+            CompletePacketStream( m );
         }
 
         Task NotifyErrorAsync( IActivityMonitor m, string message )
@@ -295,16 +292,16 @@ namespace CK.MQTT.Sdk
                 .SendWillAsync( m, _clientId );
         }
 
-        void RemoveClient(IActivityMonitor m)
+        void RemoveClient( IActivityMonitor m )
         {
             if( string.IsNullOrEmpty( _clientId ) ) return;
 
-            _connectionProvider.RemoveConnection(m, _clientId );
+            _connectionProvider.RemoveConnection( m, _clientId );
         }
 
         void CompletePacketStream( IActivityMonitor m )
         {
-            if( !string.IsNullOrEmpty( _clientId ) ) RemoveClient(m);
+            if( !string.IsNullOrEmpty( _clientId ) ) RemoveClient( m );
 
             m.Warn( ServerProperties.PacketChannelCompleted( _clientId ?? "N/A" ) );
 

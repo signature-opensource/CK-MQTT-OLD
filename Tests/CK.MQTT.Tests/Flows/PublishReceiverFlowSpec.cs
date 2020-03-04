@@ -629,10 +629,10 @@ namespace Tests.Flows
             Subject<Monitored<IPacket>> clientSender = new Subject<Monitored<IPacket>>();
             Mock<IMqttChannel<IPacket>> clientChannel = new Mock<IMqttChannel<IPacket>>();
 
-            clientSender.OfType<Publish>().Subscribe( p =>
-            {
-                clientReceiver.OnNext( new Monitored<IPacket>( TestHelper.Monitor, new PublishAck( p.PacketId.Value ) ) );
-            } );
+            clientSender.OfType<Monitored<Publish>>().Subscribe( p =>
+           {
+               clientReceiver.OnNext( new Monitored<IPacket>( TestHelper.Monitor, new PublishAck( p.Item.PacketId.Value ) ) );
+           } );
 
             clientChannel.Setup( c => c.ReceiverStream ).Returns( clientReceiver );
             clientChannel.Setup( c => c.SenderStream ).Returns( clientSender );
@@ -709,9 +709,9 @@ namespace Tests.Flows
             Subject<Monitored<IPacket>> clientSender = new Subject<Monitored<IPacket>>();
             Mock<IMqttChannel<IPacket>> clientChannel = new Mock<IMqttChannel<IPacket>>();
 
-            clientSender.OfType<Publish>().Subscribe( p =>
+            clientSender.OfType<Monitored<Publish>>().Subscribe( p =>
             {
-                clientReceiver.OnNext( new Monitored<IPacket>( TestHelper.Monitor, new PublishReceived( p.PacketId.Value ) ) );
+                clientReceiver.OnNext( new Monitored<IPacket>( TestHelper.Monitor, new PublishReceived( p.Item.PacketId.Value ) ) );
             } );
 
             clientChannel.Setup( c => c.ReceiverStream ).Returns( clientReceiver );

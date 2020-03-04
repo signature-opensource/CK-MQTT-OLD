@@ -14,8 +14,6 @@ namespace CK.MQTT.Sdk.Flows
 {
     internal class PublishSenderFlow : PublishFlow, IPublishSenderFlow
     {
-        static readonly ITracer _tracer = Tracer.Get<PublishSenderFlow>();
-
         IDictionary<MqttPacketType, Func<string, ushort, IFlowPacket>> _senderRules;
 
         public PublishSenderFlow( IRepository<ClientSession> sessionRepository,
@@ -69,8 +67,8 @@ namespace CK.MQTT.Sdk.Flows
                 await channel
                     .ReceiverStream
                     .ObserveOn( NewThreadScheduler.Default )
-                    .OfType<PublishComplete>()
-                    .FirstOrDefaultAsync( x => x.PacketId == message.PacketId.Value );
+                    .OfType<Monitored<PublishComplete>>()
+                    .FirstOrDefaultAsync( x => x.Item.PacketId == message.PacketId.Value );
             }
         }
 
@@ -101,7 +99,7 @@ namespace CK.MQTT.Sdk.Flows
                 {
                     if( channel.IsConnected )
                     {
-                        _tracer.Warn( ClientProperties.PublishFlow_RetryingQoSFlow( sentMessage.Type, clientId ) );
+                        m.Warn( ClientProperties.PublishFlow_RetryingQoSFlow( sentMessage.Type, clientId ) );
 
                         Publish duplicated = new Publish( sentMessage.Topic, sentMessage.QualityOfService,
                             sentMessage.Retain, duplicated: true, packetId: sentMessage.PacketId )
@@ -116,8 +114,8 @@ namespace CK.MQTT.Sdk.Flows
                 await channel
                     .ReceiverStream
                     .ObserveOn( NewThreadScheduler.Default )
-                    .OfType<T>()
-                    .FirstOrDefaultAsync( x => x.PacketId == sentMessage.PacketId.Value );
+                    .OfType<Monitored<T>>()
+                    .FirstOrDefaultAsync( x => x.Item.PacketId == sentMessage.PacketId.Value );
             }
         }
 

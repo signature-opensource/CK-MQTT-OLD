@@ -52,36 +52,36 @@ namespace CK.MQTT.Proxy.FakeClient
                 switch( clientHeader )
                 {
                     case StubClientHeader.Disconnect:
-                        await _client.DisconnectAsync(m);
+                        await _client.DisconnectAsync( m );
                         _m.Warn( $"Disconnect should have empty payload, but the payload contain ${payload.Count} objects." );
                         break;
                     case StubClientHeader.Connect:
                         SessionState state;
                         if( payload.Count == 1 )
                         {
-                            state = await _client.ConnectAsync( m,(MqttLastWill)payload.Dequeue() );
+                            state = await _client.ConnectAsync( m, (MqttLastWill)payload.Dequeue() );
                         }
                         else if( payload.Count == 3 )
                         {
-                            state = await _client.ConnectAsync( m,(MqttClientCredentials)payload.Dequeue(), (MqttLastWill)payload.Dequeue(), (bool)payload.Dequeue() );
+                            state = await _client.ConnectAsync( m, (MqttClientCredentials)payload.Dequeue(), (MqttLastWill)payload.Dequeue(), (bool)payload.Dequeue() );
                         }
                         else
                         {
                             throw new InvalidOperationException( "Payload count is incorrect." );
                         }
-                        await _pf.SendPayloadAsync(m, state );
+                        await _pf.SendPayloadAsync( m, state );
                         break;
                     case StubClientHeader.Publish:
-                        await _client.PublishAsync(m, (MqttApplicationMessage)payload.Dequeue(), (MqttQualityOfService)payload.Dequeue(), (bool)payload.Dequeue() );
+                        await _client.PublishAsync( m, (MqttApplicationMessage)payload.Dequeue(), (MqttQualityOfService)payload.Dequeue(), (bool)payload.Dequeue() );
                         break;
                     case StubClientHeader.Subscribe:
-                        await _client.SubscribeAsync(m, (string)payload.Dequeue(), (MqttQualityOfService)payload.Dequeue() );
+                        await _client.SubscribeAsync( m, (string)payload.Dequeue(), (MqttQualityOfService)payload.Dequeue() );
                         break;
                     case StubClientHeader.Unsubscribe:
-                        await _client.UnsubscribeAsync(m, (string[])payload.Dequeue() );
+                        await _client.UnsubscribeAsync( m, (string[])payload.Dequeue() );
                         break;
                     case StubClientHeader.IsConnected:
-                        await _pf.SendPayloadAsync( m, _client.IsConnected );
+                        await _pf.SendPayloadAsync( m, _client.IsConnected( m ) );
                         break;
                     default:
                         throw new InvalidOperationException( "Unknown ClientHeader." );

@@ -142,7 +142,7 @@ namespace Tests.Flows
             ConnectAck connectAck = sentPacket as ConnectAck;
 
             sessionRepository.Verify( r => r.Delete( It.Is<string>( s => s == existingSession.Id ) ) );
-            sessionRepository.Verify( r => r.Create( It.Is<ClientSession>( s => s.Clean == true ) ) );
+            sessionRepository.Verify( r => r.Create(It.Is<ClientSession>( s => s.Clean == true ) ) );
             willRepository.Verify( r => r.Create( It.IsAny<ConnectionWill>() ), Times.Never );
 
             Assert.NotNull( connectAck );
@@ -226,7 +226,7 @@ namespace Tests.Flows
             ConnectAck connectAck = sentPacket as ConnectAck;
 
             sessionRepository.Verify( r => r.Delete( It.IsAny<string>() ), Times.Never );
-            sessionRepository.Verify( r => r.Create( It.Is<ClientSession>( s => s.Id == clientId && s.Clean == true ) ) );
+            sessionRepository.Verify( r => r.Create(  It.Is<ClientSession>( s => s.Id == clientId && s.Clean == true ) ) );
             willRepository.Verify( r => r.Create( It.Is<ConnectionWill>( w => w.Id == clientId && w.Will == will ) ) );
 
             Assert.NotNull( connectAck );

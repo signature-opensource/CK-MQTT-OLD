@@ -9,6 +9,6 @@ namespace CK.MQTT.Sdk
     {
         Task<IMqttChannel<IPacket>> CreateAsync( IActivityMonitor m );
 
-        IMqttChannel<IPacket> Create( IMqttChannel<byte[]> binaryChannel );
+        IMqttChannel<IPacket> Create( IActivityMonitor m, IMqttChannel<byte[]> binaryChannel );
     }
 }

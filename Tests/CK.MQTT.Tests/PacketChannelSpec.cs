@@ -28,7 +28,7 @@ namespace Tests
 
             IMqttTopicEvaluator topicEvaluator = Mock.Of<IMqttTopicEvaluator>();
             PacketChannelFactory factory = new PacketChannelFactory( topicEvaluator, configuration );
-            IMqttChannel<IPacket> channel = factory.Create( bufferedChannel.Object );
+            IMqttChannel<IPacket> channel = factory.Create( TestHelper.Monitor, bufferedChannel.Object );
 
             Assert.NotNull( channel );
         }
@@ -65,9 +65,9 @@ namespace Tests
             Mock<IPacketManager> manager = new Mock<IPacketManager>();
 
             manager.Setup( x => x.GetPacketAsync( It.IsAny<Monitored<byte[]>>() ) )
-                .Returns( Task.FromResult<Monitored<IPacket>>( new Monitored<IPacket>( TestHelper.Monitor, expectedPacket ) ) );
+                .Returns( Task.FromResult( new Monitored<IPacket>( TestHelper.Monitor, expectedPacket ) ) );
 
-            PacketChannel channel = new PacketChannel( innerChannel.Object, manager.Object, configuration );
+            PacketChannel channel = new PacketChannel( TestHelper.Monitor, innerChannel.Object, manager.Object, configuration );
 
             IPacket receivedPacket = default;
 
@@ -104,7 +104,7 @@ namespace Tests
             manager.Setup( x => x.GetPacketAsync( It.IsAny<Monitored<byte[]>>() ) )
                 .Returns( Task.FromResult( new Monitored<IPacket>( TestHelper.Monitor, (IPacket)expectedPacket ) ) );
 
-            PacketChannel channel = new PacketChannel( innerChannel.Object, manager.Object, configuration );
+            PacketChannel channel = new PacketChannel( TestHelper.Monitor, innerChannel.Object, manager.Object, configuration );
 
             IPacket receivedPacket = default;
 
@@ -164,7 +164,7 @@ namespace Tests
             manager.Setup( x => x.GetBytesAsync( It.IsAny<Monitored<IPacket>>() ) )
                 .Returns( Task.FromResult( new Monitored<byte[]>( TestHelper.Monitor, bytes ) ) );
 
-            PacketChannel channel = new PacketChannel( innerChannel.Object, manager.Object, configuration );
+            PacketChannel channel = new PacketChannel( TestHelper.Monitor, innerChannel.Object, manager.Object, configuration );
 
             await channel.SendAsync( new Monitored<IPacket>( TestHelper.Monitor, packet ) );
 
@@ -198,7 +198,7 @@ namespace Tests
             manager.Setup( x => x.GetBytesAsync( It.IsAny<Monitored<IPacket>>() ) )
                 .Returns( Task.FromResult( new Monitored<byte[]>( TestHelper.Monitor, bytes ) ) );
 
-            PacketChannel channel = new PacketChannel( innerChannel.Object, manager.Object, configuration );
+            PacketChannel channel = new PacketChannel( TestHelper.Monitor, innerChannel.Object, manager.Object, configuration );
 
             await channel.SendAsync( new Monitored<IPacket>( TestHelper.Monitor, packet ) );
 
@@ -217,7 +217,7 @@ namespace Tests
 
             Mock<IPacketManager> manager = new Mock<IPacketManager>();
 
-            PacketChannel channel = new PacketChannel( innerChannel.Object, manager.Object, configuration );
+            PacketChannel channel = new PacketChannel( TestHelper.Monitor, innerChannel.Object, manager.Object, configuration );
 
             string errorMessage = "Packet Exception";
 

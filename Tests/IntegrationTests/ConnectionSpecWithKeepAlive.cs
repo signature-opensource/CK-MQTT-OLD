@@ -80,7 +80,7 @@ namespace IntegrationTests
             await Task.Delay( TimeSpan.FromSeconds( KeepAliveSecs * 5 ) );
 
             Assert.True( Server.ActiveClients.Any( c => c == clientId ) );
-            Assert.True( client.IsConnected );
+            Assert.True( client.IsConnected( TestHelper.Monitor ) );
             Assert.False( string.IsNullOrEmpty( client.Id ) );
 
             client.Dispose();

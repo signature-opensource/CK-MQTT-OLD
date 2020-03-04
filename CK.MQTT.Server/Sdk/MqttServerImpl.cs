@@ -14,8 +14,6 @@ namespace CK.MQTT.Sdk
 {
     internal class MqttServerImpl : IMqttServer
     {
-        static readonly ITracer _tracer = Tracer.Get<MqttServerImpl>();
-
         bool _started;
         bool _disposed;
         IDisposable _channelSubscription;
@@ -71,7 +69,11 @@ namespace CK.MQTT.Sdk
                 .Merge( channelStreams )
                 .Subscribe(
                     binaryChannel => ProcessChannel( _m, binaryChannel ),
-                    ex => { _tracer.Error( ex ); },
+                    ex =>
+                    {
+                        var m = new ActivityMonitor();//TODO: Remove monitor in onerror.
+                        m.Error( ex );
+                    },
                     () => { }
                 );
 
@@ -113,7 +115,7 @@ namespace CK.MQTT.Sdk
 
             try
             {
-                _tracer.Info( ClientProperties.Mqtt_Disposing( GetType().FullName ) );
+                _m.Info( ClientProperties.Mqtt_Disposing( GetType().FullName ) );
 
                 _streamSubscription?.Dispose();
 
@@ -135,7 +137,7 @@ namespace CK.MQTT.Sdk
             }
             catch( Exception ex )
             {
-                _tracer.Error( ex );
+                _m.Error( ex );
                 Stopped( this, new MqttEndpointDisconnected( DisconnectedReason.Error, ex.Message ) );
             }
             finally
@@ -147,9 +149,9 @@ namespace CK.MQTT.Sdk
 
         void ProcessChannel( IActivityMonitor m, IMqttChannel<byte[]> binaryChannel )
         {
-            _tracer.Verbose( ServerProperties.Server_NewSocketAccepted );
+            m.Trace( ServerProperties.Server_NewSocketAccepted );
 
-            IMqttChannel<IPacket> packetChannel = _channelFactory.Create( binaryChannel );
+            IMqttChannel<IPacket> packetChannel = _channelFactory.Create(m, binaryChannel );
             ServerPacketListener packetListener = new ServerPacketListener( m, packetChannel, _connectionProvider, _flowProvider, _configuration );
 
             packetListener.Listen();
@@ -157,12 +159,15 @@ namespace CK.MQTT.Sdk
                 .PacketStream
                 .Subscribe( _ => { }, ex =>
                 {
-                    _tracer.Error( ex, ServerProperties.Server_PacketsObservableError );
+                    var monitor = new ActivityMonitor();//TODO: Remove monitor in onerror.
+
+                    monitor.Error( ServerProperties.Server_PacketsObservableError, ex );
                     packetChannel.Dispose();
                     packetListener.Dispose();
                 }, () =>
                 {
-                    _tracer.Warn( ServerProperties.Server_PacketsObservableCompleted );
+                    var monitor = new ActivityMonitor();//TODO: Remove monitor in oncomplete.
+                    monitor.Warn( ServerProperties.Server_PacketsObservableCompleted );
                     packetChannel.Dispose();
                     packetListener.Dispose();
                 }

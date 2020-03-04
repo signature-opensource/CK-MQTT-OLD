@@ -30,7 +30,7 @@ namespace CK.MQTT
         /// This means that a CONNECT packet has been sent, 
         /// by calling <see cref="ConnectAsync ( IActivityMonitor, MqttClientCredentials, MqttLastWill, bool)"/> method
         /// </summary>
-        bool IsConnected { get; }
+        bool IsConnected( IActivityMonitor m );
 
         /// <summary>
         /// Represents the incoming application messages received from the Server

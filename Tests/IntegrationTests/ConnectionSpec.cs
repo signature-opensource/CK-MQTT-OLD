@@ -143,7 +143,7 @@ namespace IntegrationTests
             await Task.WhenAll( tasks );
 
             Server.ActiveClients.Where( c => clientIds.Contains( c ) ).Should().HaveCount( count );
-            Assert.True( clients.All( c => c.IsConnected ) );
+            Assert.True( clients.All( c => c.IsConnected( TestHelper.Monitor ) ) );
             Assert.True( clients.All( c => !string.IsNullOrEmpty( c.Id ) ) );
 
             foreach( IMqttClient client in clients )
@@ -253,7 +253,7 @@ namespace IntegrationTests
 
             await client.ConnectAsync( TestHelper.Monitor);
 
-            Assert.True( client.IsConnected );
+            Assert.True( client.IsConnected( TestHelper.Monitor ) );
             Assert.False( string.IsNullOrEmpty( client.Id ) );
             client.Id.Should().StartWith( "anonymous" );
         }
@@ -265,7 +265,7 @@ namespace IntegrationTests
 
             await client.ConnectAsync( TestHelper.Monitor, new MqttClientCredentials( clientId: null ), cleanSession: true );
 
-            Assert.True( client.IsConnected );
+            Assert.True( client.IsConnected( TestHelper.Monitor ) );
             Assert.False( string.IsNullOrEmpty( client.Id ) );
             client.Id.Should().StartWith( "anonymous" );
         }
@@ -372,7 +372,7 @@ namespace IntegrationTests
 
             while( !disconnectedSignal.IsSet )
             {
-                if( Server.ActiveClients.Where( c => clientIds.Contains( c ) ).Count() == 0 && clients.All( c => !c.IsConnected ) )
+                if( Server.ActiveClients.Where( c => clientIds.Contains( c ) ).Count() == 0 && clients.All( c => !c.IsConnected( TestHelper.Monitor ) ) )
                 {
                     disconnectedSignal.Set();
                 }
@@ -380,7 +380,7 @@ namespace IntegrationTests
 
             initialConnectedClients.Should().Be( clients.Count );
             Server.ActiveClients.Where( c => clientIds.Contains( c ) ).Should().BeEmpty();
-            Assert.True( clients.All( c => !c.IsConnected ) );
+            Assert.True( clients.All( c => !c.IsConnected( TestHelper.Monitor ) ) );
             Assert.True( clients.All( c => string.IsNullOrEmpty( c.Id ) ) );
 
             foreach( IMqttClient client in clients )

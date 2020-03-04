@@ -13,8 +13,6 @@ namespace CK.MQTT.Sdk.Flows
 {
     internal abstract class PublishFlow : IPublishFlow
     {
-        static readonly ITracer _tracer = Tracer.Get<PublishFlow>();
-
         protected readonly IRepository<ClientSession> sessionRepository;
         protected readonly MqttConfiguration configuration;
 
@@ -79,7 +77,7 @@ namespace CK.MQTT.Sdk.Flows
                 {
                     if( channel.IsConnected )
                     {
-                        _tracer.Warn( ClientProperties.PublishFlow_RetryingQoSFlow( sentMessage.Type, clientId ) );
+                        m.Warn( ClientProperties.PublishFlow_RetryingQoSFlow( sentMessage.Type, clientId ) );
 
                         await channel.SendAsync( new Monitored<IPacket>( m, sentMessage ) );
                     }
@@ -88,8 +86,8 @@ namespace CK.MQTT.Sdk.Flows
                 await channel
                     .ReceiverStream
                     .ObserveOn( NewThreadScheduler.Default )
-                    .OfType<T>()
-                    .FirstOrDefaultAsync( x => x.PacketId == sentMessage.PacketId );
+                    .OfType<Monitored<T>>()
+                    .FirstOrDefaultAsync( x => x.Item.PacketId == sentMessage.PacketId );
             }
         }
 

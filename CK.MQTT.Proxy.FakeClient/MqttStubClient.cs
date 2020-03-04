@@ -61,7 +61,7 @@ namespace CK.MQTT.Proxy.FakeClient
 
         public string Id => null;
 
-        public bool IsConnected => _pipe.IsConnected;
+        public bool IsConnected(IActivityMonitor m) => _pipe.IsConnected;
 
         public IObservable<Monitored<MqttApplicationMessage>> MessageStream => _receiver;
 

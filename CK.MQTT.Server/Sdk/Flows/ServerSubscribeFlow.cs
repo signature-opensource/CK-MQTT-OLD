@@ -11,8 +11,6 @@ namespace CK.MQTT.Sdk.Flows
 {
     internal class ServerSubscribeFlow : IProtocolFlow
     {
-        static readonly ITracer _tracer = Tracer.Get<ServerSubscribeFlow>();
-
         readonly IMqttTopicEvaluator _topicEvaluator;
         readonly IRepository<ClientSession> _sessionRepository;
         readonly IRepository<RetainedMessage> _retainedRepository;
@@ -55,7 +53,7 @@ namespace CK.MQTT.Sdk.Flows
                 {
                     if( !_topicEvaluator.IsValidTopicFilter( subscription.TopicFilter ) )
                     {
-                        _tracer.Error( ServerProperties.ServerSubscribeFlow_InvalidTopicSubscription( subscription.TopicFilter, clientId ) );
+                        m.Error( ServerProperties.ServerSubscribeFlow_InvalidTopicSubscription( subscription.TopicFilter, clientId ) );
 
                         returnCodes.Add( SubscribeReturnCode.Failure );
                         continue;
@@ -90,7 +88,7 @@ namespace CK.MQTT.Sdk.Flows
                 }
                 catch( RepositoryException repoEx )
                 {
-                    _tracer.Error( repoEx, ServerProperties.ServerSubscribeFlow_ErrorOnSubscription( clientId, subscription.TopicFilter ) );
+                    m.Error( ServerProperties.ServerSubscribeFlow_ErrorOnSubscription( clientId, subscription.TopicFilter ), repoEx );
 
                     returnCodes.Add( SubscribeReturnCode.Failure );
                 }

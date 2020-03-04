@@ -38,15 +38,15 @@ namespace CK.MQTT.Sdk
             IMqttChannel<byte[]> binaryChannel = await _innerChannelFactory
                 .CreateAsync( m );
 
-            return Create( binaryChannel );
+            return Create( m, binaryChannel );
         }
 
-        public IMqttChannel<IPacket> Create( IMqttChannel<byte[]> binaryChannel )
+        public IMqttChannel<IPacket> Create( IActivityMonitor m, IMqttChannel<byte[]> binaryChannel )
         {
             IEnumerable<IFormatter> formatters = GetFormatters();
             PacketManager packetManager = new PacketManager( formatters );
 
-            return new PacketChannel( binaryChannel, packetManager, _configuration );
+            return new PacketChannel( m, binaryChannel, packetManager, _configuration );
         }
 
         IEnumerable<IFormatter> GetFormatters()

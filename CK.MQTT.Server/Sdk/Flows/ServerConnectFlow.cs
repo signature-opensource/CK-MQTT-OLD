@@ -9,8 +9,6 @@ namespace CK.MQTT.Sdk.Flows
 {
     internal class ServerConnectFlow : IProtocolFlow
     {
-        static readonly ITracer _tracer = Tracer.Get<ServerConnectFlow>();
-
         readonly IMqttAuthenticationProvider _authenticationProvider;
         readonly IRepository<ClientSession> _sessionRepository;
         readonly IRepository<ConnectionWill> _willRepository;
@@ -42,14 +40,14 @@ namespace CK.MQTT.Sdk.Flows
             ClientSession session = _sessionRepository.Read( clientId );
             bool sessionPresent = connect.CleanSession ? false : session != null;
 
-            _tracer.Info( $"Client connecting with protocol level {connect.ProtocolLelvel}." );
+            m.Info( $"Client connecting with protocol level {connect.ProtocolLelvel}." );
 
             if( connect.CleanSession && session != null )
             {
                 _sessionRepository.Delete( session.Id );
                 session = null;
 
-                _tracer.Info( ServerProperties.Server_CleanedOldSession( clientId ) );
+                m.Info( ServerProperties.Server_CleanedOldSession( clientId ) );
             }
 
             bool sendPendingMessages = false;
@@ -60,7 +58,7 @@ namespace CK.MQTT.Sdk.Flows
 
                 _sessionRepository.Create( session );
 
-                _tracer.Info( ServerProperties.Server_CreatedSession( clientId ) );
+                m.Info( ServerProperties.Server_CreatedSession( clientId ) );
             }
             else
             {

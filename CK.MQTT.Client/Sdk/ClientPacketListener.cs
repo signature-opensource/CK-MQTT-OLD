@@ -124,7 +124,7 @@ namespace CK.MQTT.Sdk
                     ex =>
                     {
                         var m = new ActivityMonitor();//TODO: Remove onerror monitor.
-                        NotifyError(m, ex );
+                        NotifyError( m, ex );
                     }
                     , () =>
                     {
@@ -137,13 +137,13 @@ namespace CK.MQTT.Sdk
         IDisposable ListenSentConnectPacket()
             => _channel
                 .SenderStream
-                .OfType<Connect>()
+                .OfType<Monitored<Connect>>()
                 .FirstAsync()
-                .Subscribe( connect => _clientId = connect.ClientId );
+                .Subscribe( connect => _clientId = connect.Item.ClientId );
 
         IDisposable ListenSentDisconnectPacket()
             => _channel.SenderStream
-                .OfType<Disconnect>()
+                .OfType<Monitored<Disconnect>>()
                 .FirstAsync()
                 .ObserveOn( NewThreadScheduler.Default )
                 .Subscribe( disconnect =>
@@ -167,7 +167,7 @@ namespace CK.MQTT.Sdk
                          PingRequest ping = new PingRequest();
 
                          _channel.SendAsync( new Monitored<IPacket>( monitor, ping ) );
-                         _channel.ReceiverStream.OfType<PingResponse>().Timeout( TimeSpan.FromSeconds( _configuration.WaitTimeoutSecs ) );
+                         _channel.ReceiverStream.OfType<Monitored<PingResponse>>().Timeout( TimeSpan.FromSeconds( _configuration.WaitTimeoutSecs ) );
                      }
                      catch( Exception ex )
                      {

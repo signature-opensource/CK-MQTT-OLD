@@ -19,7 +19,7 @@ namespace IntegrationTests
             IMqttConnectedClient client = await Server.CreateClientAsync( TestHelper.Monitor );
 
             Assert.NotNull( client );
-            Assert.True( client.IsConnected );
+            Assert.True( client.IsConnected( TestHelper.Monitor ) );
             Assert.False( string.IsNullOrEmpty( client.Id ) );
             Assert.True( client.Id.StartsWith( "private" ) );
 
@@ -34,7 +34,7 @@ namespace IntegrationTests
 
             await client.SubscribeAsync( TestHelper.Monitor, topicFilter, MqttQualityOfService.AtMostOnce );
 
-            Assert.True( client.IsConnected );
+            Assert.True( client.IsConnected( TestHelper.Monitor ) );
 
             await client.UnsubscribeAsync( TestHelper.Monitor, topicFilter );
 
@@ -49,7 +49,7 @@ namespace IntegrationTests
 
             await client.SubscribeAsync( TestHelper.Monitor, topicFilter, MqttQualityOfService.AtMostOnce );
 
-            Assert.True( client.IsConnected );
+            Assert.True( client.IsConnected( TestHelper.Monitor ) );
 
             await client.UnsubscribeAsync( TestHelper.Monitor, topicFilter );
 
@@ -72,7 +72,7 @@ namespace IntegrationTests
             await client.PublishAsync( TestHelper.Monitor, message, MqttQualityOfService.AtLeastOnce );
             await client.PublishAsync( TestHelper.Monitor, message, MqttQualityOfService.ExactlyOnce );
 
-            Assert.True( client.IsConnected );
+            Assert.True( client.IsConnected( TestHelper.Monitor ) );
 
             client.Dispose();
         }
@@ -93,7 +93,7 @@ namespace IntegrationTests
             await client.PublishAsync( TestHelper.Monitor, message, MqttQualityOfService.AtLeastOnce );
             await client.PublishAsync( TestHelper.Monitor, message, MqttQualityOfService.ExactlyOnce );
 
-            Assert.True( client.IsConnected );
+            Assert.True( client.IsConnected( TestHelper.Monitor ) );
 
             client.Dispose();
         }
@@ -107,7 +107,7 @@ namespace IntegrationTests
             await client.DisconnectAsync( TestHelper.Monitor );
 
             Assert.False( Server.ActiveClients.Any( c => c == clientId ) );
-            Assert.False( client.IsConnected );
+            Assert.False( client.IsConnected( TestHelper.Monitor ) );
             Assert.True( string.IsNullOrEmpty( client.Id ) );
 
             client.Dispose();
@@ -139,8 +139,8 @@ namespace IntegrationTests
 
             await Task.Delay( TimeSpan.FromMilliseconds( 1000 ) );
 
-            Assert.True( fooClient.IsConnected );
-            Assert.True( barClient.IsConnected );
+            Assert.True( fooClient.IsConnected( TestHelper.Monitor ) );
+            Assert.True( barClient.IsConnected( TestHelper.Monitor ) );
             messagesReceived.Should().Be( 3 );
 
             fooClient.Dispose();
@@ -191,8 +191,8 @@ namespace IntegrationTests
 
             await Task.Delay( TimeSpan.FromMilliseconds( 1000 ) );
 
-            Assert.True( inProcessClient.IsConnected );
-            Assert.True( remoteClient.IsConnected );
+            Assert.True( inProcessClient.IsConnected( TestHelper.Monitor ) );
+            Assert.True( remoteClient.IsConnected( TestHelper.Monitor ) );
             fooMessagesReceived.Should().Be( 3 );
             barMessagesReceived.Should().Be( 3 );
 

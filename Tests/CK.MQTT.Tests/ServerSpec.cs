@@ -31,7 +31,7 @@ namespace Tests
 
             Subject<Monitored<IPacket>> packets = new Subject<Monitored<IPacket>>();
             Mock<IMqttChannel<IPacket>> packetChannel = new Mock<IMqttChannel<IPacket>>();
-            IPacketChannelFactory factory = Mock.Of<IPacketChannelFactory>( x => x.Create( It.IsAny<IMqttChannel<byte[]>>() ) == packetChannel.Object );
+            IPacketChannelFactory factory = Mock.Of<IPacketChannelFactory>( x => x.Create( TestHelper.Monitor, It.IsAny<IMqttChannel<byte[]>>() ) == packetChannel.Object );
 
             packetChannel
                 .Setup( c => c.IsConnected )
@@ -69,7 +69,7 @@ namespace Tests
 
             Subject<Monitored<IPacket>> packets = new Subject<Monitored<IPacket>>();
             Mock<IMqttChannel<IPacket>> packetChannel = new Mock<IMqttChannel<IPacket>>();
-            IPacketChannelFactory factory = Mock.Of<IPacketChannelFactory>( x => x.Create( It.IsAny<IMqttChannel<byte[]>>() ) == packetChannel.Object );
+            IPacketChannelFactory factory = Mock.Of<IPacketChannelFactory>( x => x.Create( TestHelper.Monitor, It.IsAny<IMqttChannel<byte[]>>() ) == packetChannel.Object );
 
             packetChannel
                 .Setup( c => c.IsConnected )
@@ -122,7 +122,7 @@ namespace Tests
 
             MqttConfiguration configuration = Mock.Of<MqttConfiguration>( c => c.WaitTimeoutSecs == 60 );
 
-            MqttServerImpl server = new MqttServerImpl( TestHelper.Monitor, channelProvider.Object, Mock.Of<IPacketChannelFactory>( x => x.Create( It.IsAny<IMqttChannel<byte[]>>() ) == packetChannel.Object ),
+            MqttServerImpl server = new MqttServerImpl( TestHelper.Monitor, channelProvider.Object, Mock.Of<IPacketChannelFactory>( x => x.Create( TestHelper.Monitor, It.IsAny<IMqttChannel<byte[]>>() ) == packetChannel.Object ),
                 flowProvider, connectionProvider.Object, Mock.Of<ISubject<MqttUndeliveredMessage>>(), configuration );
 
             server.Start();
@@ -163,7 +163,7 @@ namespace Tests
                 .Setup( c => c.ReceiverStream )
                 .Returns( packets );
 
-            factory.Setup( x => x.Create( It.IsAny<IMqttChannel<byte[]>>() ) )
+            factory.Setup( x => x.Create( TestHelper.Monitor, It.IsAny<IMqttChannel<byte[]>>() ) )
                 .Returns( packetChannel.Object );
 
             IProtocolFlowProvider flowProvider = Mock.Of<IProtocolFlowProvider>();

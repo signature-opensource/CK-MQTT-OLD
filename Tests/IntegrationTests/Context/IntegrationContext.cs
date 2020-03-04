@@ -16,12 +16,6 @@ namespace IntegrationTests.Context
         protected readonly bool AllowWildcardsInTopicFilters;
         private readonly IMqttAuthenticationProvider _authenticationProvider;
 
-        static IntegrationContext()
-        {
-            Tracer.Configuration.AddListener( "CK.MQTT", new TestTracerListener() );
-            Tracer.Configuration.SetTracingLevel( "CK.MQTT", SourceLevels.All );
-        }
-
         protected IntegrationContext( ushort keepAliveSecs = 5, bool allowWildcardsInTopicFilters = true, IMqttAuthenticationProvider authenticationProvider = null )
         {
             KeepAliveSecs = keepAliveSecs;

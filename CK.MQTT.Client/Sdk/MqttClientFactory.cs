@@ -13,8 +13,6 @@ namespace CK.MQTT.Sdk
     /// </summary>
     public class MqttClientFactory
     {
-        static readonly ITracer _tracer = Tracer.Get<MqttClientFactory>();
-
         readonly string _hostAddress;
         readonly IMqttBinding _binding;
 
@@ -73,7 +71,7 @@ namespace CK.MQTT.Sdk
             }
             catch( Exception ex )
             {
-                _tracer.Error( ex, ClientProperties.Client_InitializeError );
+                m.Error( ClientProperties.Client_InitializeError, ex );
 
                 throw new MqttClientException( ClientProperties.Client_InitializeError, ex );
             }
