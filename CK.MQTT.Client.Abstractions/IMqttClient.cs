@@ -43,7 +43,7 @@ namespace CK.MQTT
         /// an error or a remote disconnection produced by the Server.
         /// The stream subscritpions should be created again if the client is intended to be re-connected
         /// </remarks>
-        IObservable<Monitored<MqttApplicationMessage>> MessageStream { get; }
+        IObservable<IMonitored<MqttApplicationMessage>> MessageStream { get; }
 
         /// <summary>
         /// Represents the protocol connection, which consists of sending a CONNECT packet

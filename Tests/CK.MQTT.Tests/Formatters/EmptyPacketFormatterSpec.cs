@@ -49,9 +49,7 @@ namespace Tests.Formatters
             IFormatter formatter = GetFormatter( packetType, type );
             byte[] packet = Packet.ReadAllBytes( packetPath );
 
-            AggregateException ex = Assert.Throws<AggregateException>( () => formatter.FormatAsync( packet ).Wait() );
-
-            Assert.True( ex.InnerException is MqttException );
+            Assert.Throws<MqttException>( () => formatter.FormatAsync( packet ).Wait() );
         }
 
         [Theory]

@@ -43,9 +43,8 @@ namespace Tests.Formatters
             ConnectFormatter formatter = new ConnectFormatter();
             byte[] packet = Packet.ReadAllBytes( packetPath );
 
-            AggregateException ex = Assert.Throws<AggregateException>( () => formatter.FormatAsync( packet ).Wait() );
-
-            Assert.True( ex.InnerException is MqttException );
+            Action action = () => formatter.FormatAsync( packet ).Wait();
+            action.Should().Throw<Exception>();
         }
 
         [Theory]
@@ -74,9 +73,7 @@ namespace Tests.Formatters
             ConnectFormatter formatter = new ConnectFormatter();
             Connect connect = Packet.ReadPacket<Connect>( jsonPath );
 
-            AggregateException ex = Assert.Throws<AggregateException>( () => formatter.FormatAsync( connect ).Wait() );
-
-            Assert.True( ex.InnerException is MqttException );
+            Assert.Throws<MqttException>( () => formatter.FormatAsync( connect ).Wait() );
         }
     }
 }

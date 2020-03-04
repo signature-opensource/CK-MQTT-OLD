@@ -72,7 +72,7 @@ namespace CK.MQTT.Sdk.Flows
                 _willRepository.Create( connectionWill );
             }
 
-            await channel.SendAsync( new Monitored<IPacket>( m, new ConnectAck( MqttConnectionStatus.Accepted, sessionPresent ) ) );
+            await channel.SendAsync( Monitored<IPacket>.Create( m, new ConnectAck( MqttConnectionStatus.Accepted, sessionPresent ) ) );
 
             if( sendPendingMessages )
             {

@@ -38,7 +38,7 @@ namespace CK.MQTT.Sdk.Flows
                 return;
             }
 
-            await channel.SendAsync( new Monitored<IPacket>( m, ack ) );
+            await channel.SendAsync( Monitored<IPacket>.Create( m, ack ) );
 
             if( ack.Type == MqttPacketType.PublishReceived )
             {
@@ -79,14 +79,14 @@ namespace CK.MQTT.Sdk.Flows
                     {
                         m.Warn( ClientProperties.PublishFlow_RetryingQoSFlow( sentMessage.Type, clientId ) );
 
-                        await channel.SendAsync( new Monitored<IPacket>( m, sentMessage ) );
+                        await channel.SendAsync( Monitored<IPacket>.Create( m, sentMessage ) );
                     }
                 } ) )
             {
                 await channel
                     .ReceiverStream
                     .ObserveOn( NewThreadScheduler.Default )
-                    .OfType<Monitored<T>>()
+                    .OfMonitoredType<T>()
                     .FirstOrDefaultAsync( x => x.Item.PacketId == sentMessage.PacketId );
             }
         }

@@ -44,7 +44,7 @@ namespace Tests.Flows
             IPacket response = default;
 
             channel.Setup( c => c.SendAsync( It.IsAny<Monitored<IPacket>>() ) )
-                .Callback<IPacket>( p => response = p )
+                .Callback<IMonitored<IPacket>>( p => response = p.Item )
                 .Returns( Task.Delay( 0 ) );
 
             Mock<IConnectionProvider> connectionProvider = new Mock<IConnectionProvider>();
@@ -83,7 +83,7 @@ namespace Tests.Flows
             IPacket response = default;
 
             channel.Setup( c => c.SendAsync( It.IsAny<Monitored<IPacket>>() ) )
-                .Callback<IPacket>( p => response = p )
+                .Callback<IMonitored<IPacket>>( p => response = p.Item )
                 .Returns( Task.Delay( 0 ) );
 
             Mock<IConnectionProvider> connectionProvider = new Mock<IConnectionProvider>();

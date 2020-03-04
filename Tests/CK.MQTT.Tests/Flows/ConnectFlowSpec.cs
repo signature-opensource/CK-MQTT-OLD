@@ -31,7 +31,7 @@ namespace Tests.Flows
             IPacket sentPacket = default;
 
             channel.Setup( c => c.SendAsync( It.IsAny<Monitored<IPacket>>() ) )
-                .Callback<IPacket>( packet => sentPacket = packet )
+                .Callback<IMonitored<IPacket>>( packet => sentPacket = packet.Item )
                 .Returns( Task.Delay( 0 ) );
 
             Mock<IConnectionProvider> connectionProvider = new Mock<IConnectionProvider>();
@@ -79,7 +79,7 @@ namespace Tests.Flows
             IPacket sentPacket = default;
 
             channel.Setup( c => c.SendAsync( It.IsAny<Monitored<IPacket>>() ) )
-                .Callback<IPacket>( packet => sentPacket = packet )
+                .Callback<IMonitored<IPacket>>( packet => sentPacket = packet.Item )
                 .Returns( Task.Delay( 0 ) );
 
             Mock<IConnectionProvider> connectionProvider = new Mock<IConnectionProvider>();
@@ -126,7 +126,7 @@ namespace Tests.Flows
             IPacket sentPacket = default;
 
             channel.Setup( c => c.SendAsync( It.IsAny<Monitored<IPacket>>() ) )
-                .Callback<IPacket>( packet => sentPacket = packet )
+                .Callback<IMonitored<IPacket>>( packet => sentPacket = packet.Item )
                 .Returns( Task.Delay( 0 ) );
 
             Mock<IConnectionProvider> connectionProvider = new Mock<IConnectionProvider>();
@@ -171,7 +171,7 @@ namespace Tests.Flows
             IPacket sentPacket = default;
 
             channel.Setup( c => c.SendAsync( It.IsAny<Monitored<IPacket>>() ) )
-                .Callback<IPacket>( packet => sentPacket = packet )
+                .Callback<IMonitored<IPacket>>( packet => sentPacket = packet.Item )
                 .Returns( Task.Delay( 0 ) );
 
             Mock<IConnectionProvider> connectionProvider = new Mock<IConnectionProvider>();
@@ -210,7 +210,7 @@ namespace Tests.Flows
             IPacket sentPacket = default;
 
             channel.Setup( c => c.SendAsync( It.IsAny<Monitored<IPacket>>() ) )
-                .Callback<IPacket>( packet => sentPacket = packet )
+                .Callback<IMonitored<IPacket>>( packet => sentPacket = packet.Item )
                 .Returns( Task.Delay( 0 ) );
 
             Mock<IConnectionProvider> connectionProvider = new Mock<IConnectionProvider>();
@@ -249,7 +249,7 @@ namespace Tests.Flows
             IPacket sentPacket = default;
 
             channel.Setup( c => c.SendAsync( It.IsAny<Monitored<IPacket>>() ) )
-                .Callback<IPacket>( packet => sentPacket = packet )
+                .Callback<IMonitored<IPacket>>( packet => sentPacket = packet.Item )
                 .Returns( Task.Delay( 0 ) );
 
             Mock<IConnectionProvider> connectionProvider = new Mock<IConnectionProvider>();
@@ -318,17 +318,17 @@ namespace Tests.Flows
 
             senderFlow
                 .Setup( f => f.SendPublishAsync( TestHelper.Monitor, It.IsAny<string>(), It.IsAny<Publish>(), It.IsAny<IMqttChannel<IPacket>>(), It.IsAny<PendingMessageStatus>() ) )
-                .Callback<string, Publish, IMqttChannel<IPacket>, PendingMessageStatus>( async ( id, pub, ch, stat ) =>
+                .Callback<IActivityMonitor, string, Publish, IMqttChannel<IPacket>, PendingMessageStatus>( async (m, id, pub, ch, stat ) =>
                  {
-                     await ch.SendAsync( new Monitored<IPacket>( TestHelper.Monitor, pub ) );
+                     await ch.SendAsync( Monitored<IPacket>.Create( m, pub ) );
                  } )
                 .Returns( Task.Delay( 0 ) );
 
             senderFlow
                 .Setup( f => f.SendAckAsync( TestHelper.Monitor, It.IsAny<string>(), It.IsAny<IFlowPacket>(), It.IsAny<IMqttChannel<IPacket>>(), It.IsAny<PendingMessageStatus>() ) )
-                .Callback<string, IFlowPacket, IMqttChannel<IPacket>, PendingMessageStatus>( async ( id, pack, ch, stat ) =>
+                .Callback<IActivityMonitor, string, IFlowPacket, IMqttChannel<IPacket>, PendingMessageStatus>( async ( m, id, pack, ch, stat ) =>
                  {
-                     await ch.SendAsync( new Monitored<IPacket>( TestHelper.Monitor, pack ) );
+                     await ch.SendAsync( Monitored<IPacket>.Create( TestHelper.Monitor, pack ) );
                  } )
                 .Returns( Task.Delay( 0 ) );
 
@@ -339,15 +339,15 @@ namespace Tests.Flows
 
             channel
                 .Setup( c => c.SendAsync( It.IsAny<Monitored<IPacket>>() ) )
-                .Callback<IPacket>( packet =>
+                .Callback<IMonitored<IPacket>>( packet =>
                  {
                      if( firstPacket == default( IPacket ) )
                      {
-                         firstPacket = packet;
+                         firstPacket = packet.Item;
                      }
                      else
                      {
-                         nextPackets.Add( packet );
+                         nextPackets.Add( packet.Item );
                      }
                  } )
                 .Returns( Task.Delay( 0 ) );

@@ -7,11 +7,11 @@ namespace CK.MQTT.Sdk.Bindings
 {
     internal class PrivateChannelFactory : IMqttChannelFactory
     {
-        readonly ISubject<Monitored<PrivateStream>> _privateStreamListener;
+        readonly ISubject<IMonitored<PrivateStream>> _privateStreamListener;
         readonly EndpointIdentifier _identifier;
         readonly MqttConfiguration _configuration;
 
-        public PrivateChannelFactory( ISubject<Monitored<PrivateStream>> privateStreamListener, EndpointIdentifier identifier, MqttConfiguration configuration )
+        public PrivateChannelFactory( ISubject<IMonitored<PrivateStream>> privateStreamListener, EndpointIdentifier identifier, MqttConfiguration configuration )
         {
             _privateStreamListener = privateStreamListener;
             _identifier = identifier;
@@ -22,7 +22,7 @@ namespace CK.MQTT.Sdk.Bindings
         {
             PrivateStream stream = new PrivateStream( _configuration );
             var monitor = new ActivityMonitor();
-            _privateStreamListener.OnNext( new Monitored<PrivateStream>( monitor, stream ) );
+            _privateStreamListener.OnNext( Monitored<PrivateStream>.Create( monitor, stream ) );
 
             return Task.FromResult<IMqttChannel<byte[]>>( new PrivateChannel( monitor, stream, _identifier, _configuration ) );
         }

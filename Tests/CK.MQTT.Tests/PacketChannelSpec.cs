@@ -21,7 +21,7 @@ namespace Tests
         public void when_creating_packet_channel_then_succeeds()
         {
             MqttConfiguration configuration = new MqttConfiguration { WaitTimeoutSecs = 1 };
-            Subject<Monitored<byte[]>> receiver = new Subject<Monitored<byte[]>>();
+            Subject<IMonitored<byte[]>> receiver = new Subject<IMonitored<byte[]>>();
             Mock<IMqttChannel<byte[]>> bufferedChannel = new Mock<IMqttChannel<byte[]>>();
 
             bufferedChannel.Setup( x => x.ReceiverStream ).Returns( receiver );
@@ -53,7 +53,7 @@ namespace Tests
         public void when_reading_bytes_from_source_then_notifies_packet( string packetPath, string jsonPath, Type packetType )
         {
             MqttConfiguration configuration = new MqttConfiguration { WaitTimeoutSecs = 1 };
-            Subject<Monitored<byte[]>> receiver = new Subject<Monitored<byte[]>>();
+            Subject<IMonitored<byte[]>> receiver = new Subject<IMonitored<byte[]>>();
             Mock<IMqttChannel<byte[]>> innerChannel = new Mock<IMqttChannel<byte[]>>();
 
             innerChannel.Setup( x => x.ReceiverStream ).Returns( receiver );
@@ -65,7 +65,7 @@ namespace Tests
             Mock<IPacketManager> manager = new Mock<IPacketManager>();
 
             manager.Setup( x => x.GetPacketAsync( It.IsAny<Monitored<byte[]>>() ) )
-                .Returns( Task.FromResult( new Monitored<IPacket>( TestHelper.Monitor, expectedPacket ) ) );
+                .Returns( Task.FromResult<IMonitored<IPacket>>( Monitored<IPacket>.Create( TestHelper.Monitor, expectedPacket ) ) );
 
             PacketChannel channel = new PacketChannel( TestHelper.Monitor, innerChannel.Object, manager.Object, configuration );
 
@@ -80,7 +80,7 @@ namespace Tests
 
             byte[] readPacket = Packet.ReadAllBytes( packetPath );
 
-            receiver.OnNext( new Monitored<byte[]>( TestHelper.Monitor, readPacket ) );
+            receiver.OnNext( Monitored<byte[]>.Create( TestHelper.Monitor, readPacket ) );
 
             Assert.NotNull( receivedPacket );
             expectedPacket.Should().Be( receivedPacket );
@@ -93,7 +93,7 @@ namespace Tests
         public void when_reading_bytes_then_notifies_packet( string packetPath, Type packetType )
         {
             MqttConfiguration configuration = new MqttConfiguration { WaitTimeoutSecs = 1 };
-            Subject<Monitored<byte[]>> receiver = new Subject<Monitored<byte[]>>();
+            Subject<IMonitored<byte[]>> receiver = new Subject<IMonitored<byte[]>>();
             Mock<IMqttChannel<byte[]>> innerChannel = new Mock<IMqttChannel<byte[]>>();
 
             innerChannel.Setup( x => x.ReceiverStream ).Returns( receiver );
@@ -102,7 +102,7 @@ namespace Tests
             Mock<IPacketManager> manager = new Mock<IPacketManager>();
 
             manager.Setup( x => x.GetPacketAsync( It.IsAny<Monitored<byte[]>>() ) )
-                .Returns( Task.FromResult( new Monitored<IPacket>( TestHelper.Monitor, (IPacket)expectedPacket ) ) );
+                .Returns( Task.FromResult<IMonitored<IPacket>>( Monitored<IPacket>.Create( TestHelper.Monitor, (IPacket)expectedPacket ) ) );
 
             PacketChannel channel = new PacketChannel( TestHelper.Monitor, innerChannel.Object, manager.Object, configuration );
 
@@ -117,7 +117,7 @@ namespace Tests
 
             byte[] readPacket = Packet.ReadAllBytes( packetPath );
 
-            receiver.OnNext( new Monitored<byte[]>( TestHelper.Monitor, readPacket ) );
+            receiver.OnNext( Monitored<byte[]>.Create( TestHelper.Monitor, readPacket ) );
 
             Assert.NotNull( receivedPacket );
             packetType.Should().Be( receivedPacket.GetType() );
@@ -148,7 +148,7 @@ namespace Tests
 
             byte[] bytes = Packet.ReadAllBytes( packetPath );
 
-            Subject<Monitored<byte[]>> receiver = new Subject<Monitored<byte[]>>();
+            Subject<IMonitored<byte[]>> receiver = new Subject<IMonitored<byte[]>>();
             Mock<IMqttChannel<byte[]>> innerChannel = new Mock<IMqttChannel<byte[]>>();
 
             innerChannel.Setup( x => x.ReceiverStream ).Returns( receiver );
@@ -162,11 +162,11 @@ namespace Tests
             Mock<IPacketManager> manager = new Mock<IPacketManager>();
 
             manager.Setup( x => x.GetBytesAsync( It.IsAny<Monitored<IPacket>>() ) )
-                .Returns( Task.FromResult( new Monitored<byte[]>( TestHelper.Monitor, bytes ) ) );
+                .Returns( Task.FromResult<IMonitored<byte[]>>( Monitored<byte[]>.Create( TestHelper.Monitor, bytes ) ) );
 
             PacketChannel channel = new PacketChannel( TestHelper.Monitor, innerChannel.Object, manager.Object, configuration );
 
-            await channel.SendAsync( new Monitored<IPacket>( TestHelper.Monitor, packet ) );
+            await channel.SendAsync( Monitored<IPacket>.Create( TestHelper.Monitor, packet ) );
 
             innerChannel.Verify( x => x.SendAsync( It.Is<Monitored<byte[]>>( b => b.Item.ToList().SequenceEqual( bytes ) ) ) );
             manager.Verify( x => x.GetBytesAsync( It.Is<Monitored<IPacket>>( p => Convert.ChangeType( p.Item, packetType ) == packet ) ) );
@@ -184,7 +184,7 @@ namespace Tests
 
             byte[] bytes = Packet.ReadAllBytes( packetPath );
 
-            Subject<Monitored<byte[]>> receiver = new Subject<Monitored<byte[]>>();
+            Subject<IMonitored<byte[]>> receiver = new Subject<IMonitored<byte[]>>();
             Mock<IMqttChannel<byte[]>> innerChannel = new Mock<IMqttChannel<byte[]>>();
 
             innerChannel.Setup( x => x.ReceiverStream ).Returns( receiver );
@@ -196,11 +196,11 @@ namespace Tests
             Mock<IPacketManager> manager = new Mock<IPacketManager>();
 
             manager.Setup( x => x.GetBytesAsync( It.IsAny<Monitored<IPacket>>() ) )
-                .Returns( Task.FromResult( new Monitored<byte[]>( TestHelper.Monitor, bytes ) ) );
+                .Returns( Task.FromResult<IMonitored<byte[]>>( Monitored<byte[]>.Create( TestHelper.Monitor, bytes ) ) );
 
             PacketChannel channel = new PacketChannel( TestHelper.Monitor, innerChannel.Object, manager.Object, configuration );
 
-            await channel.SendAsync( new Monitored<IPacket>( TestHelper.Monitor, packet ) );
+            await channel.SendAsync( Monitored<IPacket>.Create( TestHelper.Monitor, packet ) );
 
             innerChannel.Verify( x => x.SendAsync( It.Is<Monitored<byte[]>>( b => b.Item.ToList().SequenceEqual( bytes ) ) ) );
             manager.Verify( x => x.GetBytesAsync( It.Is<Monitored<IPacket>>( p => Convert.ChangeType( p.Item, packetType ) == packet ) ) );
@@ -210,7 +210,7 @@ namespace Tests
         public void when_packet_channel_error_then_notifies()
         {
             MqttConfiguration configuration = new MqttConfiguration { WaitTimeoutSecs = 1 };
-            Subject<Monitored<byte[]>> receiver = new Subject<Monitored<byte[]>>();
+            Subject<IMonitored<byte[]>> receiver = new Subject<IMonitored<byte[]>>();
             Mock<IMqttChannel<byte[]>> innerChannel = new Mock<IMqttChannel<byte[]>>();
 
             innerChannel.Setup( x => x.ReceiverStream ).Returns( receiver );

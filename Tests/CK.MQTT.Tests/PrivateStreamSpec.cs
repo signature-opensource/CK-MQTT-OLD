@@ -44,12 +44,12 @@ namespace Tests
                     serverReceived++;
                 } );
 
-            stream.Send( new Monitored<byte[]>( TestHelper.Monitor, new byte[255] ), EndpointIdentifier.Client );
-            stream.Send( new Monitored<byte[]>( TestHelper.Monitor, new byte[100] ), EndpointIdentifier.Client );
-            stream.Send( new Monitored<byte[]>( TestHelper.Monitor, new byte[30] ), EndpointIdentifier.Client );
-            stream.Send( new Monitored<byte[]>( TestHelper.Monitor, new byte[10] ), EndpointIdentifier.Server );
-            stream.Send( new Monitored<byte[]>( TestHelper.Monitor, new byte[500] ), EndpointIdentifier.Server );
-            stream.Send( new Monitored<byte[]>( TestHelper.Monitor, new byte[5] ), EndpointIdentifier.Server );
+            stream.Send( Monitored<byte[]>.Create( TestHelper.Monitor, new byte[255] ), EndpointIdentifier.Client );
+            stream.Send( Monitored<byte[]>.Create( TestHelper.Monitor, new byte[100] ), EndpointIdentifier.Client );
+            stream.Send( Monitored<byte[]>.Create( TestHelper.Monitor, new byte[30] ), EndpointIdentifier.Client );
+            stream.Send( Monitored<byte[]>.Create( TestHelper.Monitor, new byte[10] ), EndpointIdentifier.Server );
+            stream.Send( Monitored<byte[]>.Create( TestHelper.Monitor, new byte[500] ), EndpointIdentifier.Server );
+            stream.Send( Monitored<byte[]>.Create( TestHelper.Monitor, new byte[5] ), EndpointIdentifier.Server );
 
             await Task.Delay( TimeSpan.FromMilliseconds( 1000 ) );
 
@@ -71,9 +71,9 @@ namespace Tests
                     serverReceived++;
                 } );
 
-            stream.Send( new Monitored<byte[]>( TestHelper.Monitor, new byte[255] ), EndpointIdentifier.Client );
-            stream.Send( new Monitored<byte[]>( TestHelper.Monitor, new byte[100] ), EndpointIdentifier.Client );
-            stream.Send( new Monitored<byte[]>( TestHelper.Monitor, new byte[30] ), EndpointIdentifier.Client );
+            stream.Send( Monitored<byte[]>.Create( TestHelper.Monitor, new byte[255] ), EndpointIdentifier.Client );
+            stream.Send( Monitored<byte[]>.Create( TestHelper.Monitor, new byte[100] ), EndpointIdentifier.Client );
+            stream.Send( Monitored<byte[]>.Create( TestHelper.Monitor, new byte[30] ), EndpointIdentifier.Client );
 
             await Task.Delay( TimeSpan.FromMilliseconds( 1000 ) );
 

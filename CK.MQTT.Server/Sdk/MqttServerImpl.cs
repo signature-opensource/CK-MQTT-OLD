@@ -26,7 +26,7 @@ namespace CK.MQTT.Sdk
         readonly IConnectionProvider _connectionProvider;
         readonly ISubject<MqttUndeliveredMessage> _undeliveredMessagesListener;
         readonly MqttConfiguration _configuration;
-        readonly ISubject<Monitored<PrivateStream>> _privateStreamListener;
+        readonly ISubject<IMonitored<PrivateStream>> _privateStreamListener;
         readonly IList<IMqttChannel<IPacket>> _channels = new List<IMqttChannel<IPacket>>();
 
         internal MqttServerImpl( IActivityMonitor m,
@@ -37,7 +37,7 @@ namespace CK.MQTT.Sdk
             ISubject<MqttUndeliveredMessage> undeliveredMessagesListener,
             MqttConfiguration configuration )
         {
-            _privateStreamListener = new Subject<Monitored<PrivateStream>>();
+            _privateStreamListener = new Subject<IMonitored<PrivateStream>>();
             _binaryChannelListeners = new[] { new PrivateChannelListener( _privateStreamListener, configuration ), binaryChannelListener };
             _m = m;
             _channelFactory = channelFactory;

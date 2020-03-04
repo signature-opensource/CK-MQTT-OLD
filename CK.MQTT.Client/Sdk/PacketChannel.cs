@@ -14,8 +14,8 @@ namespace CK.MQTT.Sdk
         readonly IActivityMonitor _m;
         readonly IMqttChannel<byte[]> _innerChannel;
         readonly IPacketManager _manager;
-        readonly ReplaySubject<Monitored<IPacket>> _receiver;
-        readonly ReplaySubject<Monitored<IPacket>> _sender;
+        readonly ReplaySubject<IMonitored<IPacket>> _receiver;
+        readonly ReplaySubject<IMonitored<IPacket>> _sender;
         readonly IDisposable _subscription;
 
         public PacketChannel( IActivityMonitor m,
@@ -27,15 +27,15 @@ namespace CK.MQTT.Sdk
             _innerChannel = innerChannel;
             _manager = manager;
 
-            _receiver = new ReplaySubject<Monitored<IPacket>>( window: TimeSpan.FromSeconds( configuration.WaitTimeoutSecs ) );
-            _sender = new ReplaySubject<Monitored<IPacket>>( window: TimeSpan.FromSeconds( configuration.WaitTimeoutSecs ) );
+            _receiver = new ReplaySubject<IMonitored<IPacket>>( window: TimeSpan.FromSeconds( configuration.WaitTimeoutSecs ) );
+            _sender = new ReplaySubject<IMonitored<IPacket>>( window: TimeSpan.FromSeconds( configuration.WaitTimeoutSecs ) );
             _subscription = innerChannel
                 .ReceiverStream
                 .Subscribe( async bytes =>
                 {
                     try
                     {
-                        Monitored<IPacket> packet = await _manager.GetPacketAsync( bytes );
+                        IMonitored<IPacket> packet = await _manager.GetPacketAsync( bytes );
 
                         _receiver.OnNext( packet );
                     }
@@ -48,11 +48,11 @@ namespace CK.MQTT.Sdk
 
         public bool IsConnected => _innerChannel != null && _innerChannel.IsConnected;
 
-        public IObservable<Monitored<IPacket>> ReceiverStream => _receiver;
+        public IObservable<IMonitored<IPacket>> ReceiverStream => _receiver;
 
-        public IObservable<Monitored<IPacket>> SenderStream => _sender;
+        public IObservable<IMonitored<IPacket>> SenderStream => _sender;
 
-        public async Task SendAsync( Monitored<IPacket> packet )
+        public async Task SendAsync( IMonitored<IPacket> packet )
         {
             if( _disposed )
             {

@@ -18,7 +18,7 @@ namespace CK.MQTT.Sdk
         readonly IMqttChannel<IPacket> _channel;
         readonly IProtocolFlowProvider _flowProvider;
         readonly MqttConfiguration _configuration;
-        readonly ReplaySubject<Monitored<IPacket>> _packets;
+        readonly ReplaySubject<IMonitored<IPacket>> _packets;
         readonly TaskRunner _flowRunner;
         IDisposable _listenerDisposable;
         bool _disposed;
@@ -34,11 +34,11 @@ namespace CK.MQTT.Sdk
             _channel = channel;
             _flowProvider = flowProvider;
             _configuration = configuration;
-            _packets = new ReplaySubject<Monitored<IPacket>>( window: TimeSpan.FromSeconds( configuration.WaitTimeoutSecs ) );
+            _packets = new ReplaySubject<IMonitored<IPacket>>( window: TimeSpan.FromSeconds( configuration.WaitTimeoutSecs ) );
             _flowRunner = TaskRunner.Get();
         }
 
-        public IObservable<Monitored<IPacket>> PacketStream => _packets;
+        public IObservable<IMonitored<IPacket>> PacketStream => _packets;
 
         public void Listen()
         {
@@ -137,13 +137,13 @@ namespace CK.MQTT.Sdk
         IDisposable ListenSentConnectPacket()
             => _channel
                 .SenderStream
-                .OfType<Monitored<Connect>>()
+                .OfMonitoredType<Connect>()
                 .FirstAsync()
                 .Subscribe( connect => _clientId = connect.Item.ClientId );
 
         IDisposable ListenSentDisconnectPacket()
             => _channel.SenderStream
-                .OfType<Monitored<Disconnect>>()
+                .OfMonitoredType<Disconnect>()
                 .FirstAsync()
                 .ObserveOn( NewThreadScheduler.Default )
                 .Subscribe( disconnect =>
@@ -166,8 +166,8 @@ namespace CK.MQTT.Sdk
 
                          PingRequest ping = new PingRequest();
 
-                         _channel.SendAsync( new Monitored<IPacket>( monitor, ping ) );
-                         _channel.ReceiverStream.OfType<Monitored<PingResponse>>().Timeout( TimeSpan.FromSeconds( _configuration.WaitTimeoutSecs ) );
+                         _channel.SendAsync( Monitored<IPacket>.Create( monitor, ping ) );
+                         _channel.ReceiverStream.OfMonitoredType<PingResponse>().Timeout( TimeSpan.FromSeconds( _configuration.WaitTimeoutSecs ) );
                      }
                      catch( Exception ex )
                      {
@@ -181,7 +181,7 @@ namespace CK.MQTT.Sdk
             _keepAliveMonitor.Dispose();
         }
 
-        async Task DispatchPacketAsync( Monitored<IPacket> packet )
+        async Task DispatchPacketAsync( IMonitored<IPacket> packet )
         {
             IProtocolFlow flow = _flowProvider.GetFlow( packet.Item.Type );
 

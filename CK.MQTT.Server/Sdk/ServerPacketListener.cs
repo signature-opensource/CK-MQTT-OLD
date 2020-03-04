@@ -20,7 +20,7 @@ namespace CK.MQTT.Sdk
         readonly IConnectionProvider _connectionProvider;
         readonly IProtocolFlowProvider _flowProvider;
         readonly MqttConfiguration _configuration;
-        readonly ReplaySubject<Monitored<IPacket>> _packets;
+        readonly ReplaySubject<IMonitored<IPacket>> _packets;
         readonly TaskRunner _flowRunner;
         CompositeDisposable _listenerDisposable;
         bool _disposed;
@@ -38,11 +38,11 @@ namespace CK.MQTT.Sdk
             _connectionProvider = connectionProvider;
             _flowProvider = flowProvider;
             _configuration = configuration;
-            _packets = new ReplaySubject<Monitored<IPacket>>( window: TimeSpan.FromSeconds( configuration.WaitTimeoutSecs ) );
+            _packets = new ReplaySubject<IMonitored<IPacket>>( window: TimeSpan.FromSeconds( configuration.WaitTimeoutSecs ) );
             _flowRunner = TaskRunner.Get();
         }
 
-        public IObservable<Monitored<IPacket>> PacketStream => _packets;
+        public IObservable<IMonitored<IPacket>> PacketStream => _packets;
 
         public void Listen()
         {
@@ -96,7 +96,7 @@ namespace CK.MQTT.Sdk
 
                     packet.Monitor.Info( ServerProperties.ServerPacketListener_ConnectPacketReceived( _clientId ) );
 
-                    await DispatchPacketAsync( new Monitored<IPacket>( packet.Monitor, connect ) );
+                    await DispatchPacketAsync( Monitored<IPacket>.Create( packet.Monitor, connect ) );
                 }, async ( e ) =>
                 {
                     var m = new ActivityMonitor();
@@ -142,7 +142,7 @@ namespace CK.MQTT.Sdk
 
         IDisposable ListenSentPackets()
             => _channel.SenderStream
-                .OfType<Monitored<ConnectAck>>()
+                .OfMonitoredType<ConnectAck>()
                 .FirstAsync()
                 .Subscribe( connectAck =>
                 {
@@ -167,7 +167,7 @@ namespace CK.MQTT.Sdk
 
                 try
                 {
-                    await _channel.SendAsync( new Monitored<IPacket>( m, errorAck ) );
+                    await _channel.SendAsync( Monitored<IPacket>.Create( m, errorAck ) );
                 }
                 catch( Exception ex )
                 {
@@ -212,7 +212,7 @@ namespace CK.MQTT.Sdk
             return TimeSpan.FromSeconds( tolerance );
         }
 
-        async Task DispatchPacketAsync( Monitored<IPacket> packet )
+        async Task DispatchPacketAsync( IMonitored<IPacket> packet )
         {
             IProtocolFlow flow = _flowProvider.GetFlow( packet.Item.Type );
 

@@ -15,7 +15,7 @@ namespace Tests
         [Test]
         public async Task when_creating_channel_then_succeeds()
         {
-            PrivateChannelFactory factory = new PrivateChannelFactory( Mock.Of<ISubject<Monitored<PrivateStream>>>(), EndpointIdentifier.Client, new MqttConfiguration() );
+            PrivateChannelFactory factory = new PrivateChannelFactory( Mock.Of<ISubject<IMonitored<PrivateStream>>>(), EndpointIdentifier.Client, new MqttConfiguration() );
             CK.MQTT.Sdk.IMqttChannel<byte[]> channel = await factory.CreateAsync(TestHelper.Monitor);
 
             Assert.NotNull( channel );

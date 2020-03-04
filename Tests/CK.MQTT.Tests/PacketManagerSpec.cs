@@ -53,7 +53,7 @@ namespace Tests
                 .Returns( Task.FromResult( (IPacket)packet ) );
 
             PacketManager packetManager = new PacketManager( formatter.Object );
-            var result = await packetManager.GetPacketAsync( new Monitored<byte[]>( TestHelper.Monitor, bytes ) );
+            var result = await packetManager.GetPacketAsync( Monitored<byte[]>.Create( TestHelper.Monitor, bytes ) );
             packet.Should().Be( result.Item );
         }
 
@@ -91,8 +91,8 @@ namespace Tests
                 .Returns( Task.FromResult( bytes ) );
 
             PacketManager packetManager = new PacketManager( formatter.Object );
-            var result = await packetManager.GetBytesAsync( new Monitored<IPacket>( TestHelper.Monitor, packet ) );
-            bytes.Should().BeEquivalentTo( result );
+            var result = await packetManager.GetBytesAsync( Monitored<IPacket>.Create( TestHelper.Monitor, packet ) );
+            bytes.Should().BeEquivalentTo( result.Item );
         }
 
         [Theory]
@@ -115,9 +115,9 @@ namespace Tests
                 .Returns( Task.FromResult( bytes ) );
 
             PacketManager packetManager = new PacketManager( formatter.Object );
-            var result = await packetManager.GetBytesAsync( new Monitored<IPacket>( TestHelper.Monitor, packet ) );
+            var result = await packetManager.GetBytesAsync( Monitored<IPacket>.Create( TestHelper.Monitor, packet ) );
 
-            bytes.Should().BeEquivalentTo( result );
+            bytes.Should().BeEquivalentTo( result.Item );
         }
 
         [Theory]
@@ -148,7 +148,7 @@ namespace Tests
             Mock<IFormatter> formatter = new Mock<IFormatter>();
             PacketManager packetManager = new PacketManager( formatter.Object );
 
-            AggregateException ex = Assert.Throws<AggregateException>( () => packetManager.GetPacketAsync( new Monitored<byte[]>( TestHelper.Monitor, packet ) ).Wait() );
+            AggregateException ex = Assert.Throws<AggregateException>( () => packetManager.GetPacketAsync( Monitored<byte[]>.Create( TestHelper.Monitor, packet ) ).Wait() );
 
             ex.InnerException.Should().BeOfType<MqttException>();
         }
@@ -178,7 +178,7 @@ namespace Tests
             Mock<IFormatter> formatter = new Mock<IFormatter>();
             PacketManager packetManager = new PacketManager( formatter.Object );
 
-            AggregateException ex = Assert.Throws<AggregateException>( () => packetManager.GetBytesAsync( new Monitored<IPacket>( TestHelper.Monitor, packet ) ).Wait() );
+            AggregateException ex = Assert.Throws<AggregateException>( () => packetManager.GetBytesAsync( Monitored<IPacket>.Create( TestHelper.Monitor, packet ) ).Wait() );
 
             Assert.True( ex.InnerException is MqttException );
         }

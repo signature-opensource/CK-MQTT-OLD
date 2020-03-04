@@ -19,8 +19,8 @@ namespace CK.MQTT.Sdk.Bindings
         readonly IActivityMonitor _m;
         readonly IChannelClient _client;
         readonly IPacketBuffer _buffer;
-        readonly ReplaySubject<Monitored<byte[]>> _receiver;
-        readonly ReplaySubject<Monitored<byte[]>> _sender;
+        readonly ReplaySubject<IMonitored<byte[]>> _receiver;
+        readonly ReplaySubject<IMonitored<byte[]>> _sender;
         readonly IDisposable _streamSubscription;
 
         public GenericChannel(
@@ -34,8 +34,8 @@ namespace CK.MQTT.Sdk.Bindings
             _client.PreferedReceiveBufferSize = configuration.BufferSize;
             _client.PreferedSendBufferSize = configuration.BufferSize;
             _buffer = buffer;
-            _receiver = new ReplaySubject<Monitored<byte[]>>( window: TimeSpan.FromSeconds( configuration.WaitTimeoutSecs ) );
-            _sender = new ReplaySubject<Monitored<byte[]>>( window: TimeSpan.FromSeconds( configuration.WaitTimeoutSecs ) );
+            _receiver = new ReplaySubject<IMonitored<byte[]>>( window: TimeSpan.FromSeconds( configuration.WaitTimeoutSecs ) );
+            _sender = new ReplaySubject<IMonitored<byte[]>>( window: TimeSpan.FromSeconds( configuration.WaitTimeoutSecs ) );
             _streamSubscription = SubscribeStream();
         }
 
@@ -58,11 +58,11 @@ namespace CK.MQTT.Sdk.Bindings
             }
         }
 
-        public IObservable<Monitored<byte[]>> ReceiverStream => _receiver;
+        public IObservable<IMonitored<byte[]>> ReceiverStream => _receiver;
 
-        public IObservable<Monitored<byte[]>> SenderStream => _sender;
+        public IObservable<IMonitored<byte[]>> SenderStream => _sender;
 
-        public async Task SendAsync( Monitored<byte[]> message )
+        public async Task SendAsync( IMonitored<byte[]> message )
         {
             if( _disposed )
             {
@@ -136,7 +136,7 @@ namespace CK.MQTT.Sdk.Bindings
                         {
                             m.Trace( "Received packet of {packet.Length} bytes" );
 
-                            _receiver.OnNext( new Monitored<byte[]>( m, packet ) );
+                            _receiver.OnNext( Monitored<byte[]>.Create( m, packet ) );
                         }
                     }
                 }

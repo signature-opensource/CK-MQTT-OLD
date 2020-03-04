@@ -36,9 +36,7 @@ namespace Tests.Formatters
             FlowPacketFormatter<PublishRelease> formatter = new FlowPacketFormatter<PublishRelease>( MqttPacketType.PublishRelease, id => new PublishRelease( id ) );
             byte[] packet = Packet.ReadAllBytes( packetPath );
 
-            AggregateException ex = Assert.Throws<AggregateException>( () => formatter.FormatAsync( packet ).Wait() );
-
-            Assert.True( ex.InnerException is MqttException );
+            Assert.Throws<MqttException>( () => formatter.FormatAsync( packet ).Wait() );
         }
 
         [Theory]

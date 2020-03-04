@@ -66,12 +66,12 @@ namespace Tests.Flows
                 }
             };
 
-            Subject<Monitored<IPacket>> client1Receiver = new Subject<Monitored<IPacket>>();
+            Subject<IMonitored<IPacket>> client1Receiver = new Subject<IMonitored<IPacket>>();
             Mock<IMqttChannel<IPacket>> client1Channel = new Mock<IMqttChannel<IPacket>>();
 
             client1Channel.Setup( c => c.ReceiverStream ).Returns( client1Receiver );
 
-            Subject<Monitored<IPacket>> client2Receiver = new Subject<Monitored<IPacket>>();
+            Subject<IMonitored<IPacket>> client2Receiver = new Subject<IMonitored<IPacket>>();
             Mock<IMqttChannel<IPacket>> client2Channel = new Mock<IMqttChannel<IPacket>>();
 
             client2Channel.Setup( c => c.ReceiverStream ).Returns( client2Receiver );
@@ -91,7 +91,7 @@ namespace Tests.Flows
                 Payload = Encoding.UTF8.GetBytes( "Publish Receiver Flow Test" )
             };
 
-            Subject<Monitored<IPacket>> receiver = new Subject<Monitored<IPacket>>();
+            Subject<IMonitored<IPacket>> receiver = new Subject<IMonitored<IPacket>>();
             Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
 
             channel.Setup( c => c.ReceiverStream ).Returns( receiver );
@@ -146,7 +146,7 @@ namespace Tests.Flows
                 }
             }};
 
-            Subject<Monitored<IPacket>> clientReceiver = new Subject<Monitored<IPacket>>();
+            Subject<IMonitored<IPacket>> clientReceiver = new Subject<IMonitored<IPacket>>();
             Mock<IMqttChannel<IPacket>> clientChannel = new Mock<IMqttChannel<IPacket>>();
 
             clientChannel.Setup( c => c.ReceiverStream ).Returns( clientReceiver );
@@ -164,7 +164,7 @@ namespace Tests.Flows
                 Payload = Encoding.UTF8.GetBytes( "Publish Flow Test" )
             };
 
-            Subject<Monitored<IPacket>> receiver = new Subject<Monitored<IPacket>>();
+            Subject<IMonitored<IPacket>> receiver = new Subject<IMonitored<IPacket>>();
             Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
 
             channel.Setup( c => c.IsConnected ).Returns( true );
@@ -222,7 +222,7 @@ namespace Tests.Flows
                 }
             }};
 
-            Subject<Monitored<IPacket>> clientReceiver = new Subject<Monitored<IPacket>>();
+            Subject<IMonitored<IPacket>> clientReceiver = new Subject<IMonitored<IPacket>>();
             Mock<IMqttChannel<IPacket>> clientChannel = new Mock<IMqttChannel<IPacket>>();
 
             clientChannel.Setup( c => c.ReceiverStream ).Returns( clientReceiver );
@@ -239,8 +239,8 @@ namespace Tests.Flows
                 Payload = Encoding.UTF8.GetBytes( "Publish Flow Test" )
             };
 
-            Subject<Monitored<IPacket>> receiver = new Subject<Monitored<IPacket>>();
-            Subject<Monitored<IPacket>> sender = new Subject<Monitored<IPacket>>();
+            Subject<IMonitored<IPacket>> receiver = new Subject<IMonitored<IPacket>>();
+            Subject<IMonitored<IPacket>> sender = new Subject<IMonitored<IPacket>>();
             Mock<IMqttChannel<IPacket>> channelMock = new Mock<IMqttChannel<IPacket>>();
 
             channelMock.Setup( c => c.IsConnected ).Returns( true );
@@ -265,7 +265,7 @@ namespace Tests.Flows
 
             bool ackSent = ackSentSignal.Wait( 1000 );
 
-            receiver.OnNext( new Monitored<IPacket>( TestHelper.Monitor, new PublishRelease( packetId.Value ) ) );
+            receiver.OnNext( Monitored<IPacket>.Create( TestHelper.Monitor, new PublishRelease( packetId.Value ) ) );
 
             await Task.Delay( TimeSpan.FromMilliseconds( 1000 ) );
 
@@ -317,7 +317,7 @@ namespace Tests.Flows
                 }
             }};
 
-            Subject<Monitored<IPacket>> clientReceiver = new Subject<Monitored<IPacket>>();
+            Subject<IMonitored<IPacket>> clientReceiver = new Subject<IMonitored<IPacket>>();
             Mock<IMqttChannel<IPacket>> clientChannel = new Mock<IMqttChannel<IPacket>>();
 
             clientChannel.Setup( c => c.ReceiverStream ).Returns( clientReceiver );
@@ -331,15 +331,15 @@ namespace Tests.Flows
                 Payload = Encoding.UTF8.GetBytes( "Publish Receiver Flow Test" )
             };
 
-            Subject<Monitored<IPacket>> receiver = new Subject<Monitored<IPacket>>();
-            Subject<Monitored<IPacket>> sender = new Subject<Monitored<IPacket>>();
+            Subject<IMonitored<IPacket>> receiver = new Subject<IMonitored<IPacket>>();
+            Subject<IMonitored<IPacket>> sender = new Subject<IMonitored<IPacket>>();
             Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
 
             channel.Setup( c => c.IsConnected ).Returns( true );
             channel.Setup( c => c.ReceiverStream ).Returns( receiver );
             channel.Setup( c => c.SenderStream ).Returns( sender );
             channel.Setup( c => c.SendAsync( It.IsAny<Monitored<IPacket>>() ) )
-                .Callback<Monitored<IPacket>>( packet => sender.OnNext( packet ) )
+                .Callback<IMonitored<IPacket>>( packet => sender.OnNext( packet ) )
                 .Returns( Task.Delay( 0 ) );
 
             ManualResetEventSlim publishReceivedSignal = new ManualResetEventSlim( initialState: false );
@@ -403,7 +403,7 @@ namespace Tests.Flows
                 Payload = Encoding.UTF8.GetBytes( payload )
             };
 
-            Subject<Monitored<IPacket>> receiver = new Subject<Monitored<IPacket>>();
+            Subject<IMonitored<IPacket>> receiver = new Subject<IMonitored<IPacket>>();
             Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
 
             channel.Setup( c => c.ReceiverStream ).Returns( receiver );
@@ -455,7 +455,7 @@ namespace Tests.Flows
                 Payload = Encoding.UTF8.GetBytes( payload )
             };
 
-            Subject<Monitored<IPacket>> receiver = new Subject<Monitored<IPacket>>();
+            Subject<IMonitored<IPacket>> receiver = new Subject<IMonitored<IPacket>>();
             Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
 
             channel.Setup( c => c.ReceiverStream ).Returns( receiver );
@@ -505,7 +505,7 @@ namespace Tests.Flows
                 }
             }};
 
-            Subject<Monitored<IPacket>> clientReceiver = new Subject<Monitored<IPacket>>();
+            Subject<IMonitored<IPacket>> clientReceiver = new Subject<IMonitored<IPacket>>();
             Mock<IMqttChannel<IPacket>> clientChannel = new Mock<IMqttChannel<IPacket>>();
 
             clientChannel.Setup( c => c.ReceiverStream ).Returns( clientReceiver );
@@ -523,7 +523,7 @@ namespace Tests.Flows
                 Payload = Encoding.UTF8.GetBytes( "Publish Flow Test" )
             };
 
-            Subject<Monitored<IPacket>> receiver = new Subject<Monitored<IPacket>>();
+            Subject<IMonitored<IPacket>> receiver = new Subject<IMonitored<IPacket>>();
             Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
 
             channel.Setup( c => c.IsConnected ).Returns( true );
@@ -573,7 +573,7 @@ namespace Tests.Flows
                 Payload = Encoding.UTF8.GetBytes( "Publish Flow Test" )
             };
 
-            Subject<Monitored<IPacket>> receiver = new Subject<Monitored<IPacket>>();
+            Subject<IMonitored<IPacket>> receiver = new Subject<IMonitored<IPacket>>();
             Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
 
             channel.Setup( c => c.ReceiverStream ).Returns( receiver );
@@ -625,19 +625,19 @@ namespace Tests.Flows
                 }
             }};
 
-            Subject<Monitored<IPacket>> clientReceiver = new Subject<Monitored<IPacket>>();
-            Subject<Monitored<IPacket>> clientSender = new Subject<Monitored<IPacket>>();
+            Subject<IMonitored<IPacket>> clientReceiver = new Subject<IMonitored<IPacket>>();
+            Subject<IMonitored<IPacket>> clientSender = new Subject<IMonitored<IPacket>>();
             Mock<IMqttChannel<IPacket>> clientChannel = new Mock<IMqttChannel<IPacket>>();
 
-            clientSender.OfType<Monitored<Publish>>().Subscribe( p =>
+            clientSender.OfMonitoredType<Publish>().Subscribe( p =>
            {
-               clientReceiver.OnNext( new Monitored<IPacket>( TestHelper.Monitor, new PublishAck( p.Item.PacketId.Value ) ) );
+               clientReceiver.OnNext( Monitored<IPacket>.Create( TestHelper.Monitor, new PublishAck( p.Item.PacketId.Value ) ) );
            } );
 
             clientChannel.Setup( c => c.ReceiverStream ).Returns( clientReceiver );
             clientChannel.Setup( c => c.SenderStream ).Returns( clientSender );
             clientChannel.Setup( c => c.SendAsync( It.IsAny<Monitored<IPacket>>() ) )
-                .Callback<IPacket>( packet => clientSender.OnNext( new Monitored<IPacket>( TestHelper.Monitor, packet ) ) )
+                .Callback<IMonitored<IPacket>>( packet => clientSender.OnNext( Monitored<IPacket>.Create( TestHelper.Monitor, packet.Item ) ) )
                 .Returns( Task.Delay( 0 ) );
             topicEvaluator.Setup( e => e.Matches( It.IsAny<string>(), It.IsAny<string>() ) ).Returns( true );
             sessionRepository.Setup( r => r.ReadAll() ).Returns( sessions.AsQueryable() );
@@ -652,7 +652,7 @@ namespace Tests.Flows
                 Payload = Encoding.UTF8.GetBytes( "Publish Receiver Flow Test" )
             };
 
-            Subject<Monitored<IPacket>> receiver = new Subject<Monitored<IPacket>>();
+            Subject<IMonitored<IPacket>> receiver = new Subject<IMonitored<IPacket>>();
             Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
 
             channel.Setup( c => c.ReceiverStream ).Returns( receiver );
@@ -705,19 +705,19 @@ namespace Tests.Flows
                 }
             }};
 
-            Subject<Monitored<IPacket>> clientReceiver = new Subject<Monitored<IPacket>>();
-            Subject<Monitored<IPacket>> clientSender = new Subject<Monitored<IPacket>>();
+            Subject<IMonitored<IPacket>> clientReceiver = new Subject<IMonitored<IPacket>>();
+            Subject<IMonitored<IPacket>> clientSender = new Subject<IMonitored<IPacket>>();
             Mock<IMqttChannel<IPacket>> clientChannel = new Mock<IMqttChannel<IPacket>>();
 
-            clientSender.OfType<Monitored<Publish>>().Subscribe( p =>
+            clientSender.OfMonitoredType<Publish>().Subscribe( p =>
             {
-                clientReceiver.OnNext( new Monitored<IPacket>( TestHelper.Monitor, new PublishReceived( p.Item.PacketId.Value ) ) );
+                clientReceiver.OnNext( Monitored<IPacket>.Create( TestHelper.Monitor, new PublishReceived( p.Item.PacketId.Value ) ) );
             } );
 
             clientChannel.Setup( c => c.ReceiverStream ).Returns( clientReceiver );
             clientChannel.Setup( c => c.SenderStream ).Returns( clientSender );
             clientChannel.Setup( c => c.SendAsync( It.IsAny<Monitored<IPacket>>() ) )
-                .Callback<IPacket>( packet => clientSender.OnNext( new Monitored<IPacket>( TestHelper.Monitor, packet ) ) )
+                .Callback<IMonitored<IPacket>>( packet => clientSender.OnNext( Monitored<IPacket>.Create( TestHelper.Monitor, packet.Item ) ) )
                 .Returns( Task.Delay( 0 ) );
             topicEvaluator.Setup( e => e.Matches( It.IsAny<string>(), It.IsAny<string>() ) ).Returns( true );
             sessionRepository.Setup( r => r.ReadAll() ).Returns( sessions.AsQueryable() );
@@ -732,7 +732,7 @@ namespace Tests.Flows
                 Payload = Encoding.UTF8.GetBytes( "Publish Receiver Flow Test" )
             };
 
-            Subject<Monitored<IPacket>> receiver = new Subject<Monitored<IPacket>>();
+            Subject<IMonitored<IPacket>> receiver = new Subject<IMonitored<IPacket>>();
             Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
 
             channel.Setup( c => c.ReceiverStream ).Returns( receiver );
@@ -816,7 +816,7 @@ namespace Tests.Flows
                 Payload = Encoding.UTF8.GetBytes( "Publish Receiver Flow Test" )
             };
 
-            Subject<Monitored<IPacket>> receiver = new Subject<Monitored<IPacket>>();
+            Subject<IMonitored<IPacket>> receiver = new Subject<IMonitored<IPacket>>();
             Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
 
             channel.Setup( c => c.ReceiverStream ).Returns( receiver );
@@ -867,7 +867,7 @@ namespace Tests.Flows
                 Payload = Encoding.UTF8.GetBytes( "Publish Receiver Flow Test" )
             };
 
-            Subject<Monitored<IPacket>> receiver = new Subject<Monitored<IPacket>>();
+            Subject<IMonitored<IPacket>> receiver = new Subject<IMonitored<IPacket>>();
             Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
 
             channel.Setup( c => c.ReceiverStream ).Returns( receiver );

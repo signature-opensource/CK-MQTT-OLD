@@ -37,9 +37,7 @@ namespace Tests.Formatters
             UnsubscribeFormatter formatter = new UnsubscribeFormatter();
             byte[] packet = Packet.ReadAllBytes( packetPath );
 
-            AggregateException ex = Assert.Throws<AggregateException>( () => formatter.FormatAsync( packet ).Wait() );
-
-            Assert.True( ex.InnerException is MqttException );
+            Assert.Throws<MqttException>( () => formatter.FormatAsync( packet ).Wait() );
         }
 
         [Theory]
@@ -51,9 +49,7 @@ namespace Tests.Formatters
             UnsubscribeFormatter formatter = new UnsubscribeFormatter();
             byte[] packet = Packet.ReadAllBytes( packetPath );
 
-            AggregateException ex = Assert.Throws<AggregateException>( () => formatter.FormatAsync( packet ).Wait() );
-
-            Assert.True( ex.InnerException is MqttProtocolViolationException );
+            Assert.Throws<MqttProtocolViolationException>( () => formatter.FormatAsync( packet ).Wait() );
         }
 
         [Theory]
@@ -82,9 +78,7 @@ namespace Tests.Formatters
             UnsubscribeFormatter formatter = new UnsubscribeFormatter();
             Unsubscribe unsubscribe = Packet.ReadPacket<Unsubscribe>( jsonPath );
 
-            AggregateException ex = Assert.Throws<AggregateException>( () => formatter.FormatAsync( unsubscribe ).Wait() );
-
-            Assert.True( ex.InnerException is MqttProtocolViolationException );
+            Assert.Throws<MqttProtocolViolationException>( () => formatter.FormatAsync( unsubscribe ).Wait() );
         }
     }
 }

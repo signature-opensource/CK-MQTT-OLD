@@ -38,7 +38,7 @@ namespace CK.MQTT.Proxy.FakeClient
             _pf.SendPayload( RelayHeader.Disconnected, e );
         }
 
-        void MessageReceived( Monitored<MqttApplicationMessage> msg )
+        void MessageReceived( IMonitored<MqttApplicationMessage> msg )
         {
             _pf.SendPayload( RelayHeader.MessageEvent, msg.Item );
         }

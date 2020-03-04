@@ -29,7 +29,7 @@ namespace Tests
 
             MqttConfiguration configuration = Mock.Of<MqttConfiguration>( c => c.WaitTimeoutSecs == 60 );
 
-            Subject<Monitored<IPacket>> packets = new Subject<Monitored<IPacket>>();
+            Subject<IMonitored<IPacket>> packets = new Subject<IMonitored<IPacket>>();
             Mock<IMqttChannel<IPacket>> packetChannel = new Mock<IMqttChannel<IPacket>>();
             IPacketChannelFactory factory = Mock.Of<IPacketChannelFactory>( x => x.Create( TestHelper.Monitor, It.IsAny<IMqttChannel<byte[]>>() ) == packetChannel.Object );
 
@@ -38,7 +38,7 @@ namespace Tests
                 .Returns( true );
             packetChannel
                 .Setup( c => c.SenderStream )
-                .Returns( new Subject<Monitored<IPacket>>() );
+                .Returns( new Subject<IMonitored<IPacket>>() );
             packetChannel
                 .Setup( c => c.ReceiverStream )
                 .Returns( packets );
@@ -48,9 +48,9 @@ namespace Tests
 
             MqttServerImpl server = new MqttServerImpl( TestHelper.Monitor, channelProvider.Object, factory, flowProvider, connectionProvider.Object, Mock.Of<ISubject<MqttUndeliveredMessage>>(), configuration );
 
-            sockets.OnNext( Mock.Of<IMqttChannel<byte[]>>( x => x.ReceiverStream == new Subject<Monitored<byte[]>>() ) );
-            sockets.OnNext( Mock.Of<IMqttChannel<byte[]>>( x => x.ReceiverStream == new Subject<Monitored<byte[]>>() ) );
-            sockets.OnNext( Mock.Of<IMqttChannel<byte[]>>( x => x.ReceiverStream == new Subject<Monitored<byte[]>>() ) );
+            sockets.OnNext( Mock.Of<IMqttChannel<byte[]>>( x => x.ReceiverStream == new Subject<IMonitored<byte[]>>() ) );
+            sockets.OnNext( Mock.Of<IMqttChannel<byte[]>>( x => x.ReceiverStream == new Subject<IMonitored<byte[]>>() ) );
+            sockets.OnNext( Mock.Of<IMqttChannel<byte[]>>( x => x.ReceiverStream == new Subject<IMonitored<byte[]>>() ) );
 
             0.Should().Be( server.ActiveConnections );
         }
@@ -67,7 +67,7 @@ namespace Tests
 
             MqttConfiguration configuration = Mock.Of<MqttConfiguration>( c => c.WaitTimeoutSecs == 60 );
 
-            Subject<Monitored<IPacket>> packets = new Subject<Monitored<IPacket>>();
+            Subject<IMonitored<IPacket>> packets = new Subject<IMonitored<IPacket>>();
             Mock<IMqttChannel<IPacket>> packetChannel = new Mock<IMqttChannel<IPacket>>();
             IPacketChannelFactory factory = Mock.Of<IPacketChannelFactory>( x => x.Create( TestHelper.Monitor, It.IsAny<IMqttChannel<byte[]>>() ) == packetChannel.Object );
 
@@ -76,7 +76,7 @@ namespace Tests
                 .Returns( true );
             packetChannel
                 .Setup( c => c.SenderStream )
-                .Returns( new Subject<Monitored<IPacket>>() );
+                .Returns( new Subject<IMonitored<IPacket>>() );
             packetChannel
                 .Setup( c => c.ReceiverStream )
                 .Returns( packets );
@@ -88,9 +88,9 @@ namespace Tests
 
             server.Start();
 
-            sockets.OnNext( Mock.Of<IMqttChannel<byte[]>>( x => x.ReceiverStream == new Subject<Monitored<byte[]>>() ) );
-            sockets.OnNext( Mock.Of<IMqttChannel<byte[]>>( x => x.ReceiverStream == new Subject<Monitored<byte[]>>() ) );
-            sockets.OnNext( Mock.Of<IMqttChannel<byte[]>>( x => x.ReceiverStream == new Subject<Monitored<byte[]>>() ) );
+            sockets.OnNext( Mock.Of<IMqttChannel<byte[]>>( x => x.ReceiverStream == new Subject<IMonitored<byte[]>>() ) );
+            sockets.OnNext( Mock.Of<IMqttChannel<byte[]>>( x => x.ReceiverStream == new Subject<IMonitored<byte[]>>() ) );
+            sockets.OnNext( Mock.Of<IMqttChannel<byte[]>>( x => x.ReceiverStream == new Subject<IMonitored<byte[]>>() ) );
 
             3.Should().Be( server.ActiveConnections );
         }
@@ -112,10 +112,10 @@ namespace Tests
                 .Returns( true );
             packetChannel
                 .Setup( c => c.SenderStream )
-                .Returns( new Subject<Monitored<IPacket>>() );
+                .Returns( new Subject<IMonitored<IPacket>>() );
             packetChannel
                 .Setup( c => c.ReceiverStream )
-                .Returns( new Subject<Monitored<IPacket>>() );
+                .Returns( new Subject<IMonitored<IPacket>>() );
 
             IProtocolFlowProvider flowProvider = Mock.Of<IProtocolFlowProvider>();
             Mock<IConnectionProvider> connectionProvider = new Mock<IConnectionProvider>();
@@ -148,7 +148,7 @@ namespace Tests
 
             MqttConfiguration configuration = Mock.Of<MqttConfiguration>( c => c.WaitTimeoutSecs == 60 );
 
-            Subject<Monitored<IPacket>> packets = new Subject<Monitored<IPacket>>();
+            Subject<IMonitored<IPacket>> packets = new Subject<IMonitored<IPacket>>();
 
             Mock<IMqttChannel<IPacket>> packetChannel = new Mock<IMqttChannel<IPacket>>();
             Mock<IPacketChannelFactory> factory = new Mock<IPacketChannelFactory>();
@@ -158,7 +158,7 @@ namespace Tests
                 .Returns( true );
             packetChannel
                 .Setup( c => c.SenderStream )
-                .Returns( new Subject<Monitored<IPacket>>() );
+                .Returns( new Subject<IMonitored<IPacket>>() );
             packetChannel
                 .Setup( c => c.ReceiverStream )
                 .Returns( packets );
@@ -170,7 +170,7 @@ namespace Tests
             Mock<IConnectionProvider> connectionProvider = new Mock<IConnectionProvider>();
 
             MqttServerImpl server = new MqttServerImpl( TestHelper.Monitor, channelProvider.Object, factory.Object, flowProvider, connectionProvider.Object, Mock.Of<ISubject<MqttUndeliveredMessage>>(), configuration );
-            Subject<Monitored<byte[]>> receiver = new Subject<Monitored<byte[]>>();
+            Subject<IMonitored<byte[]>> receiver = new Subject<IMonitored<byte[]>>();
             Mock<IMqttChannel<byte[]>> socket = new Mock<IMqttChannel<byte[]>>();
 
             socket.Setup( x => x.ReceiverStream ).Returns( receiver );

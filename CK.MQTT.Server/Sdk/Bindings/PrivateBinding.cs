@@ -5,10 +5,10 @@ namespace CK.MQTT.Sdk.Bindings
 {
     internal class PrivateBinding : IMqttBinding
     {
-        readonly ISubject<Monitored<PrivateStream>> _privateStreamListener;
+        readonly ISubject<IMonitored<PrivateStream>> _privateStreamListener;
         readonly EndpointIdentifier _identifier;
 
-        public PrivateBinding( ISubject<Monitored<PrivateStream>> privateStreamListener, EndpointIdentifier identifier )
+        public PrivateBinding( ISubject<IMonitored<PrivateStream>> privateStreamListener, EndpointIdentifier identifier )
         {
             _privateStreamListener = privateStreamListener;
             _identifier = identifier;

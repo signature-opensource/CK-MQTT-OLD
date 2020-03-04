@@ -15,16 +15,16 @@ namespace CK.MQTT.Sdk.Bindings
     internal class PrivateStream : IDisposable
     {
         bool _disposed;
-        readonly ReplaySubject<Tuple<Monitored<byte[]>, EndpointIdentifier>> _payloadSequence;
+        readonly ReplaySubject<Tuple<IMonitored<byte[]>, EndpointIdentifier>> _payloadSequence;
 
         public PrivateStream( MqttConfiguration configuration )
         {
-            _payloadSequence = new ReplaySubject<Tuple<Monitored<byte[]>, EndpointIdentifier>>( window: TimeSpan.FromSeconds( configuration.WaitTimeoutSecs ) );
+            _payloadSequence = new ReplaySubject<Tuple<IMonitored<byte[]>, EndpointIdentifier>>( window: TimeSpan.FromSeconds( configuration.WaitTimeoutSecs ) );
         }
 
         public bool IsDisposed => _payloadSequence.IsDisposed;
 
-        public IObservable<Monitored<byte[]>> Receive( EndpointIdentifier identifier )
+        public IObservable<IMonitored<byte[]>> Receive( EndpointIdentifier identifier )
         {
             if( _disposed ) throw new ObjectDisposedException( nameof( PrivateStream ) );
 
@@ -33,7 +33,7 @@ namespace CK.MQTT.Sdk.Bindings
                 .Select( t => t.Item1 );
         }
 
-        public void Send( Monitored<byte[]> payload, EndpointIdentifier identifier )
+        public void Send( IMonitored<byte[]> payload, EndpointIdentifier identifier )
         {
             if( _disposed ) throw new ObjectDisposedException( nameof( PrivateStream ) );
             _payloadSequence.OnNext( Tuple.Create( payload, identifier ) );

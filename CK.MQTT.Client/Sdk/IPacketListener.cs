@@ -7,7 +7,7 @@ namespace CK.MQTT.Sdk
 {
     internal interface IPacketListener : IDisposable
     {
-        IObservable<Monitored<IPacket>> PacketStream { get; }
+        IObservable<IMonitored<IPacket>> PacketStream { get; }
 
         void Listen();
     }

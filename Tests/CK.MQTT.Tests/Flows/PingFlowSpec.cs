@@ -23,7 +23,7 @@ namespace Tests.Flows
             IPacket sentPacket = default;
 
             channel.Setup( c => c.SendAsync( It.IsAny<Monitored<IPacket>>() ) )
-                .Callback<IPacket>( packet => sentPacket = packet )
+                .Callback<IMonitored<IPacket>>( packet => sentPacket = packet.Item )
                 .Returns( Task.Delay( 0 ) );
 
             PingFlow flow = new PingFlow();

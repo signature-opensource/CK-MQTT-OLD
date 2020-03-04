@@ -37,9 +37,7 @@ namespace Tests.Formatters
             SubscribeAckFormatter formatter = new SubscribeAckFormatter();
             byte[] packet = Packet.ReadAllBytes( packetPath );
 
-            AggregateException ex = Assert.Throws<AggregateException>( () => formatter.FormatAsync( packet ).Wait() );
-
-            Assert.True( ex.InnerException is MqttException );
+            Assert.Throws<MqttException>( () => formatter.FormatAsync( packet ).Wait() );
         }
 
         [Theory]
@@ -52,9 +50,8 @@ namespace Tests.Formatters
             SubscribeAckFormatter formatter = new SubscribeAckFormatter();
             byte[] packet = Packet.ReadAllBytes( packetPath );
 
-            AggregateException ex = Assert.Throws<AggregateException>( () => formatter.FormatAsync( packet ).Wait() );
-
-            Assert.True( ex.InnerException is MqttProtocolViolationException );
+            Action action = () => formatter.FormatAsync( packet ).Wait();
+            action.Should().Throw<MqttException>();
         }
 
         [Theory]
@@ -83,9 +80,7 @@ namespace Tests.Formatters
             SubscribeAckFormatter formatter = new SubscribeAckFormatter();
             SubscribeAck subscribeAck = Packet.ReadPacket<SubscribeAck>( jsonPath );
 
-            AggregateException ex = Assert.Throws<AggregateException>( () => formatter.FormatAsync( subscribeAck ).Wait() );
-
-            Assert.True( ex.InnerException is MqttProtocolViolationException );
+            Assert.Throws<MqttProtocolViolationException>( () => formatter.FormatAsync( subscribeAck ).Wait() );
         }
     }
 }

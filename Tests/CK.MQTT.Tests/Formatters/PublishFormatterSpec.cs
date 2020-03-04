@@ -52,9 +52,7 @@ namespace Tests.Formatters
             PublishFormatter formatter = new PublishFormatter( topicEvaluator );
             byte[] packet = Packet.ReadAllBytes( packetPath );
 
-            AggregateException ex = Assert.Throws<AggregateException>( () => formatter.FormatAsync( packet ).Wait() );
-
-            Assert.True( ex.InnerException is MqttException );
+            Assert.Throws<MqttException>( () => formatter.FormatAsync( packet ).Wait() );
         }
 
         [Theory]
@@ -87,9 +85,7 @@ namespace Tests.Formatters
             PublishFormatter formatter = new PublishFormatter( topicEvaluator );
             Publish publish = Packet.ReadPacket<Publish>( jsonPath );
 
-            AggregateException ex = Assert.Throws<AggregateException>( () => formatter.FormatAsync( publish ).Wait() );
-
-            Assert.True( ex.InnerException is MqttException );
+            Assert.Throws<MqttException>( () => formatter.FormatAsync( publish ).Wait() );
         }
     }
 }
