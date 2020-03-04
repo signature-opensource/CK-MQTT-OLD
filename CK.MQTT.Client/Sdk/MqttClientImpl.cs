@@ -1,5 +1,5 @@
 using CK.Core;
-using CK.MQTT.Client.Abstractions;
+
 using CK.MQTT.Sdk.Flows;
 using CK.MQTT.Sdk.Packets;
 using CK.MQTT.Sdk.Storage;
@@ -87,7 +87,7 @@ namespace CK.MQTT.Sdk
 
                 OpenClientSession( cleanSession );
 
-                await InitializeChannelAsync();
+                await InitializeChannelAsync( m );
 
                 Connect connect = new Connect( Id, cleanSession, MqttProtocol.SupportedLevel )
                 {
@@ -369,12 +369,12 @@ namespace CK.MQTT.Sdk
             Disconnected( this, new MqttEndpointDisconnected( reason, message ) );
         }
 
-        async Task InitializeChannelAsync()
+        async Task InitializeChannelAsync( IActivityMonitor m )
         {
             Channel = await _channelFactory
-                .CreateAsync();
+                .CreateAsync( m );
 
-            _packetListener = new ClientPacketListener( Channel, _flowProvider, _configuration );
+            _packetListener = new ClientPacketListener( m, Channel, _flowProvider, _configuration );
             _packetListener.Listen();
             ObservePackets();
         }

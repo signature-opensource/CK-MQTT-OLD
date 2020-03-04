@@ -1,3 +1,4 @@
+using CK.Core;
 using CK.MQTT.Sdk;
 using System;
 using System.Diagnostics;
@@ -10,8 +11,6 @@ namespace CK.MQTT.Sdk.Bindings
     public class GenericListener<TChannel> : IMqttChannelListener
         where TChannel : IMqttChannel<byte[]>
     {
-        static readonly ITracer _tracer = Tracer.Get<GenericListener<TChannel>>();
-
         readonly MqttConfiguration _configuration;
         /// <summary>
         /// A lazy initialized listener. Start the listener at the initialisation.
@@ -19,51 +18,52 @@ namespace CK.MQTT.Sdk.Bindings
         readonly Lazy<IListener<TChannel>> _listener;
         bool _disposed;
 
-        public GenericListener( MqttConfiguration configuration, Func<MqttConfiguration, IListener<TChannel>> listenerFactory )
+        public GenericListener( IActivityMonitor m, MqttConfiguration configuration, Func<MqttConfiguration, IListener<TChannel>> listenerFactory )
         {
             _configuration = configuration;
             _listener = new Lazy<IListener<TChannel>>( () =>
             {
-                IListener<TChannel> tcpListener = listenerFactory( _configuration );
+                IListener<TChannel> listener = listenerFactory( _configuration );
 
                 try
                 {
-                    tcpListener.Start();
+                    listener.Start();
                 }
                 catch( SocketException socketEx )
                 {
-                    _tracer.Error( socketEx, ClientProperties.TcpChannelProvider_TcpListener_Failed );
+                    m.Error( ClientProperties.TcpChannelProvider_TcpListener_Failed, socketEx );
 
                     throw new MqttException( ClientProperties.TcpChannelProvider_TcpListener_Failed, socketEx );
                 }
 
-                return tcpListener;
+                return listener;
             } );
         }
 
         public IObservable<IMqttChannel<byte[]>> GetChannelStream()
         {
+            var m = new ActivityMonitor();
             if( _disposed )
             {
                 throw new ObjectDisposedException( GetType().FullName );
             }
 
             return Observable
-                .FromAsync( SafeAcceptClient )
+                .FromAsync( () => SafeAcceptClient( m ) )
                 .Repeat()
                 .Select( client => (IMqttChannel<byte[]>)client );
         }
-        async Task<TChannel> SafeAcceptClient()
+        async Task<TChannel> SafeAcceptClient( IActivityMonitor m )
         {
             while( true )
             {
                 try
                 {
-                    return await _listener.Value.AcceptClientAsync();
+                    return await _listener.Value.AcceptClientAsync( m );
                 }
                 catch( Exception e )
                 {
-                    _tracer.Warn( e, "Error while trying to accept a client." );
+                    m.Warn( "Error while trying to accept a client.", e );
                 }
             }
         }

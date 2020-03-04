@@ -1,4 +1,6 @@
-﻿namespace CK.MQTT.Sdk.Bindings
+using CK.Core;
+
+namespace CK.MQTT.Sdk.Bindings
 {
     /// <summary>
     /// Represents a server binding for a supported MQTT underlying transport protocol
@@ -18,6 +20,6 @@
         /// See <see cref="MqttConfiguration" /> for more details about the supported values
         /// </param>
         /// <returns>A listener to accept and provide incoming MQTT channels on top of an underlying transport protocol</returns>
-        IMqttChannelListener GetChannelListener( MqttConfiguration configuration );
+        IMqttChannelListener GetChannelListener( IActivityMonitor m, MqttConfiguration configuration );
     }
 }

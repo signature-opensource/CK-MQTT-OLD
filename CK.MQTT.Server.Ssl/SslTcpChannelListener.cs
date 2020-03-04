@@ -1,3 +1,4 @@
+using CK.Core;
 using CK.MQTT.Sdk;
 using CK.MQTT.Sdk.Bindings;
 using System.Net;
@@ -22,7 +23,7 @@ namespace CK.MQTT.Ssl
             _sslServerConfig = sslServerConfig;
         }
 
-        public async Task<GenericChannel> AcceptClientAsync()
+        public async Task<GenericChannel> AcceptClientAsync( IActivityMonitor m )
         {
             TcpClient client = await _listener.AcceptTcpClientAsync();
             SslStream ssl = new SslStream(
@@ -38,7 +39,7 @@ namespace CK.MQTT.Ssl
                 _sslServerConfig.SslProtocols,
                 true
             );
-            return new GenericChannel( new SslTcpChannelClient( client, ssl ), new PacketBuffer(), _configuration );
+            return new GenericChannel( m, new SslTcpChannelClient( client, ssl ), new PacketBuffer(), _configuration );
         }
 
         public void Start() => _listener.Start();

@@ -1,5 +1,6 @@
+using CK.Core;
 using CK.MQTT;
-using CK.MQTT.Client.Abstractions;
+
 using CK.MQTT.Sdk;
 using CK.MQTT.Sdk.Packets;
 using FluentAssertions;
@@ -8,6 +9,8 @@ using NUnit.Framework;
 using System;
 using System.Linq;
 using System.Reactive.Subjects;
+
+using static CK.Testing.MonitorTestHelper;
 
 namespace Tests
 {
@@ -46,12 +49,12 @@ namespace Tests
 
             string clientId = Guid.NewGuid().ToString();
 
-            provider.AddConnection( clientId, Mock.Of<IMqttChannel<IPacket>>( c => c.IsConnected == true ) );
+            provider.AddConnection( TestHelper.Monitor, clientId, Mock.Of<IMqttChannel<IPacket>>( c => c.IsConnected == true ) );
             provider.RegisterPrivateClient( clientId );
 
             int previousPrivateClients = provider.PrivateClients.Count();
 
-            provider.RemoveConnection( clientId );
+            provider.RemoveConnection( TestHelper.Monitor, clientId );
 
             int currentPrivateClients = provider.PrivateClients.Count();
             currentPrivateClients.Should().Be( previousPrivateClients - 1 );
@@ -65,7 +68,7 @@ namespace Tests
             int existingClients = provider.Connections;
             string clientId = Guid.NewGuid().ToString();
 
-            provider.AddConnection( clientId, Mock.Of<IMqttChannel<IPacket>>( c => c.IsConnected == true ) );
+            provider.AddConnection( TestHelper.Monitor, clientId, Mock.Of<IMqttChannel<IPacket>>( c => c.IsConnected == true ) );
             provider.Connections.Should().Be( existingClients + 1 );
         }
 
@@ -77,7 +80,7 @@ namespace Tests
             int existingClients = provider.ActiveClients.Count();
             string clientId = Guid.NewGuid().ToString();
 
-            provider.AddConnection( clientId, Mock.Of<IMqttChannel<IPacket>>( c => c.IsConnected == false ) );
+            provider.AddConnection( TestHelper.Monitor, clientId, Mock.Of<IMqttChannel<IPacket>>( c => c.IsConnected == false ) );
 
             provider.ActiveClients.Should().HaveCount( existingClients );
         }
@@ -94,7 +97,7 @@ namespace Tests
 
             connection.Setup( c => c.IsConnected ).Returns( true );
 
-            provider.AddConnection( clientId, connection.Object );
+            provider.AddConnection( TestHelper.Monitor, clientId, connection.Object );
 
             int currentClients = provider.ActiveClients.Count();
 
@@ -114,11 +117,11 @@ namespace Tests
 
             string clientId = Guid.NewGuid().ToString();
 
-            provider.AddConnection( clientId, Mock.Of<IMqttChannel<IPacket>>( c => c.IsConnected == true ) );
+            provider.AddConnection( TestHelper.Monitor, clientId, Mock.Of<IMqttChannel<IPacket>>( c => c.IsConnected == true ) );
 
             int newClients = provider.Connections;
 
-            provider.RemoveConnection( clientId );
+            provider.RemoveConnection( TestHelper.Monitor, clientId );
 
             int finalClients = provider.Connections;
             newClients.Should().Be( initialClients + 1 );
@@ -144,8 +147,8 @@ namespace Tests
 
             string clientId = Guid.NewGuid().ToString();
 
-            provider.AddConnection( clientId, channel1.Object );
-            provider.AddConnection( clientId, channel2.Object );
+            provider.AddConnection( TestHelper.Monitor, clientId, channel1.Object );
+            provider.AddConnection( TestHelper.Monitor, clientId, channel2.Object );
 
             channel1.Verify( c => c.Dispose() );
             channel2.Verify( c => c.Dispose(), Times.Never );
@@ -157,9 +160,9 @@ namespace Tests
             ConnectionProvider provider = new ConnectionProvider();
             string clientId = Guid.NewGuid().ToString();
 
-            provider.AddConnection( clientId, Mock.Of<IMqttChannel<IPacket>>( c => c.IsConnected == true ) );
+            provider.AddConnection( TestHelper.Monitor, clientId, Mock.Of<IMqttChannel<IPacket>>( c => c.IsConnected == true ) );
 
-            IMqttChannel<IPacket> connection = provider.GetConnection( clientId );
+            IMqttChannel<IPacket> connection = provider.GetConnection( TestHelper.Monitor, clientId );
 
             Assert.NotNull( connection );
         }
@@ -170,9 +173,9 @@ namespace Tests
             ConnectionProvider provider = new ConnectionProvider();
             string clientId = Guid.NewGuid().ToString();
 
-            provider.AddConnection( clientId, Mock.Of<IMqttChannel<IPacket>>( c => c.IsConnected == false ) );
+            provider.AddConnection( TestHelper.Monitor, clientId, Mock.Of<IMqttChannel<IPacket>>( c => c.IsConnected == false ) );
 
-            IMqttChannel<IPacket> connection = provider.GetConnection( clientId );
+            IMqttChannel<IPacket> connection = provider.GetConnection( TestHelper.Monitor, clientId );
 
             Assert.Null( connection );
         }

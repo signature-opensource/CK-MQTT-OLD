@@ -1,5 +1,5 @@
 using CK.Core;
-using CK.MQTT.Client.Abstractions;
+
 using CK.MQTT.Sdk.Flows;
 using CK.MQTT.Sdk.Packets;
 using System;
@@ -14,8 +14,7 @@ namespace CK.MQTT.Sdk
 {
     internal class ClientPacketListener : IPacketListener
     {
-        static readonly ITracer _tracer = Tracer.Get<ClientPacketListener>();
-
+        readonly IActivityMonitor _m;
         readonly IMqttChannel<IPacket> _channel;
         readonly IProtocolFlowProvider _flowProvider;
         readonly MqttConfiguration _configuration;
@@ -26,10 +25,12 @@ namespace CK.MQTT.Sdk
         string _clientId = string.Empty;
         IDisposable _keepAliveMonitor;
 
-        public ClientPacketListener( IMqttChannel<IPacket> channel,
+        public ClientPacketListener( IActivityMonitor m,
+            IMqttChannel<IPacket> channel,
             IProtocolFlowProvider flowProvider,
             MqttConfiguration configuration )
         {
+            _m = m;
             _channel = channel;
             _flowProvider = flowProvider;
             _configuration = configuration;
@@ -61,7 +62,7 @@ namespace CK.MQTT.Sdk
                 return;
             }
 
-            _tracer.Info( ClientProperties.Mqtt_Disposing( GetType().FullName ) );
+            _m.Info( ClientProperties.Mqtt_Disposing( GetType().FullName ) );
 
             _listenerDisposable.Dispose();
             StopKeepAliveMonitor();
@@ -82,11 +83,11 @@ namespace CK.MQTT.Sdk
                         return;
                     }
 
-                    _tracer.Info( ClientProperties.ClientPacketListener_FirstPacketReceived( _clientId, packet.Item.Type ) );
+                    packet.Monitor.Info( ClientProperties.ClientPacketListener_FirstPacketReceived( _clientId, packet.Item.Type ) );
 
                     if( !(packet.Item is ConnectAck connectAck) )
                     {
-                        NotifyError( ClientProperties.ClientPacketListener_FirstReceivedPacketMustBeConnectAck );
+                        NotifyError( packet.Monitor, ClientProperties.ClientPacketListener_FirstReceivedPacketMustBeConnectAck );
                         return;
                     }
 
@@ -98,7 +99,8 @@ namespace CK.MQTT.Sdk
                     await DispatchPacketAsync( packet );
                 }, ex =>
                 {
-                    NotifyError( ex );
+                    var m = new ActivityMonitor();//TODO: Remove onerror monitor.
+                    NotifyError( m, ex );
                 } );
         }
 
@@ -108,17 +110,26 @@ namespace CK.MQTT.Sdk
                 .Skip( 1 )
                 .Subscribe(
                     async packet => await DispatchPacketAsync( packet )
-                    , ex => NotifyError( ex )
+                    , ex =>
+                    {
+                        var m = new ActivityMonitor();//TODO: Remove onerror monitor.
+                        NotifyError( m, ex );
+                    }
                 );
 
         IDisposable ListenCompletionAndErrors()
             => _channel
                 .ReceiverStream
                 .Subscribe( _ => { },
-                    ex => NotifyError( ex )
+                    ex =>
+                    {
+                        var m = new ActivityMonitor();//TODO: Remove onerror monitor.
+                        NotifyError(m, ex );
+                    }
                     , () =>
                     {
-                        _tracer.Warn( ClientProperties.ClientPacketListener_PacketChannelCompleted( _clientId ) );
+                        var m = new ActivityMonitor();//TODO: Remove oncomplete monitor.
+                        m.Warn( ClientProperties.ClientPacketListener_PacketChannelCompleted( _clientId ) );
                         _packets.OnCompleted();
                     }
                 );
@@ -151,16 +162,16 @@ namespace CK.MQTT.Sdk
                  {
                      try
                      {
-                         _tracer.Warn( ClientProperties.ClientPacketListener_SendingKeepAlive( _clientId, _configuration.KeepAliveSecs ) );
+                         monitor.Warn( ClientProperties.ClientPacketListener_SendingKeepAlive( _clientId, _configuration.KeepAliveSecs ) );
 
                          PingRequest ping = new PingRequest();
 
-                         _channel.SendAsync( new Monitored<IPacket>( monitor, ping ));
+                         _channel.SendAsync( new Monitored<IPacket>( monitor, ping ) );
                          _channel.ReceiverStream.OfType<PingResponse>().Timeout( TimeSpan.FromSeconds( _configuration.WaitTimeoutSecs ) );
                      }
                      catch( Exception ex )
                      {
-                         NotifyError( ex );
+                         NotifyError( monitor, ex );
                      }
                  } );
         }
@@ -186,33 +197,33 @@ namespace CK.MQTT.Sdk
 
                         if( publish == null )
                         {
-                            _tracer.Info( ClientProperties.ClientPacketListener_DispatchingMessage( _clientId, packet.Item.Type, flow.GetType().Name ) );
+                            packet.Monitor.Info( ClientProperties.ClientPacketListener_DispatchingMessage( _clientId, packet.Item.Type, flow.GetType().Name ) );
                         }
                         else
                         {
-                            _tracer.Info( ClientProperties.ClientPacketListener_DispatchingPublish( _clientId, flow.GetType().Name, publish.Topic ) );
+                            packet.Monitor.Info( ClientProperties.ClientPacketListener_DispatchingPublish( _clientId, flow.GetType().Name, publish.Topic ) );
                         }
 
-                        await flow.ExecuteAsync(packet.Monitor, _clientId, packet.Item, _channel );
+                        await flow.ExecuteAsync( packet.Monitor, _clientId, packet.Item, _channel );
                     } );
                 }
                 catch( Exception ex )
                 {
-                    NotifyError( ex );
+                    NotifyError( packet.Monitor, ex );
                 }
             }
         }
 
-        void NotifyError( Exception exception )
+        void NotifyError( IActivityMonitor m, Exception exception )
         {
-            _tracer.Error( exception, ClientProperties.ClientPacketListener_Error );
+            m.Error( ClientProperties.ClientPacketListener_Error, exception );
 
             _packets.OnError( exception );
         }
 
-        void NotifyError( string message )
+        void NotifyError( IActivityMonitor m, string message )
         {
-            NotifyError( new MqttException( message ) );
+            NotifyError( m, new MqttException( message ) );
         }
     }
 }

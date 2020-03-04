@@ -1,5 +1,6 @@
+using CK.Core;
 using CK.MQTT;
-using CK.MQTT.Client.Abstractions;
+
 using CK.MQTT.Sdk;
 using CK.MQTT.Sdk.Flows;
 using CK.MQTT.Sdk.Packets;
@@ -9,6 +10,8 @@ using NUnit.Framework;
 using System;
 using System.Reactive.Subjects;
 using System.Threading.Tasks;
+
+using static CK.Testing.MonitorTestHelper;
 
 namespace Tests
 {
@@ -43,7 +46,7 @@ namespace Tests
             IProtocolFlowProvider flowProvider = Mock.Of<IProtocolFlowProvider>();
             Mock<IConnectionProvider> connectionProvider = new Mock<IConnectionProvider>();
 
-            MqttServerImpl server = new MqttServerImpl( channelProvider.Object, factory, flowProvider, connectionProvider.Object, Mock.Of<ISubject<MqttUndeliveredMessage>>(), configuration );
+            MqttServerImpl server = new MqttServerImpl( TestHelper.Monitor, channelProvider.Object, factory, flowProvider, connectionProvider.Object, Mock.Of<ISubject<MqttUndeliveredMessage>>(), configuration );
 
             sockets.OnNext( Mock.Of<IMqttChannel<byte[]>>( x => x.ReceiverStream == new Subject<Monitored<byte[]>>() ) );
             sockets.OnNext( Mock.Of<IMqttChannel<byte[]>>( x => x.ReceiverStream == new Subject<Monitored<byte[]>>() ) );
@@ -81,7 +84,7 @@ namespace Tests
             IProtocolFlowProvider flowProvider = Mock.Of<IProtocolFlowProvider>();
             Mock<IConnectionProvider> connectionProvider = new Mock<IConnectionProvider>();
 
-            MqttServerImpl server = new MqttServerImpl( channelProvider.Object, factory, flowProvider, connectionProvider.Object, Mock.Of<ISubject<MqttUndeliveredMessage>>(), configuration );
+            MqttServerImpl server = new MqttServerImpl( TestHelper.Monitor, channelProvider.Object, factory, flowProvider, connectionProvider.Object, Mock.Of<ISubject<MqttUndeliveredMessage>>(), configuration );
 
             server.Start();
 
@@ -119,7 +122,7 @@ namespace Tests
 
             MqttConfiguration configuration = Mock.Of<MqttConfiguration>( c => c.WaitTimeoutSecs == 60 );
 
-            MqttServerImpl server = new MqttServerImpl( channelProvider.Object, Mock.Of<IPacketChannelFactory>( x => x.Create( It.IsAny<IMqttChannel<byte[]>>() ) == packetChannel.Object ),
+            MqttServerImpl server = new MqttServerImpl( TestHelper.Monitor, channelProvider.Object, Mock.Of<IPacketChannelFactory>( x => x.Create( It.IsAny<IMqttChannel<byte[]>>() ) == packetChannel.Object ),
                 flowProvider, connectionProvider.Object, Mock.Of<ISubject<MqttUndeliveredMessage>>(), configuration );
 
             server.Start();
@@ -166,7 +169,7 @@ namespace Tests
             IProtocolFlowProvider flowProvider = Mock.Of<IProtocolFlowProvider>();
             Mock<IConnectionProvider> connectionProvider = new Mock<IConnectionProvider>();
 
-            MqttServerImpl server = new MqttServerImpl( channelProvider.Object, factory.Object, flowProvider, connectionProvider.Object, Mock.Of<ISubject<MqttUndeliveredMessage>>(), configuration );
+            MqttServerImpl server = new MqttServerImpl( TestHelper.Monitor, channelProvider.Object, factory.Object, flowProvider, connectionProvider.Object, Mock.Of<ISubject<MqttUndeliveredMessage>>(), configuration );
             Subject<Monitored<byte[]>> receiver = new Subject<Monitored<byte[]>>();
             Mock<IMqttChannel<byte[]>> socket = new Mock<IMqttChannel<byte[]>>();
 

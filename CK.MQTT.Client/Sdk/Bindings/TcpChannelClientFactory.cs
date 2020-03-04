@@ -1,3 +1,4 @@
+using CK.Core;
 using System;
 using System.Diagnostics;
 using System.Net.Sockets;
@@ -8,8 +9,6 @@ namespace CK.MQTT.Sdk.Bindings
 {
     internal class TcpChannelClientFactory
     {
-        static readonly ITracer _tracer = Tracer.Get<TcpChannelClientFactory>();
-
         readonly string _hostAddress;
         readonly MqttConfiguration _configuration;
 
@@ -19,7 +18,7 @@ namespace CK.MQTT.Sdk.Bindings
             _configuration = configuration;
         }
 
-        public async Task<IChannelClient> CreateAsync()
+        public async Task<IChannelClient> CreateAsync(IActivityMonitor m)
         {
             TcpClient tcpClient = new TcpClient();
 
@@ -45,7 +44,7 @@ namespace CK.MQTT.Sdk.Bindings
             {
                 string message = ClientProperties.TcpChannelFactory_TcpClient_Failed( _hostAddress, _configuration.Port );
 
-                _tracer.Error( socketEx, message );
+                m.Error( message, socketEx );
 
                 throw new MqttException( message, socketEx );
             }
@@ -62,7 +61,7 @@ namespace CK.MQTT.Sdk.Bindings
 
                 string message = ClientProperties.TcpChannelFactory_TcpClient_Failed( _hostAddress, _configuration.Port );
 
-                _tracer.Error( timeoutEx, message );
+                m.Error( message, timeoutEx );
                 throw new MqttException( message, timeoutEx );
             }
         }

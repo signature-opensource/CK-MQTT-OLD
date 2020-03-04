@@ -1,4 +1,5 @@
-using CK.MQTT.Client.Abstractions;
+
+using CK.Core;
 using CK.MQTT.Sdk;
 using CK.MQTT.Sdk.Flows;
 using CK.MQTT.Sdk.Packets;

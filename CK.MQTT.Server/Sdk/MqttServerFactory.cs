@@ -1,3 +1,4 @@
+using CK.Core;
 using CK.MQTT.Sdk.Bindings;
 using CK.MQTT.Sdk.Flows;
 using CK.MQTT.Sdk.Storage;
@@ -12,8 +13,6 @@ namespace CK.MQTT.Sdk
     /// </summary>
     public class MqttServerFactory
     {
-        static readonly ITracer _tracer = Tracer.Get<MqttServerFactory>();
-
         readonly IMqttServerBinding _binding;
         readonly IMqttAuthenticationProvider _authenticationProvider;
 
@@ -64,12 +63,12 @@ namespace CK.MQTT.Sdk
         /// </param>
         /// <returns>A new MQTT Server</returns>
         /// <exception cref="MqttServerException">MqttServerException</exception>
-        public IMqttServer CreateServer( MqttConfiguration configuration )
+        public IMqttServer CreateServer( IActivityMonitor m, MqttConfiguration configuration )
         {
             try
             {
                 MqttTopicEvaluator topicEvaluator = new MqttTopicEvaluator( configuration );
-                IMqttChannelListener channelProvider = _binding.GetChannelListener( configuration );
+                IMqttChannelListener channelProvider = _binding.GetChannelListener(m, configuration );
                 PacketChannelFactory channelFactory = new PacketChannelFactory( topicEvaluator, configuration );
                 InMemoryRepositoryProvider repositoryProvider = new InMemoryRepositoryProvider();
                 ConnectionProvider connectionProvider = new ConnectionProvider();
@@ -78,12 +77,12 @@ namespace CK.MQTT.Sdk
                 ServerProtocolFlowProvider flowProvider = new ServerProtocolFlowProvider( _authenticationProvider, connectionProvider, topicEvaluator,
                     repositoryProvider, packetIdProvider, undeliveredMessagesListener, configuration );
 
-                return new MqttServerImpl( channelProvider, channelFactory,
+                return new MqttServerImpl( m, channelProvider, channelFactory,
                     flowProvider, connectionProvider, undeliveredMessagesListener, configuration );
             }
             catch( Exception ex )
             {
-                _tracer.Error( ex, ServerProperties.Server_InitializeError );
+                m.Error( ServerProperties.Server_InitializeError, ex );
 
                 throw new MqttServerException( ServerProperties.Server_InitializeError, ex );
             }

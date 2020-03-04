@@ -1,3 +1,4 @@
+using CK.Core;
 using CK.MQTT.Sdk.Packets;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -8,7 +9,6 @@ namespace CK.MQTT.Sdk
 {
     internal class ConnectionProvider : IConnectionProvider
     {
-        static readonly ITracer _tracer = Tracer.Get<ConnectionProvider>();
         static readonly IList<string> _privateClients = new List<string>();
         static readonly ConcurrentDictionary<string, IMqttChannel<IPacket>> _connections = new ConcurrentDictionary<string, IMqttChannel<IPacket>>();
         static readonly object _lockObject = new object();
@@ -35,27 +35,27 @@ namespace CK.MQTT.Sdk
             }
         }
 
-        public void AddConnection( string clientId, IMqttChannel<IPacket> connection )
+        public void AddConnection( IActivityMonitor m, string clientId, IMqttChannel<IPacket> connection )
         {
             if( _connections.TryGetValue( clientId, out _ ) )
             {
-                _tracer.Warn( ServerProperties.ConnectionProvider_ClientIdExists( clientId ) );
+                m.Warn( ServerProperties.ConnectionProvider_ClientIdExists( clientId ) );
 
-                RemoveConnection( clientId );
+                RemoveConnection(m, clientId );
             }
 
             _connections.TryAdd( clientId, connection );
         }
 
-        public IMqttChannel<IPacket> GetConnection( string clientId )
+        public IMqttChannel<IPacket> GetConnection( IActivityMonitor m, string clientId )
         {
             if( _connections.TryGetValue( clientId, out IMqttChannel<IPacket> existingConnection ) )
             {
                 if( !existingConnection.IsConnected )
                 {
-                    _tracer.Warn( ServerProperties.ConnectionProvider_ClientDisconnected( clientId ) );
+                    m.Warn( ServerProperties.ConnectionProvider_ClientDisconnected( clientId ) );
 
-                    RemoveConnection( clientId );
+                    RemoveConnection( m, clientId );
                     existingConnection = default;
                 }
             }
@@ -63,11 +63,11 @@ namespace CK.MQTT.Sdk
             return existingConnection;
         }
 
-        public void RemoveConnection( string clientId )
+        public void RemoveConnection( IActivityMonitor m, string clientId )
         {
             if( _connections.TryRemove( clientId, out IMqttChannel<IPacket> existingConnection ) )
             {
-                _tracer.Info( ServerProperties.ConnectionProvider_RemovingClient( clientId ) );
+                m.Info( ServerProperties.ConnectionProvider_RemovingClient( clientId ) );
 
                 existingConnection.Dispose();
             }

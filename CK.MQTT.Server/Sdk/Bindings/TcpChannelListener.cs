@@ -1,3 +1,4 @@
+using CK.Core;
 using System;
 using System.Diagnostics;
 using System.Net;
@@ -19,8 +20,8 @@ namespace CK.MQTT.Sdk.Bindings
             _listener = new TcpListener( IPAddress.Any, _configuration.Port );
         }
 
-        public async Task<GenericChannel> AcceptClientAsync()
-            => new GenericChannel(
+        public async Task<GenericChannel> AcceptClientAsync(IActivityMonitor m)
+            => new GenericChannel( m,
                 new TcpChannelClient( await _listener.AcceptTcpClientAsync() ),
                 new PacketBuffer(),
                 _configuration );

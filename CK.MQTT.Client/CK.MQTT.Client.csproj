@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="CK.ActivityMonitor.SimpleSender" Version="13.1.0" />
     <PackageReference Include="System.Reactive" Version="3.0.0" />
     <PackageReference Include="System.Diagnostics.Tracer" Version="2.0.8" />
   </ItemGroup>

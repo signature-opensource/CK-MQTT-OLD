@@ -8,8 +8,6 @@ namespace CK.MQTT.Sdk.Flows
 {
     internal class DisconnectFlow : IProtocolFlow
     {
-        static readonly ITracer _tracer = Tracer.Get<DisconnectFlow>();
-
         readonly IConnectionProvider _connectionProvider;
         readonly IRepository<ClientSession> _sessionRepository;
         readonly IRepository<ConnectionWill> _willRepository;
@@ -31,7 +29,7 @@ namespace CK.MQTT.Sdk.Flows
             {
                 Disconnect disconnect = input as Disconnect;
 
-                _tracer.Info( ServerProperties.DisconnectFlow_Disconnecting( clientId ) );
+                m.Info( ServerProperties.DisconnectFlow_Disconnecting( clientId ) );
 
                 _willRepository.Delete( clientId );
 
@@ -46,10 +44,10 @@ namespace CK.MQTT.Sdk.Flows
                 {
                     _sessionRepository.Delete( session.Id );
 
-                    _tracer.Info( ServerProperties.Server_DeletedSessionOnDisconnect( clientId ) );
+                    m.Info( ServerProperties.Server_DeletedSessionOnDisconnect( clientId ) );
                 }
 
-                _connectionProvider.RemoveConnection( clientId );
+                _connectionProvider.RemoveConnection( m, clientId );
             } );
         }
     }

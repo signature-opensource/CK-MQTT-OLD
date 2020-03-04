@@ -10,8 +10,6 @@ namespace CK.MQTT.Sdk.Flows
 {
     internal class ServerPublishReceiverFlow : PublishReceiverFlow, IServerPublishReceiverFlow
     {
-        static readonly ITracer _tracer = Tracer.Get<ServerPublishReceiverFlow>();
-
         readonly IConnectionProvider _connectionProvider;
         readonly IPublishSenderFlow _senderFlow;
         readonly IRepository<ConnectionWill> _willRepository;
@@ -47,7 +45,7 @@ namespace CK.MQTT.Sdk.Flows
                     Payload = will.Will.Payload
                 };
 
-                _tracer.Info( ServerProperties.ServerPublishReceiverFlow_SendingWill( clientId, willPublish.Topic ) );
+                m.Info( ServerProperties.ServerPublishReceiverFlow_SendingWill( clientId, willPublish.Topic ) );
 
                 await DispatchAsync( m, willPublish, clientId, isWill: true );
             }
@@ -96,7 +94,7 @@ namespace CK.MQTT.Sdk.Flows
 
             if( !subscriptions.Any() )
             {
-                _tracer.Verbose( ServerProperties.ServerPublishReceiverFlow_TopicNotSubscribed( publish.Topic, clientId ) );
+                m.Info( ServerProperties.ServerPublishReceiverFlow_TopicNotSubscribed( publish.Topic, clientId ) );
 
                 _undeliveredMessagesListener.OnNext( new MqttUndeliveredMessage { SenderId = clientId, Message = new MqttApplicationMessage( publish.Topic, publish.Payload ) } );
             }
@@ -119,7 +117,7 @@ namespace CK.MQTT.Sdk.Flows
             {
                 Payload = publish.Payload
             };
-            IMqttChannel<IPacket> clientChannel = _connectionProvider.GetConnection( subscription.ClientId );
+            IMqttChannel<IPacket> clientChannel = _connectionProvider.GetConnection( m, subscription.ClientId );
 
             await _senderFlow.SendPublishAsync( m, subscription.ClientId, subscriptionPublish, clientChannel );
         }

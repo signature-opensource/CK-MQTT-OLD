@@ -1,4 +1,5 @@
-using CK.MQTT.Client.Abstractions;
+using CK.Core;
+
 using CK.MQTT.Sdk.Formatters;
 using CK.MQTT.Sdk.Packets;
 using System.Collections.Generic;
@@ -27,7 +28,7 @@ namespace CK.MQTT.Sdk
             _configuration = configuration;
         }
 
-        public async Task<IMqttChannel<IPacket>> CreateAsync()
+        public async Task<IMqttChannel<IPacket>> CreateAsync( IActivityMonitor m )
         {
             if( _innerChannelFactory == null )
             {
@@ -35,7 +36,7 @@ namespace CK.MQTT.Sdk
             }
 
             IMqttChannel<byte[]> binaryChannel = await _innerChannelFactory
-                .CreateAsync();
+                .CreateAsync( m );
 
             return Create( binaryChannel );
         }

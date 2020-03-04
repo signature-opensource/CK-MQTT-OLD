@@ -1,5 +1,5 @@
 using CK.Core;
-using CK.MQTT.Client.Abstractions;
+
 using System;
 using System.Threading.Tasks;
 

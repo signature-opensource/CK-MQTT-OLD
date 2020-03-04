@@ -1,5 +1,6 @@
+using CK.Core;
 using CK.MQTT;
-using CK.MQTT.Client.Abstractions;
+
 using CK.MQTT.Sdk;
 using CK.MQTT.Sdk.Flows;
 using CK.MQTT.Sdk.Packets;
@@ -35,7 +36,7 @@ namespace Tests
             packetChannel.Setup( c => c.ReceiverStream ).Returns( receiver );
             packetChannel.Setup( c => c.SenderStream ).Returns( new Subject<Monitored<IPacket>>() );
 
-            ServerPacketListener listener = new ServerPacketListener( packetChannel.Object, connectionProvider.Object, flowProvider.Object, configuration );
+            ServerPacketListener listener = new ServerPacketListener( TestHelper.Monitor, packetChannel.Object, connectionProvider.Object, flowProvider.Object, configuration );
 
             listener.Listen();
 
@@ -89,7 +90,7 @@ namespace Tests
             packetChannel.Setup( c => c.ReceiverStream ).Returns( receiver );
             packetChannel.Setup( c => c.SenderStream ).Returns( new Subject<Monitored<IPacket>>() );
 
-            ServerPacketListener listener = new ServerPacketListener( packetChannel.Object, connectionProvider.Object, flowProvider, configuration );
+            ServerPacketListener listener = new ServerPacketListener( TestHelper.Monitor, packetChannel.Object, connectionProvider.Object, flowProvider, configuration );
 
             listener.Listen();
 
@@ -98,7 +99,7 @@ namespace Tests
 
             receiver.OnNext( new Monitored<IPacket>( TestHelper.Monitor, connect ) );
 
-            connectionProvider.Verify( m => m.AddConnection( It.Is<string>( s => s == clientId ), It.Is<IMqttChannel<IPacket>>( c => c == packetChannel.Object ) ) );
+            connectionProvider.Verify( m => m.AddConnection( TestHelper.Monitor, It.Is<string>( s => s == clientId ), It.Is<IMqttChannel<IPacket>>( c => c == packetChannel.Object ) ) );
         }
 
         [Test]
@@ -115,7 +116,7 @@ namespace Tests
             packetChannel.Setup( c => c.ReceiverStream ).Returns( receiver );
             packetChannel.Setup( c => c.SenderStream ).Returns( new Subject<Monitored<IPacket>>() );
 
-            ServerPacketListener listener = new ServerPacketListener( packetChannel.Object, connectionProvider.Object, flowProvider, configuration );
+            ServerPacketListener listener = new ServerPacketListener( TestHelper.Monitor, packetChannel.Object, connectionProvider.Object, flowProvider, configuration );
 
             listener.Listen();
 
@@ -145,7 +146,7 @@ namespace Tests
             packetChannel.Setup( c => c.ReceiverStream ).Returns( receiver );
             packetChannel.Setup( c => c.SenderStream ).Returns( new Subject<Monitored<IPacket>>() );
 
-            ServerPacketListener listener = new ServerPacketListener( packetChannel.Object, connectionProvider.Object, flowProvider, configuration );
+            ServerPacketListener listener = new ServerPacketListener( TestHelper.Monitor, packetChannel.Object, connectionProvider.Object, flowProvider, configuration );
 
             listener.Listen();
 
@@ -177,7 +178,7 @@ namespace Tests
             packetChannel.Setup( c => c.ReceiverStream ).Returns( receiver );
             packetChannel.Setup( c => c.SenderStream ).Returns( new Subject<Monitored<IPacket>>() );
 
-            ServerPacketListener listener = new ServerPacketListener( packetChannel.Object, connectionProvider.Object, flowProvider, configuration );
+            ServerPacketListener listener = new ServerPacketListener( TestHelper.Monitor, packetChannel.Object, connectionProvider.Object, flowProvider, configuration );
 
             listener.Listen();
 
@@ -198,7 +199,7 @@ namespace Tests
         {
             Mock<IConnectionProvider> connectionProvider = new Mock<IConnectionProvider>();
 
-            connectionProvider.Setup( p => p.RemoveConnection( It.IsAny<string>() ) );
+            connectionProvider.Setup( p => p.RemoveConnection( TestHelper.Monitor, It.IsAny<string>() ) );
 
             Mock<IServerPublishReceiverFlow> serverPublishReceiverFlow = new Mock<IServerPublishReceiverFlow>();
             Mock<IProtocolFlowProvider> flowProvider = new Mock<IProtocolFlowProvider>();
@@ -206,12 +207,12 @@ namespace Tests
             Subject<Monitored<IPacket>> receiver = new Subject<Monitored<IPacket>>();
             Mock<IMqttChannel<IPacket>> packetChannel = new Mock<IMqttChannel<IPacket>>();
 
-            serverPublishReceiverFlow.Setup( f => f.SendWillAsync(TestHelper.Monitor, It.IsAny<string>() ) ).Returns( Task.FromResult( true ) );
+            serverPublishReceiverFlow.Setup( f => f.SendWillAsync( TestHelper.Monitor, It.IsAny<string>() ) ).Returns( Task.FromResult( true ) );
             flowProvider.Setup( p => p.GetFlow<IServerPublishReceiverFlow>() ).Returns( serverPublishReceiverFlow.Object );
             packetChannel.Setup( c => c.ReceiverStream ).Returns( receiver );
             packetChannel.Setup( c => c.SenderStream ).Returns( new Subject<Monitored<IPacket>>() );
 
-            ServerPacketListener listener = new ServerPacketListener( packetChannel.Object, connectionProvider.Object, flowProvider.Object, configuration );
+            ServerPacketListener listener = new ServerPacketListener( TestHelper.Monitor, packetChannel.Object, connectionProvider.Object, flowProvider.Object, configuration );
 
             listener.Listen();
 
@@ -231,7 +232,7 @@ namespace Tests
             bool errorOccured = errorSignal.Wait( TimeSpan.FromSeconds( 1 ) );
 
             Assert.True( errorOccured );
-            connectionProvider.Verify( p => p.RemoveConnection( It.Is<string>( s => s == clientId ) ) );
+            connectionProvider.Verify( p => p.RemoveConnection( TestHelper.Monitor, It.Is<string>( s => s == clientId ) ) );
         }
 
         [Test]
@@ -241,7 +242,7 @@ namespace Tests
             Mock<IServerPublishReceiverFlow> serverPublishReceiverFlow = new Mock<IServerPublishReceiverFlow>();
             Mock<IProtocolFlowProvider> flowProvider = new Mock<IProtocolFlowProvider>();
 
-            serverPublishReceiverFlow.Setup( f => f.SendWillAsync(TestHelper.Monitor, It.IsAny<string>() ) )
+            serverPublishReceiverFlow.Setup( f => f.SendWillAsync( TestHelper.Monitor, It.IsAny<string>() ) )
                 .Returns( Task.FromResult( true ) );
             flowProvider.Setup( p => p.GetFlow<IServerPublishReceiverFlow>() )
                 .Returns( serverPublishReceiverFlow.Object );
@@ -258,13 +259,16 @@ namespace Tests
 
             IMqttChannel<IPacket> packetChannel = packetChannelMock.Object;
 
-            ServerPacketListener listener = new ServerPacketListener( packetChannel, connectionProvider.Object, flowProvider.Object, configuration );
+            ServerPacketListener listener = new ServerPacketListener( TestHelper.Monitor, packetChannel, connectionProvider.Object, flowProvider.Object, configuration );
 
             listener.Listen();
 
             ManualResetEventSlim timeoutSignal = new ManualResetEventSlim( initialState: false );
 
             listener.PacketStream.Subscribe( _ => { }, ex =>
+            {
+                timeoutSignal.Set();
+            }, () =>
             {
                 timeoutSignal.Set();
             } );
@@ -301,7 +305,7 @@ namespace Tests
             packetChannel.Setup( c => c.ReceiverStream ).Returns( receiver );
             packetChannel.Setup( c => c.SenderStream ).Returns( new Subject<Monitored<IPacket>>() );
 
-            ServerPacketListener listener = new ServerPacketListener( packetChannel.Object, connectionProvider.Object, flowProvider.Object, configuration );
+            ServerPacketListener listener = new ServerPacketListener( TestHelper.Monitor, packetChannel.Object, connectionProvider.Object, flowProvider.Object, configuration );
 
             listener.Listen();
 
@@ -340,7 +344,7 @@ namespace Tests
             packetChannel.Setup( c => c.ReceiverStream ).Returns( receiver );
             packetChannel.Setup( c => c.SenderStream ).Returns( new Subject<Monitored<IPacket>>() );
 
-            ServerPacketListener listener = new ServerPacketListener( packetChannel.Object, connectionProvider.Object, flowProvider.Object, configuration );
+            ServerPacketListener listener = new ServerPacketListener( TestHelper.Monitor, packetChannel.Object, connectionProvider.Object, flowProvider.Object, configuration );
 
             listener.Listen();
 

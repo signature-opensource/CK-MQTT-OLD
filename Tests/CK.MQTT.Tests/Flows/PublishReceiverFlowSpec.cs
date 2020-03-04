@@ -1,5 +1,6 @@
+using CK.Core;
 using CK.MQTT;
-using CK.MQTT.Client.Abstractions;
+
 using CK.MQTT.Sdk;
 using CK.MQTT.Sdk.Flows;
 using CK.MQTT.Sdk.Packets;
@@ -53,7 +54,7 @@ namespace Tests.Flows
             const MqttQualityOfService requestedQoS1 = MqttQualityOfService.AtLeastOnce;
             const MqttQualityOfService requestedQoS2 = MqttQualityOfService.ExactlyOnce;
             List<ClientSession> sessions = new List<ClientSession> {
-                new ClientSession (subscribedClientId1,  clean: false) {
+                new ClientSession (subscribedClientId1, clean: false) {
                     Subscriptions = new List<ClientSubscription> {
                         new ClientSubscription { ClientId = subscribedClientId1,
                             MaximumQualityOfService = requestedQoS1, TopicFilter = topic }}
@@ -79,10 +80,10 @@ namespace Tests.Flows
             sessionRepository.Setup( r => r.ReadAll() ).Returns( sessions.AsQueryable() );
 
             connectionProvider
-                .Setup( p => p.GetConnection( It.Is<string>( s => s == subscribedClientId1 ) ) )
+                .Setup( p => p.GetConnection( TestHelper.Monitor, It.Is<string>( s => s == subscribedClientId1 ) ) )
                 .Returns( client1Channel.Object );
             connectionProvider
-                .Setup( p => p.GetConnection( It.Is<string>( s => s == subscribedClientId2 ) ) )
+                .Setup( p => p.GetConnection( TestHelper.Monitor, It.Is<string>( s => s == subscribedClientId2 ) ) )
                 .Returns( client2Channel.Object );
 
             Publish publish = new Publish( topic, MqttQualityOfService.AtMostOnce, retain: false, duplicated: false )
@@ -154,7 +155,7 @@ namespace Tests.Flows
             sessionRepository.Setup( r => r.ReadAll() ).Returns( sessions.AsQueryable() );
 
             connectionProvider
-                .Setup( p => p.GetConnection( It.Is<string>( s => s == subscribedClientId ) ) )
+                .Setup( p => p.GetConnection( TestHelper.Monitor, It.Is<string>( s => s == subscribedClientId ) ) )
                 .Returns( clientChannel.Object );
 
             ushort? packetId = (ushort?)new Random().Next( 0, ushort.MaxValue );
@@ -230,7 +231,7 @@ namespace Tests.Flows
             sessionRepository.Setup( r => r.ReadAll() ).Returns( sessions.AsQueryable() );
 
             connectionProvider
-                .Setup( p => p.GetConnection( It.Is<string>( s => s == subscribedClientId ) ) )
+                .Setup( p => p.GetConnection( TestHelper.Monitor, It.Is<string>( s => s == subscribedClientId ) ) )
                 .Returns( clientChannel.Object );
 
             Publish publish = new Publish( topic, MqttQualityOfService.ExactlyOnce, retain: false, duplicated: false, packetId: packetId )
@@ -513,7 +514,7 @@ namespace Tests.Flows
             sessionRepository.Setup( r => r.ReadAll() ).Returns( sessions.AsQueryable() );
 
             connectionProvider
-                .Setup( p => p.GetConnection( It.Is<string>( s => s == subscribedClientId ) ) )
+                .Setup( p => p.GetConnection( TestHelper.Monitor, It.Is<string>( s => s == subscribedClientId ) ) )
                 .Returns( clientChannel.Object );
 
             ushort? packetId = (ushort?)new Random().Next( 0, ushort.MaxValue );
@@ -642,7 +643,7 @@ namespace Tests.Flows
             sessionRepository.Setup( r => r.ReadAll() ).Returns( sessions.AsQueryable() );
 
             connectionProvider
-                .Setup( p => p.GetConnection( It.Is<string>( s => s == subscribedClientId ) ) )
+                .Setup( p => p.GetConnection( TestHelper.Monitor, It.Is<string>( s => s == subscribedClientId ) ) )
                 .Returns( clientChannel.Object );
 
             ushort? packetId = (ushort?)new Random().Next( 0, ushort.MaxValue );
@@ -722,7 +723,7 @@ namespace Tests.Flows
             sessionRepository.Setup( r => r.ReadAll() ).Returns( sessions.AsQueryable() );
 
             connectionProvider
-                .Setup( p => p.GetConnection( It.Is<string>( s => s == subscribedClientId ) ) )
+                .Setup( p => p.GetConnection( TestHelper.Monitor, It.Is<string>( s => s == subscribedClientId ) ) )
                 .Returns( clientChannel.Object );
 
             ushort? packetId = (ushort?)new Random().Next( 0, ushort.MaxValue );

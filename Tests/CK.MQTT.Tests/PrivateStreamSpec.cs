@@ -1,5 +1,6 @@
+using CK.Core;
 using CK.MQTT;
-using CK.MQTT.Client.Abstractions;
+
 using CK.MQTT.Sdk.Bindings;
 using FluentAssertions;
 using NUnit.Framework;

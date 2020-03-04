@@ -1,5 +1,5 @@
 using CK.Core;
-using CK.MQTT.Client.Abstractions;
+
 using CK.MQTT.Sdk.Packets;
 using System;
 using System.Diagnostics;

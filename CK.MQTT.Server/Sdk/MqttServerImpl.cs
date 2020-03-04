@@ -22,23 +22,26 @@ namespace CK.MQTT.Sdk
         IDisposable _streamSubscription;
 
         readonly IEnumerable<IMqttChannelListener> _binaryChannelListeners;
+        private readonly IActivityMonitor _m;
         readonly IPacketChannelFactory _channelFactory;
         readonly IProtocolFlowProvider _flowProvider;
         readonly IConnectionProvider _connectionProvider;
         readonly ISubject<MqttUndeliveredMessage> _undeliveredMessagesListener;
         readonly MqttConfiguration _configuration;
-        readonly ISubject<PrivateStream> _privateStreamListener;
+        readonly ISubject<Monitored<PrivateStream>> _privateStreamListener;
         readonly IList<IMqttChannel<IPacket>> _channels = new List<IMqttChannel<IPacket>>();
 
-        internal MqttServerImpl( IMqttChannelListener binaryChannelListener,
+        internal MqttServerImpl( IActivityMonitor m,
+            IMqttChannelListener binaryChannelListener,
             IPacketChannelFactory channelFactory,
             IProtocolFlowProvider flowProvider,
             IConnectionProvider connectionProvider,
             ISubject<MqttUndeliveredMessage> undeliveredMessagesListener,
             MqttConfiguration configuration )
         {
-            _privateStreamListener = new Subject<PrivateStream>();
+            _privateStreamListener = new Subject<Monitored<PrivateStream>>();
             _binaryChannelListeners = new[] { new PrivateChannelListener( _privateStreamListener, configuration ), binaryChannelListener };
+            _m = m;
             _channelFactory = channelFactory;
             _flowProvider = flowProvider;
             _connectionProvider = new NotifyingConnectionProvider( this, connectionProvider );
@@ -67,7 +70,7 @@ namespace CK.MQTT.Sdk
             _channelSubscription = Observable
                 .Merge( channelStreams )
                 .Subscribe(
-                    binaryChannel => ProcessChannel( binaryChannel ),
+                    binaryChannel => ProcessChannel( _m, binaryChannel ),
                     ex => { _tracer.Error( ex ); },
                     () => { }
                 );
@@ -142,12 +145,12 @@ namespace CK.MQTT.Sdk
             }
         }
 
-        void ProcessChannel( IMqttChannel<byte[]> binaryChannel )
+        void ProcessChannel( IActivityMonitor m, IMqttChannel<byte[]> binaryChannel )
         {
             _tracer.Verbose( ServerProperties.Server_NewSocketAccepted );
 
             IMqttChannel<IPacket> packetChannel = _channelFactory.Create( binaryChannel );
-            ServerPacketListener packetListener = new ServerPacketListener( packetChannel, _connectionProvider, _flowProvider, _configuration );
+            ServerPacketListener packetListener = new ServerPacketListener( m, packetChannel, _connectionProvider, _flowProvider, _configuration );
 
             packetListener.Listen();
             packetListener
@@ -203,15 +206,15 @@ namespace CK.MQTT.Sdk
                 _connections = connections;
             }
 
-            public void AddConnection( string clientId, IMqttChannel<IPacket> connection )
+            public void AddConnection( IActivityMonitor m, string clientId, IMqttChannel<IPacket> connection )
             {
-                _connections.AddConnection( clientId, connection );
+                _connections.AddConnection( m, clientId, connection );
                 _server.RaiseClientConnected( clientId );
             }
 
-            public void RemoveConnection( string clientId )
+            public void RemoveConnection( IActivityMonitor m, string clientId )
             {
-                _connections.RemoveConnection( clientId );
+                _connections.RemoveConnection( m, clientId );
                 _server.RaiseClientDisconnected( clientId );
             }
 
@@ -221,7 +224,7 @@ namespace CK.MQTT.Sdk
 
             public IEnumerable<string> PrivateClients => _connections.PrivateClients;
 
-            public IMqttChannel<IPacket> GetConnection( string clientId ) => _connections.GetConnection( clientId );
+            public IMqttChannel<IPacket> GetConnection( IActivityMonitor m, string clientId ) => _connections.GetConnection( m, clientId );
 
             public void RegisterPrivateClient( string clientId ) => _connections.RegisterPrivateClient( clientId );
         }

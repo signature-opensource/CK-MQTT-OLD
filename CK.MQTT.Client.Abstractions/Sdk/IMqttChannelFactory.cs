@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+using CK.Core;
+using System.Threading.Tasks;
 
 namespace CK.MQTT.Sdk
 {
@@ -13,6 +14,6 @@ namespace CK.MQTT.Sdk
         /// </summary>
         /// <returns>An MQTT channel of byte[].</returns>
         /// <exception cref="MqttException">MqttException</exception>
-        Task<IMqttChannel<byte[]>> CreateAsync();
+        Task<IMqttChannel<byte[]>> CreateAsync( IActivityMonitor m );
     }
 }

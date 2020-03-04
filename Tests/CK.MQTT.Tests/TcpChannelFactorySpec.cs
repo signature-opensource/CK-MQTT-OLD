@@ -6,6 +6,8 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 
+using static CK.Testing.MonitorTestHelper;
+
 namespace Tests
 {
     public class TcpChannelFactorySpec
@@ -19,7 +21,7 @@ namespace Tests
             listener.Start();
 
             TcpChannelClientFactory factory = new TcpChannelClientFactory( IPAddress.Loopback.ToString(), configuration );
-            var channel = await factory.CreateAsync();
+            var channel = await factory.CreateAsync( TestHelper.Monitor );
 
             Assert.NotNull( channel );
             Assert.True( channel.Connected );
@@ -34,8 +36,8 @@ namespace Tests
             TcpChannelClientFactory factory = new TcpChannelClientFactory( IPAddress.Loopback.ToString(), configuration );
             AggregateException ex = Assert.Throws<AggregateException>( () =>
            {
-               var a = factory.CreateAsync().Result;//Why this variable must exist ????
-            } );
+               var a = factory.CreateAsync( TestHelper.Monitor ).Result;//Why this variable must exist ????
+           } );
 
             Assert.NotNull( ex );
             Assert.NotNull( ex.InnerException );

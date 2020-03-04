@@ -1,3 +1,4 @@
+using CK.Core;
 using CK.MQTT.Sdk;
 using CK.MQTT.Sdk.Bindings;
 
@@ -25,7 +26,7 @@ namespace CK.MQTT.Ssl
         /// See <see cref="MqttConfiguration" /> for more details about the supported values
         /// </param>
         /// <returns>A listener to accept and provide incoming MQTT channels on top of TCP</returns>
-        public IMqttChannelListener GetChannelListener( MqttConfiguration config )
-            => new GenericListener<GenericChannel>( config, ( conf ) => new SslTcpChannelListener( config, _sslTcpConfig, _config ) );
+        public IMqttChannelListener GetChannelListener( IActivityMonitor m, MqttConfiguration config )
+            => new GenericListener<GenericChannel>( m, config, ( conf ) => new SslTcpChannelListener( config, _sslTcpConfig, _config ) );
     }
 }

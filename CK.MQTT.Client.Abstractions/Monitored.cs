@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace CK.MQTT.Client.Abstractions
+namespace CK.Core
 {
     public class Monitored<T>
     {

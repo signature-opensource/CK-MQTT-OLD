@@ -1,5 +1,6 @@
+using CK.Core;
 using CK.MQTT;
-using CK.MQTT.Client.Abstractions;
+
 using CK.MQTT.Sdk;
 using CK.MQTT.Sdk.Flows;
 using CK.MQTT.Sdk.Packets;
@@ -54,7 +55,7 @@ namespace Tests.Flows
                 .Callback<IPacket>( packet => sender.OnNext( new Monitored<IPacket>( TestHelper.Monitor, packet ) ) )
                 .Returns( Task.Delay( 0 ) );
 
-            connectionProvider.Setup( m => m.GetConnection( It.IsAny<string>() ) ).Returns( channel.Object );
+            connectionProvider.Setup( m => m.GetConnection( TestHelper.Monitor, It.IsAny<string>() ) ).Returns( channel.Object );
 
             ManualResetEventSlim retrySignal = new ManualResetEventSlim( initialState: false );
             int retries = 0;
@@ -118,7 +119,7 @@ namespace Tests.Flows
                 .Callback<IPacket>( packet => sender.OnNext( new Monitored<IPacket>( TestHelper.Monitor, packet ) ) )
                 .Returns( Task.Delay( 0 ) );
 
-            connectionProvider.Setup( m => m.GetConnection( It.IsAny<string>() ) ).Returns( channel.Object );
+            connectionProvider.Setup( m => m.GetConnection( TestHelper.Monitor, It.IsAny<string>() ) ).Returns( channel.Object );
 
             ManualResetEventSlim retrySignal = new ManualResetEventSlim( initialState: false );
             int retries = 0;
@@ -178,7 +179,7 @@ namespace Tests.Flows
                 .Callback<IPacket>( packet => sender.OnNext( new Monitored<IPacket>( TestHelper.Monitor, packet ) ) )
                 .Returns( Task.Delay( 0 ) );
 
-            connectionProvider.Setup( m => m.GetConnection( It.Is<string>( s => s == clientId ) ) ).Returns( channel.Object );
+            connectionProvider.Setup( m => m.GetConnection( TestHelper.Monitor, It.Is<string>( s => s == clientId ) ) ).Returns( channel.Object );
 
             ManualResetEventSlim ackSentSignal = new ManualResetEventSlim( initialState: false );
 
@@ -230,7 +231,7 @@ namespace Tests.Flows
                 .Callback<IPacket>( packet => sender.OnNext( new Monitored<IPacket>( TestHelper.Monitor, packet ) ) )
                 .Returns( Task.Delay( 0 ) );
 
-            connectionProvider.Setup( m => m.GetConnection( It.Is<string>( s => s == clientId ) ) ).Returns( channel.Object );
+            connectionProvider.Setup( m => m.GetConnection( TestHelper.Monitor, It.Is<string>( s => s == clientId ) ) ).Returns( channel.Object );
 
             ManualResetEventSlim ackSentSignal = new ManualResetEventSlim( initialState: false );
 

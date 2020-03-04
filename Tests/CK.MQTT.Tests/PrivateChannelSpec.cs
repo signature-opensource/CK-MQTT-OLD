@@ -1,5 +1,6 @@
+using CK.Core;
 using CK.MQTT;
-using CK.MQTT.Client.Abstractions;
+
 using CK.MQTT.Sdk.Bindings;
 using FluentAssertions;
 using NUnit.Framework;
@@ -17,7 +18,7 @@ namespace Tests
         {
             MqttConfiguration configuration = new MqttConfiguration();
             PrivateStream stream = new PrivateStream( configuration );
-            PrivateChannel channel = new PrivateChannel( stream, EndpointIdentifier.Client, configuration );
+            PrivateChannel channel = new PrivateChannel( TestHelper.Monitor, stream, EndpointIdentifier.Client, configuration );
 
             Assert.True( channel.IsConnected );
             Assert.NotNull( channel.ReceiverStream );
@@ -32,7 +33,7 @@ namespace Tests
 
             stream.Dispose();
 
-            ObjectDisposedException ex = Assert.Throws<ObjectDisposedException>( () => new PrivateChannel( stream, EndpointIdentifier.Client, configuration ) );
+            ObjectDisposedException ex = Assert.Throws<ObjectDisposedException>( () => new PrivateChannel( TestHelper.Monitor, stream, EndpointIdentifier.Client, configuration ) );
 
             Assert.NotNull( ex );
         }
@@ -42,7 +43,7 @@ namespace Tests
         {
             MqttConfiguration configuration = new MqttConfiguration();
             PrivateStream stream = new PrivateStream( configuration );
-            PrivateChannel channel = new PrivateChannel( stream, EndpointIdentifier.Client, configuration );
+            PrivateChannel channel = new PrivateChannel( TestHelper.Monitor, stream, EndpointIdentifier.Client, configuration );
 
             int packetsReceived = 0;
 
@@ -69,7 +70,7 @@ namespace Tests
         {
             MqttConfiguration configuration = new MqttConfiguration();
             PrivateStream stream = new PrivateStream( configuration );
-            PrivateChannel channel = new PrivateChannel( stream, EndpointIdentifier.Server, configuration );
+            PrivateChannel channel = new PrivateChannel( TestHelper.Monitor, stream, EndpointIdentifier.Server, configuration );
 
             int packetsReceived = 0;
 
@@ -94,7 +95,7 @@ namespace Tests
         {
             MqttConfiguration configuration = new MqttConfiguration();
             PrivateStream stream = new PrivateStream( configuration );
-            PrivateChannel channel = new PrivateChannel( stream, EndpointIdentifier.Server, configuration );
+            PrivateChannel channel = new PrivateChannel( TestHelper.Monitor, stream, EndpointIdentifier.Server, configuration );
 
             channel.Dispose();
 

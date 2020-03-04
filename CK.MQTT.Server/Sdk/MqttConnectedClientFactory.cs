@@ -14,9 +14,9 @@ namespace CK.MQTT.Sdk
     {
         static readonly ITracer _tracer = Tracer.Get<MqttClientFactory>();
 
-        readonly ISubject<PrivateStream> _privateStreamListener;
+        readonly ISubject<Monitored<PrivateStream>> _privateStreamListener;
 
-        public MqttConnectedClientFactory( ISubject<PrivateStream> privateStreamListener )
+        public MqttConnectedClientFactory( ISubject<Monitored<PrivateStream>> privateStreamListener )
         {
             _privateStreamListener = privateStreamListener;
         }

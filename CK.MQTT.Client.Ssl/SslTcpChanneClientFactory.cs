@@ -1,3 +1,4 @@
+using CK.Core;
 using CK.MQTT.Sdk;
 using CK.MQTT.Sdk.Bindings;
 using System.Net.Security;
@@ -19,7 +20,7 @@ namespace CK.MQTT.Ssl
             _hostName = hostName;
         }
 
-        public async Task<IChannelClient> CreateAsync()
+        public async Task<IChannelClient> CreateAsync( IActivityMonitor m )
         {
             TcpClient client = new TcpClient( _config.AddressFamily );
             await client.ConnectAsync( _hostName, _mqqtConfig.Port );

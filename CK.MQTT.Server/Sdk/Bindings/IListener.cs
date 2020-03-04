@@ -1,3 +1,4 @@
+using CK.Core;
 using CK.MQTT.Sdk;
 using System.Threading.Tasks;
 
@@ -9,6 +10,6 @@ namespace CK.MQTT.Sdk.Bindings
 
         void Stop();
 
-        Task<TChannel> AcceptClientAsync();
+        Task<TChannel> AcceptClientAsync(IActivityMonitor m);
     }
 }

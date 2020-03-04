@@ -1,5 +1,5 @@
 using CK.Core;
-using CK.MQTT.Client.Abstractions;
+
 using CK.MQTT.Sdk;
 using System;
 using System.Collections.Generic;
@@ -15,10 +15,8 @@ namespace CK.MQTT.Sdk.Bindings
 {
     public sealed class GenericChannel : IMqttChannel<byte[]>
     {
-        static readonly ITracer _tracer = Tracer.Get<GenericChannel>();
-
         bool _disposed;
-
+        readonly IActivityMonitor _m;
         readonly IChannelClient _client;
         readonly IPacketBuffer _buffer;
         readonly ReplaySubject<Monitored<byte[]>> _receiver;
@@ -26,10 +24,12 @@ namespace CK.MQTT.Sdk.Bindings
         readonly IDisposable _streamSubscription;
 
         public GenericChannel(
+            IActivityMonitor m,
             IChannelClient client,
             IPacketBuffer buffer,
             MqttConfiguration configuration )
         {
+            _m = m;
             _client = client;
             _client.PreferedReceiveBufferSize = configuration.BufferSize;
             _client.PreferedSendBufferSize = configuration.BufferSize;
@@ -78,7 +78,7 @@ namespace CK.MQTT.Sdk.Bindings
 
             try
             {
-                _tracer.Verbose( "Sending packet of {0} bytes", message.Item.Length );
+                message.Monitor.Trace( $"Sending packet of {message.Item.Length} bytes" );
 
                 await _client.GetStream()
                     .WriteAsync( message.Item, 0, message.Item.Length );
@@ -92,7 +92,7 @@ namespace CK.MQTT.Sdk.Bindings
         public void Dispose()
         {
             if( _disposed ) return;
-            _tracer.Info( "Disposing {0}...", GetType().FullName );
+            _m.Info( $"Disposing {GetType().FullName}..." );
 
             _streamSubscription.Dispose();
             _receiver.OnCompleted();
@@ -103,7 +103,7 @@ namespace CK.MQTT.Sdk.Bindings
             }
             catch( SocketException socketEx )
             {
-                _tracer.Error( socketEx, "An error occurred while closing underlying communication channel. Error code: {0}", socketEx.SocketErrorCode );
+                _m.Error( $"An error occurred while closing underlying communication channel. Error code: {socketEx.SocketErrorCode}", socketEx );
             }
 
             _disposed = true;
@@ -134,7 +134,7 @@ namespace CK.MQTT.Sdk.Bindings
                     {
                         foreach( var packet in packets )
                         {
-                            _tracer.Verbose( "Received packet of {0} bytes", packet.Length );
+                            m.Trace( "Received packet of {packet.Length} bytes" );
 
                             _receiver.OnNext( new Monitored<byte[]>( m, packet ) );
                         }
@@ -144,12 +144,12 @@ namespace CK.MQTT.Sdk.Bindings
                 {
                     try
                     {
-                        _tracer.Warn( e, "Error while processing client data. Closing connection." );
+                        m.Warn( "Error while processing client data. Closing connection.", e );
                         _client.Dispose();
                     }
                     catch( Exception F )
                     {
-                        _tracer.Warn( F, "Error while disposing client connection." );
+                        m.Warn(  "Error while disposing client connection.", F );
                     }
                 }
 
@@ -165,7 +165,8 @@ namespace CK.MQTT.Sdk.Bindings
                 }
             }, () =>
             {
-                _tracer.Warn( "The underlying communication stream has completed sending bytes. The observable sequence will be completed and the channel will be disposed" );
+                var monitor = new ActivityMonitor();//TODO: remove OnComplete monitor.
+                monitor.Warn( "The underlying communication stream has completed sending bytes. The observable sequence will be completed and the channel will be disposed" );
                 _receiver.OnCompleted();
             } );
         }

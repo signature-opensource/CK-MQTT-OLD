@@ -41,7 +41,7 @@ namespace IntegrationTests.Context
         [SetUp]
         public void Setup()
         {
-            Server = MqttServer.Create( Configuration, MqttServerBinding, _authenticationProvider );
+            Server = MqttServer.Create( TestHelper.Monitor, Configuration, MqttServerBinding, _authenticationProvider ) ;
             Server.Start();
         }
 

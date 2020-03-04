@@ -1,3 +1,4 @@
+using CK.Core;
 using CK.MQTT.Sdk;
 using CK.MQTT.Sdk.Bindings;
 
@@ -31,8 +32,8 @@ namespace CK.MQTT
         /// </param>
         /// <returns>A new MQTT Server</returns>
         /// <exception cref="MqttServerException">MqttServerException</exception>
-        public static IMqttServer Create( MqttConfiguration configuration, IMqttServerBinding binding = null, IMqttAuthenticationProvider authenticationProvider = null )
-            => new MqttServerFactory( binding ?? new ServerTcpBinding(), authenticationProvider ).CreateServer( configuration );
+        public static IMqttServer Create( IActivityMonitor m, MqttConfiguration configuration, IMqttServerBinding binding = null, IMqttAuthenticationProvider authenticationProvider = null )
+            => new MqttServerFactory( binding ?? new ServerTcpBinding(), authenticationProvider ).CreateServer( m, configuration );
 
         /// <summary>
         /// Creates an <see cref="IMqttServer"/> over the TCP protocol, using the 
@@ -43,7 +44,7 @@ namespace CK.MQTT
         /// </param>
         /// <returns>A new MQTT Server</returns>
         /// <exception cref="MqttServerException">MqttServerException</exception>
-        public static IMqttServer Create( int port ) => new MqttServerFactory().CreateServer( new MqttConfiguration { Port = port } );
+        public static IMqttServer Create( IActivityMonitor m, int port ) => new MqttServerFactory().CreateServer(m, new MqttConfiguration { Port = port } );
 
         /// <summary>
         /// Creates an <see cref="IMqttServer"/> over the TCP protocol, using the 
@@ -51,6 +52,6 @@ namespace CK.MQTT
         /// </summary>
         /// <returns>A new MQTT Server</returns>
         /// <exception cref="MqttServerException">MqttServerException</exception>
-        public static IMqttServer Create() => new MqttServerFactory().CreateServer( new MqttConfiguration() );
+        public static IMqttServer Create( IActivityMonitor m ) => new MqttServerFactory().CreateServer( m, new MqttConfiguration() );
     }
 }

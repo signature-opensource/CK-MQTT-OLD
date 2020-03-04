@@ -1,3 +1,5 @@
+using CK.Core;
+
 namespace CK.MQTT.Sdk.Bindings
 {
     /// <summary>
@@ -14,7 +16,7 @@ namespace CK.MQTT.Sdk.Bindings
         /// See <see cref="MqttConfiguration" /> for more details about the supported values
         /// </param>
         /// <returns>A listener to accept and provide incoming MQTT channels on top of TCP</returns>
-        public IMqttChannelListener GetChannelListener( MqttConfiguration configuration )
-            => new GenericListener<GenericChannel>( configuration, ( conf ) => new TcpChannelListener( configuration ) );
+        public IMqttChannelListener GetChannelListener( IActivityMonitor m, MqttConfiguration configuration )
+            => new GenericListener<GenericChannel>( m, configuration, ( conf ) => new TcpChannelListener( configuration ) );
     }
 }

@@ -37,7 +37,7 @@ namespace Tests
             };
             ServerTcpBinding binding = new ServerTcpBinding();
             MqttServerFactory initializer = new MqttServerFactory( binding );
-            IMqttServer server = initializer.CreateServer( configuration );
+            IMqttServer server = initializer.CreateServer( TestHelper.Monitor, configuration );
 
             Assert.NotNull( server );
 
@@ -47,15 +47,14 @@ namespace Tests
         [Test]
         public async Task when_initializing_client_then_succeeds()
         {
-            int port = new Random().Next( IPEndPoint.MinPort, IPEndPoint.MaxPort );
-            TcpListener listener = new TcpListener( IPAddress.Loopback, port );
+            TcpListener listener = new TcpListener( IPAddress.Loopback, 25565 );
 
             listener.Start();
 
             MqttConfiguration configuration = new MqttConfiguration
             {
                 BufferSize = 131072,
-                Port = port
+                Port = 25565
             };
             TcpBinding binding = new TcpBinding();
             MqttClientFactory initializer = new MqttClientFactory( IPAddress.Loopback.ToString(), binding );

@@ -1,5 +1,6 @@
+using CK.Core;
 using CK.MQTT;
-using CK.MQTT.Client.Abstractions;
+
 using CK.MQTT.Sdk;
 using CK.MQTT.Sdk.Flows;
 using CK.MQTT.Sdk.Packets;
@@ -56,7 +57,7 @@ namespace Tests.Flows
             Mock<IConnectionProvider> connectionProvider = new Mock<IConnectionProvider>();
 
             connectionProvider
-                .Setup( p => p.GetConnection( It.Is<string>( c => c == clientId ) ) )
+                .Setup( p => p.GetConnection( TestHelper.Monitor, It.Is<string>( c => c == clientId ) ) )
                 .Returns( channel.Object );
 
             ServerSubscribeFlow flow = new ServerSubscribeFlow( topicEvaluator.Object, sessionRepository.Object,
@@ -116,7 +117,7 @@ namespace Tests.Flows
             Mock<IConnectionProvider> connectionProvider = new Mock<IConnectionProvider>();
 
             connectionProvider
-                .Setup( p => p.GetConnection( It.Is<string>( c => c == clientId ) ) )
+                .Setup( p => p.GetConnection( TestHelper.Monitor, It.Is<string>( c => c == clientId ) ) )
                 .Returns( channel.Object );
 
             ServerSubscribeFlow flow = new ServerSubscribeFlow( topicEvaluator.Object, sessionRepository.Object,
@@ -171,7 +172,7 @@ namespace Tests.Flows
             Mock<IConnectionProvider> connectionProvider = new Mock<IConnectionProvider>();
 
             connectionProvider
-                .Setup( p => p.GetConnection( It.Is<string>( c => c == clientId ) ) )
+                .Setup( p => p.GetConnection( TestHelper.Monitor, It.Is<string>( c => c == clientId ) ) )
                 .Returns( channel.Object );
 
             ServerSubscribeFlow flow = new ServerSubscribeFlow( topicEvaluator.Object, sessionRepository.Object,
@@ -228,7 +229,7 @@ namespace Tests.Flows
             Mock<IConnectionProvider> connectionProvider = new Mock<IConnectionProvider>();
 
             connectionProvider
-                .Setup( p => p.GetConnection( It.Is<string>( c => c == clientId ) ) )
+                .Setup( p => p.GetConnection( TestHelper.Monitor, It.Is<string>( c => c == clientId ) ) )
                 .Returns( channel.Object );
 
             ServerSubscribeFlow flow = new ServerSubscribeFlow( topicEvaluator.Object,
