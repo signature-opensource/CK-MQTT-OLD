@@ -19,12 +19,12 @@ namespace CK.MQTT.Sdk
         /// <summary>
         /// Represents the stream of incoming information received by the channel
         /// </summary>
-		IObservable<IMonitored<T>> ReceiverStream { get; }
+		IObservable<Mon<T>> ReceiverStream { get; }
 
         /// <summary>
         /// Represents the stream of outgoing information sent by the channel
         /// </summary>
-		IObservable<IMonitored<T>> SenderStream { get; }
+		IObservable<Mon<T>> SenderStream { get; }
 
         /// <summary>
         /// Sends information to the other end, through the underlying stream
@@ -33,6 +33,6 @@ namespace CK.MQTT.Sdk
         /// Message to send to the other end of the channel
         /// </param>
 		/// <exception cref="MqttException">MqttException</exception>
-		Task SendAsync( IMonitored<T> message );
+		Task SendAsync( Mon<T> message );
     }
 }

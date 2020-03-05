@@ -66,12 +66,12 @@ namespace Tests.Flows
                 }
             };
 
-            Subject<IMonitored<IPacket>> client1Receiver = new Subject<IMonitored<IPacket>>();
+            Subject<Mon<IPacket>> client1Receiver = new Subject<Mon<IPacket>>();
             Mock<IMqttChannel<IPacket>> client1Channel = new Mock<IMqttChannel<IPacket>>();
 
             client1Channel.Setup( c => c.ReceiverStream ).Returns( client1Receiver );
 
-            Subject<IMonitored<IPacket>> client2Receiver = new Subject<IMonitored<IPacket>>();
+            Subject<Mon<IPacket>> client2Receiver = new Subject<Mon<IPacket>>();
             Mock<IMqttChannel<IPacket>> client2Channel = new Mock<IMqttChannel<IPacket>>();
 
             client2Channel.Setup( c => c.ReceiverStream ).Returns( client2Receiver );
@@ -91,7 +91,7 @@ namespace Tests.Flows
                 Payload = Encoding.UTF8.GetBytes( "Publish Receiver Flow Test" )
             };
 
-            Subject<IMonitored<IPacket>> receiver = new Subject<IMonitored<IPacket>>();
+            Subject<Mon<IPacket>> receiver = new Subject<Mon<IPacket>>();
             Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
 
             channel.Setup( c => c.ReceiverStream ).Returns( receiver );
@@ -107,7 +107,7 @@ namespace Tests.Flows
                 It.Is<Publish>( p => p.Topic == publish.Topic &&
                     p.Payload.ToList().SequenceEqual( publish.Payload ) ),
                 It.Is<IMqttChannel<IPacket>>( c => c == client2Channel.Object ), It.Is<PendingMessageStatus>( x => x == PendingMessageStatus.PendingToSend ) ) );
-            channel.Verify( c => c.SendAsync( It.IsAny<Monitored<IPacket>>() ), Times.Never );
+            channel.Verify( c => c.SendAsync( It.IsAny<Mon<IPacket>>() ), Times.Never );
         }
 
         [Test]
@@ -146,7 +146,7 @@ namespace Tests.Flows
                 }
             }};
 
-            Subject<IMonitored<IPacket>> clientReceiver = new Subject<IMonitored<IPacket>>();
+            Subject<Mon<IPacket>> clientReceiver = new Subject<Mon<IPacket>>();
             Mock<IMqttChannel<IPacket>> clientChannel = new Mock<IMqttChannel<IPacket>>();
 
             clientChannel.Setup( c => c.ReceiverStream ).Returns( clientReceiver );
@@ -164,7 +164,7 @@ namespace Tests.Flows
                 Payload = Encoding.UTF8.GetBytes( "Publish Flow Test" )
             };
 
-            Subject<IMonitored<IPacket>> receiver = new Subject<IMonitored<IPacket>>();
+            Subject<Mon<IPacket>> receiver = new Subject<Mon<IPacket>>();
             Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
 
             channel.Setup( c => c.IsConnected ).Returns( true );
@@ -177,7 +177,7 @@ namespace Tests.Flows
                 It.Is<Publish>( p => p.Topic == publish.Topic &&
                     p.Payload.ToList().SequenceEqual( publish.Payload ) ),
                 It.Is<IMqttChannel<IPacket>>( c => c == clientChannel.Object ), It.Is<PendingMessageStatus>( x => x == PendingMessageStatus.PendingToSend ) ) );
-            channel.Verify( c => c.SendAsync( It.Is<Monitored<IPacket>>( p => p.Item is PublishAck &&
+            channel.Verify( c => c.SendAsync( It.Is<Mon<IPacket>>( p => p.Item is PublishAck &&
                 ((PublishAck)p.Item).PacketId == packetId.Value ) ) );
         }
 
@@ -222,7 +222,7 @@ namespace Tests.Flows
                 }
             }};
 
-            Subject<IMonitored<IPacket>> clientReceiver = new Subject<IMonitored<IPacket>>();
+            Subject<Mon<IPacket>> clientReceiver = new Subject<Mon<IPacket>>();
             Mock<IMqttChannel<IPacket>> clientChannel = new Mock<IMqttChannel<IPacket>>();
 
             clientChannel.Setup( c => c.ReceiverStream ).Returns( clientReceiver );
@@ -239,15 +239,15 @@ namespace Tests.Flows
                 Payload = Encoding.UTF8.GetBytes( "Publish Flow Test" )
             };
 
-            Subject<IMonitored<IPacket>> receiver = new Subject<IMonitored<IPacket>>();
-            Subject<IMonitored<IPacket>> sender = new Subject<IMonitored<IPacket>>();
+            Subject<Mon<IPacket>> receiver = new Subject<Mon<IPacket>>();
+            Subject<Mon<IPacket>> sender = new Subject<Mon<IPacket>>();
             Mock<IMqttChannel<IPacket>> channelMock = new Mock<IMqttChannel<IPacket>>();
 
             channelMock.Setup( c => c.IsConnected ).Returns( true );
             channelMock.Setup( c => c.ReceiverStream ).Returns( receiver );
             channelMock.Setup( c => c.SenderStream ).Returns( sender );
-            channelMock.Setup( c => c.SendAsync( It.IsAny<Monitored<IPacket>>() ) )
-                .Callback<Monitored<IPacket>>( packet => sender.OnNext( packet ) )
+            channelMock.Setup( c => c.SendAsync( It.IsAny<Mon<IPacket>>() ) )
+                .Callback<Mon<IPacket>>( packet => sender.OnNext( packet ) )
                 .Returns( Task.Delay( 0 ) );
 
             IMqttChannel<IPacket> channel = channelMock.Object;
@@ -265,7 +265,7 @@ namespace Tests.Flows
 
             bool ackSent = ackSentSignal.Wait( 1000 );
 
-            receiver.OnNext( Monitored<IPacket>.Create( TestHelper.Monitor, new PublishRelease( packetId.Value ) ) );
+            receiver.OnNext( new Mon<IPacket>( TestHelper.Monitor, new PublishRelease( packetId.Value ) ) );
 
             await Task.Delay( TimeSpan.FromMilliseconds( 1000 ) );
 
@@ -275,7 +275,7 @@ namespace Tests.Flows
                     p.Payload.ToList().SequenceEqual( publish.Payload ) ),
                 It.Is<IMqttChannel<IPacket>>( c => c == clientChannel.Object ), It.Is<PendingMessageStatus>( x => x == PendingMessageStatus.PendingToSend ) ) );
             retainedRepository.Verify( r => r.Create( It.IsAny<RetainedMessage>() ), Times.Never );
-            channelMock.Verify( c => c.SendAsync( It.Is<Monitored<IPacket>>( p => p.Item is PublishReceived && (p.Item as PublishReceived).PacketId == packetId.Value ) ) );
+            channelMock.Verify( c => c.SendAsync( It.Is<Mon<IPacket>>( p => p.Item is PublishReceived && (p.Item as PublishReceived).PacketId == packetId.Value ) ) );
         }
 
         [Test]
@@ -317,7 +317,7 @@ namespace Tests.Flows
                 }
             }};
 
-            Subject<IMonitored<IPacket>> clientReceiver = new Subject<IMonitored<IPacket>>();
+            Subject<Mon<IPacket>> clientReceiver = new Subject<Mon<IPacket>>();
             Mock<IMqttChannel<IPacket>> clientChannel = new Mock<IMqttChannel<IPacket>>();
 
             clientChannel.Setup( c => c.ReceiverStream ).Returns( clientReceiver );
@@ -331,15 +331,15 @@ namespace Tests.Flows
                 Payload = Encoding.UTF8.GetBytes( "Publish Receiver Flow Test" )
             };
 
-            Subject<IMonitored<IPacket>> receiver = new Subject<IMonitored<IPacket>>();
-            Subject<IMonitored<IPacket>> sender = new Subject<IMonitored<IPacket>>();
+            Subject<Mon<IPacket>> receiver = new Subject<Mon<IPacket>>();
+            Subject<Mon<IPacket>> sender = new Subject<Mon<IPacket>>();
             Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
 
             channel.Setup( c => c.IsConnected ).Returns( true );
             channel.Setup( c => c.ReceiverStream ).Returns( receiver );
             channel.Setup( c => c.SenderStream ).Returns( sender );
-            channel.Setup( c => c.SendAsync( It.IsAny<Monitored<IPacket>>() ) )
-                .Callback<IMonitored<IPacket>>( packet => sender.OnNext( packet ) )
+            channel.Setup( c => c.SendAsync( It.IsAny<Mon<IPacket>>() ) )
+                .Callback<Mon<IPacket>>( packet => sender.OnNext( packet ) )
                 .Returns( Task.Delay( 0 ) );
 
             ManualResetEventSlim publishReceivedSignal = new ManualResetEventSlim( initialState: false );
@@ -363,7 +363,7 @@ namespace Tests.Flows
             bool retried = publishReceivedSignal.Wait( 2000 );
 
             Assert.True( retried );
-            channel.Verify( c => c.SendAsync( It.Is<Monitored<IPacket>>( p => p.Item is PublishReceived
+            channel.Verify( c => c.SendAsync( It.Is<Mon<IPacket>>( p => p.Item is PublishReceived
                 && (p.Item as PublishReceived).PacketId == packetId ) ), Times.AtLeast( 2 ) );
         }
 
@@ -403,7 +403,7 @@ namespace Tests.Flows
                 Payload = Encoding.UTF8.GetBytes( payload )
             };
 
-            Subject<IMonitored<IPacket>> receiver = new Subject<IMonitored<IPacket>>();
+            Subject<Mon<IPacket>> receiver = new Subject<Mon<IPacket>>();
             Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
 
             channel.Setup( c => c.ReceiverStream ).Returns( receiver );
@@ -414,7 +414,7 @@ namespace Tests.Flows
             await flow.ExecuteAsync( TestHelper.Monitor, clientId, publish, channel.Object );
 
             retainedRepository.Verify( r => r.Create( It.Is<RetainedMessage>( m => m.Id == topic && m.QualityOfService == qos && m.Payload.ToList().SequenceEqual( publish.Payload ) ) ) );
-            channel.Verify( c => c.SendAsync( It.IsAny<Monitored<IPacket>>() ), Times.Never );
+            channel.Verify( c => c.SendAsync( It.IsAny<Mon<IPacket>>() ), Times.Never );
         }
 
         [Test]
@@ -455,7 +455,7 @@ namespace Tests.Flows
                 Payload = Encoding.UTF8.GetBytes( payload )
             };
 
-            Subject<IMonitored<IPacket>> receiver = new Subject<IMonitored<IPacket>>();
+            Subject<Mon<IPacket>> receiver = new Subject<Mon<IPacket>>();
             Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
 
             channel.Setup( c => c.ReceiverStream ).Returns( receiver );
@@ -467,7 +467,7 @@ namespace Tests.Flows
 
             retainedRepository.Verify( r => r.Delete( It.Is<string>( m => m == existingRetainedMessage.Id ) ) );
             retainedRepository.Verify( r => r.Create( It.Is<RetainedMessage>( m => m.Id == topic && m.QualityOfService == qos && m.Payload.ToList().SequenceEqual( publish.Payload ) ) ) );
-            channel.Verify( c => c.SendAsync( It.IsAny<Monitored<IPacket>>() ), Times.Never );
+            channel.Verify( c => c.SendAsync( It.IsAny<Mon<IPacket>>() ), Times.Never );
         }
 
         [Test]
@@ -505,7 +505,7 @@ namespace Tests.Flows
                 }
             }};
 
-            Subject<IMonitored<IPacket>> clientReceiver = new Subject<IMonitored<IPacket>>();
+            Subject<Mon<IPacket>> clientReceiver = new Subject<Mon<IPacket>>();
             Mock<IMqttChannel<IPacket>> clientChannel = new Mock<IMqttChannel<IPacket>>();
 
             clientChannel.Setup( c => c.ReceiverStream ).Returns( clientReceiver );
@@ -523,7 +523,7 @@ namespace Tests.Flows
                 Payload = Encoding.UTF8.GetBytes( "Publish Flow Test" )
             };
 
-            Subject<IMonitored<IPacket>> receiver = new Subject<IMonitored<IPacket>>();
+            Subject<Mon<IPacket>> receiver = new Subject<Mon<IPacket>>();
             Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
 
             channel.Setup( c => c.IsConnected ).Returns( true );
@@ -536,7 +536,7 @@ namespace Tests.Flows
                     p.Payload.ToList().SequenceEqual( publish.Payload ) ),
                 It.Is<IMqttChannel<IPacket>>( c => c == clientChannel.Object ), It.Is<PendingMessageStatus>( x => x == PendingMessageStatus.PendingToSend ) ) );
             retainedRepository.Verify( r => r.Create( It.IsAny<RetainedMessage>() ), Times.Never );
-            channel.Verify( c => c.SendAsync( It.Is<Monitored<IPacket>>( p => p.Item is PublishAck && (p.Item as PublishAck).PacketId == packetId.Value ) ) );
+            channel.Verify( c => c.SendAsync( It.Is<Mon<IPacket>>( p => p.Item is PublishAck && (p.Item as PublishAck).PacketId == packetId.Value ) ) );
         }
 
         [Test]
@@ -573,7 +573,7 @@ namespace Tests.Flows
                 Payload = Encoding.UTF8.GetBytes( "Publish Flow Test" )
             };
 
-            Subject<IMonitored<IPacket>> receiver = new Subject<IMonitored<IPacket>>();
+            Subject<Mon<IPacket>> receiver = new Subject<Mon<IPacket>>();
             Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
 
             channel.Setup( c => c.ReceiverStream ).Returns( receiver );
@@ -625,19 +625,19 @@ namespace Tests.Flows
                 }
             }};
 
-            Subject<IMonitored<IPacket>> clientReceiver = new Subject<IMonitored<IPacket>>();
-            Subject<IMonitored<IPacket>> clientSender = new Subject<IMonitored<IPacket>>();
+            Subject<Mon<IPacket>> clientReceiver = new Subject<Mon<IPacket>>();
+            Subject<Mon<IPacket>> clientSender = new Subject<Mon<IPacket>>();
             Mock<IMqttChannel<IPacket>> clientChannel = new Mock<IMqttChannel<IPacket>>();
 
-            clientSender.OfMonitoredType<Publish>().Subscribe( p =>
+            clientSender.OfMonitoredType<Publish, IPacket>().Subscribe( p =>
            {
-               clientReceiver.OnNext( Monitored<IPacket>.Create( TestHelper.Monitor, new PublishAck( p.Item.PacketId.Value ) ) );
+               clientReceiver.OnNext( new Mon<IPacket>( TestHelper.Monitor, new PublishAck( p.Item.PacketId.Value ) ) );
            } );
 
             clientChannel.Setup( c => c.ReceiverStream ).Returns( clientReceiver );
             clientChannel.Setup( c => c.SenderStream ).Returns( clientSender );
-            clientChannel.Setup( c => c.SendAsync( It.IsAny<Monitored<IPacket>>() ) )
-                .Callback<IMonitored<IPacket>>( packet => clientSender.OnNext( Monitored<IPacket>.Create( TestHelper.Monitor, packet.Item ) ) )
+            clientChannel.Setup( c => c.SendAsync( It.IsAny<Mon<IPacket>>() ) )
+                .Callback<Mon<IPacket>>( packet => clientSender.OnNext( new Mon<IPacket>( TestHelper.Monitor, packet.Item ) ) )
                 .Returns( Task.Delay( 0 ) );
             topicEvaluator.Setup( e => e.Matches( It.IsAny<string>(), It.IsAny<string>() ) ).Returns( true );
             sessionRepository.Setup( r => r.ReadAll() ).Returns( sessions.AsQueryable() );
@@ -652,7 +652,7 @@ namespace Tests.Flows
                 Payload = Encoding.UTF8.GetBytes( "Publish Receiver Flow Test" )
             };
 
-            Subject<IMonitored<IPacket>> receiver = new Subject<IMonitored<IPacket>>();
+            Subject<Mon<IPacket>> receiver = new Subject<Mon<IPacket>>();
             Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
 
             channel.Setup( c => c.ReceiverStream ).Returns( receiver );
@@ -663,7 +663,7 @@ namespace Tests.Flows
                 It.Is<Publish>( p => p.Topic == publish.Topic &&
                     p.Payload.ToList().SequenceEqual( publish.Payload ) ),
                 It.Is<IMqttChannel<IPacket>>( c => c == clientChannel.Object ), It.Is<PendingMessageStatus>( x => x == PendingMessageStatus.PendingToSend ) ), Times.Once );
-            clientChannel.Verify( c => c.SendAsync( It.Is<Monitored<IPacket>>( p => p.Item is Publish ) ), Times.Never );
+            clientChannel.Verify( c => c.SendAsync( It.Is<Mon<IPacket>>( p => p.Item is Publish ) ), Times.Never );
         }
 
         [Test]
@@ -705,19 +705,19 @@ namespace Tests.Flows
                 }
             }};
 
-            Subject<IMonitored<IPacket>> clientReceiver = new Subject<IMonitored<IPacket>>();
-            Subject<IMonitored<IPacket>> clientSender = new Subject<IMonitored<IPacket>>();
+            Subject<Mon<IPacket>> clientReceiver = new Subject<Mon<IPacket>>();
+            Subject<Mon<IPacket>> clientSender = new Subject<Mon<IPacket>>();
             Mock<IMqttChannel<IPacket>> clientChannel = new Mock<IMqttChannel<IPacket>>();
 
-            clientSender.OfMonitoredType<Publish>().Subscribe( p =>
+            clientSender.OfMonitoredType<Publish, IPacket>().Subscribe( p =>
             {
-                clientReceiver.OnNext( Monitored<IPacket>.Create( TestHelper.Monitor, new PublishReceived( p.Item.PacketId.Value ) ) );
+                clientReceiver.OnNext( new Mon<IPacket>( TestHelper.Monitor, new PublishReceived( p.Item.PacketId.Value ) ) );
             } );
 
             clientChannel.Setup( c => c.ReceiverStream ).Returns( clientReceiver );
             clientChannel.Setup( c => c.SenderStream ).Returns( clientSender );
-            clientChannel.Setup( c => c.SendAsync( It.IsAny<Monitored<IPacket>>() ) )
-                .Callback<IMonitored<IPacket>>( packet => clientSender.OnNext( Monitored<IPacket>.Create( TestHelper.Monitor, packet.Item ) ) )
+            clientChannel.Setup( c => c.SendAsync( It.IsAny<Mon<IPacket>>() ) )
+                .Callback<Mon<IPacket>>( packet => clientSender.OnNext( new Mon<IPacket>( TestHelper.Monitor, packet.Item ) ) )
                 .Returns( Task.Delay( 0 ) );
             topicEvaluator.Setup( e => e.Matches( It.IsAny<string>(), It.IsAny<string>() ) ).Returns( true );
             sessionRepository.Setup( r => r.ReadAll() ).Returns( sessions.AsQueryable() );
@@ -732,7 +732,7 @@ namespace Tests.Flows
                 Payload = Encoding.UTF8.GetBytes( "Publish Receiver Flow Test" )
             };
 
-            Subject<IMonitored<IPacket>> receiver = new Subject<IMonitored<IPacket>>();
+            Subject<Mon<IPacket>> receiver = new Subject<Mon<IPacket>>();
             Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
 
             channel.Setup( c => c.ReceiverStream ).Returns( receiver );
@@ -743,7 +743,7 @@ namespace Tests.Flows
                 It.Is<Publish>( p => p.Topic == publish.Topic &&
                     p.Payload.ToList().SequenceEqual( publish.Payload ) ),
                 It.Is<IMqttChannel<IPacket>>( c => c == clientChannel.Object ), It.Is<PendingMessageStatus>( x => x == PendingMessageStatus.PendingToSend ) ), Times.Once );
-            clientChannel.Verify( c => c.SendAsync( It.Is<Monitored<IPacket>>( p => p.Item is Publish ) ), Times.Never );
+            clientChannel.Verify( c => c.SendAsync( It.Is<Mon<IPacket>>( p => p.Item is Publish ) ), Times.Never );
         }
 
         [Test]
@@ -780,7 +780,7 @@ namespace Tests.Flows
 
             await flow.ExecuteAsync( TestHelper.Monitor, clientId, publishRelease, channel.Object );
 
-            channel.Verify( c => c.SendAsync( It.Is<Monitored<IPacket>>( p => p.Item is PublishComplete && (p.Item as PublishComplete).PacketId == packetId ) ) );
+            channel.Verify( c => c.SendAsync( It.Is<Mon<IPacket>>( p => p.Item is PublishComplete && (p.Item as PublishComplete).PacketId == packetId ) ) );
         }
 
         [Test]
@@ -816,7 +816,7 @@ namespace Tests.Flows
                 Payload = Encoding.UTF8.GetBytes( "Publish Receiver Flow Test" )
             };
 
-            Subject<IMonitored<IPacket>> receiver = new Subject<IMonitored<IPacket>>();
+            Subject<Mon<IPacket>> receiver = new Subject<Mon<IPacket>>();
             Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
 
             channel.Setup( c => c.ReceiverStream ).Returns( receiver );
@@ -867,7 +867,7 @@ namespace Tests.Flows
                 Payload = Encoding.UTF8.GetBytes( "Publish Receiver Flow Test" )
             };
 
-            Subject<IMonitored<IPacket>> receiver = new Subject<IMonitored<IPacket>>();
+            Subject<Mon<IPacket>> receiver = new Subject<Mon<IPacket>>();
             Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
 
             channel.Setup( c => c.ReceiverStream ).Returns( receiver );
@@ -875,7 +875,7 @@ namespace Tests.Flows
             await flow.ExecuteAsync( TestHelper.Monitor, clientId, publish, channel.Object );
 
             retainedRepository.Verify( r => r.Create( It.IsAny<RetainedMessage>() ), Times.Never );
-            channel.Verify( c => c.SendAsync( It.IsAny<Monitored<IPacket>>() ), Times.Never );
+            channel.Verify( c => c.SendAsync( It.IsAny<Mon<IPacket>>() ), Times.Never );
             publishSenderFlow.Verify( s => s.SendPublishAsync( TestHelper.Monitor, It.IsAny<string>(),
                It.IsAny<Publish>(), It.IsAny<IMqttChannel<IPacket>>(), It.IsAny<PendingMessageStatus>() ), Times.Never );
         }

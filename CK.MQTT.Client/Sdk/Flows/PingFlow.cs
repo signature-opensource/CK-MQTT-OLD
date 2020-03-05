@@ -11,7 +11,7 @@ namespace CK.MQTT.Sdk.Flows
         {
             if( input.Type != MqttPacketType.PingRequest ) return;
 
-            await channel.SendAsync( Monitored<IPacket>.Create( m, new PingResponse() ) );
+            await channel.SendAsync( new Mon<IPacket>( m, new PingResponse() ) );
         }
     }
 }

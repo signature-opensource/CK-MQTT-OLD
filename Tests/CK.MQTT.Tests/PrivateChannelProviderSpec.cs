@@ -17,7 +17,7 @@ namespace Tests
         public async Task when_gettting_channels_with_stream_then_succeeds()
         {
             MqttConfiguration configuration = new MqttConfiguration();
-            Subject<IMonitored<PrivateStream>> privateStreamListener = new Subject<IMonitored<PrivateStream>>();
+            Subject<Mon<PrivateStream>> privateStreamListener = new Subject<Mon<PrivateStream>>();
             PrivateChannelListener provider = new PrivateChannelListener( privateStreamListener, configuration );
 
             int channelsCreated = 0;
@@ -29,9 +29,9 @@ namespace Tests
                     channelsCreated++;
                 } );
 
-            privateStreamListener.OnNext( Monitored<PrivateStream>.Create( TestHelper.Monitor, new PrivateStream( configuration ) ) );
-            privateStreamListener.OnNext( Monitored<PrivateStream>.Create( TestHelper.Monitor, new PrivateStream( configuration ) ) );
-            privateStreamListener.OnNext( Monitored<PrivateStream>.Create( TestHelper.Monitor, new PrivateStream( configuration ) ) );
+            privateStreamListener.OnNext( new Mon<PrivateStream>( TestHelper.Monitor, new PrivateStream( configuration ) ) );
+            privateStreamListener.OnNext( new Mon<PrivateStream>( TestHelper.Monitor, new PrivateStream( configuration ) ) );
+            privateStreamListener.OnNext( new Mon<PrivateStream>( TestHelper.Monitor, new PrivateStream( configuration ) ) );
 
             await Task.Delay( TimeSpan.FromMilliseconds( 1000 ) );
 
@@ -42,7 +42,7 @@ namespace Tests
         public async Task when_gettting_channels_without_stream_then_fails()
         {
             MqttConfiguration configuration = new MqttConfiguration();
-            Subject<IMonitored<PrivateStream>> privateStreamListener = new Subject<IMonitored<PrivateStream>>();
+            Subject<Mon<PrivateStream>> privateStreamListener = new Subject<Mon<PrivateStream>>();
             PrivateChannelListener provider = new PrivateChannelListener( privateStreamListener, configuration );
 
             int channelsCreated = 0;

@@ -22,7 +22,7 @@ namespace CK.MQTT.Sdk
             _formatters = formatters.ToDictionary( f => f.PacketType );
         }
 
-        public async Task<IMonitored<IPacket>> GetPacketAsync( IMonitored<byte[]> bytes )
+        public async Task<Mon<IPacket>> GetPacketAsync( Mon<byte[]> bytes )
         {
             MqttPacketType packetType = (MqttPacketType)bytes.Item.Byte( 0 ).Bits( 4 );
             if( !_formatters.TryGetValue( packetType, out IFormatter formatter ) )
@@ -30,17 +30,17 @@ namespace CK.MQTT.Sdk
 
             IPacket packet = await formatter.FormatAsync( bytes.Item );
 
-            return Monitored<IPacket>.Create( bytes.Monitor, packet );
+            return new Mon<IPacket>( bytes.Monitor, packet );
         }
 
-        public async Task<IMonitored<byte[]>> GetBytesAsync( IMonitored<IPacket> packet )
+        public async Task<Mon<byte[]>> GetBytesAsync( Mon<IPacket> packet )
         {
             if( !_formatters.TryGetValue( packet.Item.Type, out IFormatter formatter ) )
                 throw new MqttException( ClientProperties.PacketManager_PacketUnknown );
 
             byte[] bytes = await formatter.FormatAsync( packet.Item );
 
-            return Monitored<byte[]>.Create( packet.Monitor, bytes );
+            return new Mon<byte[]>( packet.Monitor, bytes );
         }
     }
 }

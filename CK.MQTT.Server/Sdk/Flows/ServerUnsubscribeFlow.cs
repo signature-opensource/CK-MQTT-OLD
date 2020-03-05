@@ -43,7 +43,7 @@ namespace CK.MQTT.Sdk.Flows
 
             _sessionRepository.Update( session );
 
-            await channel.SendAsync( Monitored<IPacket>.Create( m, new UnsubscribeAck( unsubscribe.PacketId ) ) );
+            await channel.SendAsync( new Mon<IPacket>( m, new UnsubscribeAck( unsubscribe.PacketId ) ) );
         }
     }
 }

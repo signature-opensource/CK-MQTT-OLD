@@ -7,8 +7,8 @@ namespace CK.MQTT.Sdk
 {
     internal interface IPacketManager
     {
-        Task<IMonitored<IPacket>> GetPacketAsync( IMonitored<byte[]> bytes );
+        Task<Mon<IPacket>> GetPacketAsync( Mon<byte[]> bytes );
 
-        Task<IMonitored<byte[]>> GetBytesAsync( IMonitored<IPacket> packet );
+        Task<Mon<byte[]>> GetBytesAsync( Mon<IPacket> packet );
     }
 }

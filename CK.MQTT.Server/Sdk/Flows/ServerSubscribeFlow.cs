@@ -96,7 +96,7 @@ namespace CK.MQTT.Sdk.Flows
 
             _sessionRepository.Update( session );
 
-            await channel.SendAsync( Monitored<IPacket>.Create( m, new SubscribeAck( subscribe.PacketId, returnCodes.ToArray() ) ) );
+            await channel.SendAsync( new Mon<IPacket>( m, new SubscribeAck( subscribe.PacketId, returnCodes.ToArray() ) ) );
         }
 
         async Task SendRetainedMessagesAsync( IActivityMonitor m, ClientSubscription subscription, IMqttChannel<IPacket> channel )

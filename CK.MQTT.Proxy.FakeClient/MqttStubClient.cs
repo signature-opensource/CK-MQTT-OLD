@@ -19,7 +19,7 @@ namespace CK.MQTT.Proxy.FakeClient
         readonly PipeFormatter _pipeFormatter;
         readonly CancellationTokenSource _listenerCancel;
         readonly Task _listener;
-        readonly ReplaySubject<IMonitored<MqttApplicationMessage>> _receiver;
+        readonly ReplaySubject<Mon<MqttApplicationMessage>> _receiver;
         MqttStubClient( IActivityMonitor m, MqttConfiguration config, NamedPipeClientStream namedPipeClientStream )
         {
             _m = m;
@@ -28,7 +28,7 @@ namespace CK.MQTT.Proxy.FakeClient
             _pipeFormatter = new PipeFormatter( _pipe );
             _listenerCancel = new CancellationTokenSource();
             _listener = Listen( _listenerCancel.Token );
-            _receiver = new ReplaySubject<IMonitored<MqttApplicationMessage>>();
+            _receiver = new ReplaySubject<Mon<MqttApplicationMessage>>();
         }
 
         public static MqttStubClient Create( IActivityMonitor m, MqttConfiguration config, string pipeName = "mqtt_pipe", string serverName = "." )
@@ -51,7 +51,7 @@ namespace CK.MQTT.Proxy.FakeClient
                         Disconnected?.Invoke( this, (MqttEndpointDisconnected)payload.Dequeue() );
                         break;
                     case RelayHeader.MessageEvent:
-                        _receiver.OnNext( Monitored<MqttApplicationMessage>.Create( m, (MqttApplicationMessage)payload.Dequeue() ) );
+                        _receiver.OnNext( new Mon<MqttApplicationMessage>( m, (MqttApplicationMessage)payload.Dequeue() ) );
                         break;
                     default:
                         throw new InvalidDataException( "Unknown Relay Header." );
@@ -63,7 +63,7 @@ namespace CK.MQTT.Proxy.FakeClient
 
         public bool IsConnected(IActivityMonitor m) => _pipe.IsConnected;
 
-        public IObservable<IMonitored<MqttApplicationMessage>> MessageStream => _receiver;
+        public IObservable<Mon<MqttApplicationMessage>> MessageStream => _receiver;
 
         public event EventHandler<MqttEndpointDisconnected> Disconnected;
 

@@ -12,9 +12,9 @@ namespace CK.MQTT.Sdk
 {
     class MqttConnectedClientFactory
     {
-        readonly ISubject<IMonitored<PrivateStream>> _privateStreamListener;
+        readonly ISubject<Mon<PrivateStream>> _privateStreamListener;
 
-        public MqttConnectedClientFactory( ISubject<IMonitored<PrivateStream>> privateStreamListener )
+        public MqttConnectedClientFactory( ISubject<Mon<PrivateStream>> privateStreamListener )
         {
             _privateStreamListener = privateStreamListener;
         }

@@ -55,7 +55,7 @@ namespace CK.MQTT.Sdk.Flows
                 SaveMessage( message, clientId, PendingMessageStatus.PendingToAcknowledge );
             }
 
-            await channel.SendAsync( Monitored<IPacket>.Create( m, message ) );
+            await channel.SendAsync( new Mon<IPacket>( m, message ) );
 
             if( qos == MqttQualityOfService.AtLeastOnce )
             {
@@ -67,7 +67,7 @@ namespace CK.MQTT.Sdk.Flows
                 await channel
                     .ReceiverStream
                     .ObserveOn( NewThreadScheduler.Default )
-                    .OfMonitoredType<PublishComplete>()
+                    .OfMonitoredType<PublishComplete, IPacket>()
                     .FirstOrDefaultAsync( x => x.Item.PacketId == message.PacketId.Value );
             }
         }
@@ -107,14 +107,14 @@ namespace CK.MQTT.Sdk.Flows
                             Payload = sentMessage.Payload
                         };
 
-                        await channel.SendAsync( Monitored<IPacket>.Create( m, duplicated ) );
+                        await channel.SendAsync( new Mon<IPacket>( m, duplicated ) );
                     }
                 } ) )
             {
                 await channel
                     .ReceiverStream
                     .ObserveOn( NewThreadScheduler.Default )
-                    .OfMonitoredType<T>()
+                    .OfMonitoredType<T, IPacket>()
                     .FirstOrDefaultAsync( x => x.Item.PacketId == sentMessage.PacketId.Value );
             }
         }

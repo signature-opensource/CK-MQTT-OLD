@@ -133,13 +133,13 @@ namespace Tests
         {
             ConnectionProvider provider = new ConnectionProvider();
 
-            Subject<IMonitored<IPacket>> receiver1 = new Subject<IMonitored<IPacket>>();
+            Subject<Mon<IPacket>> receiver1 = new Subject<Mon<IPacket>>();
             Mock<IMqttChannel<IPacket>> channel1 = new Mock<IMqttChannel<IPacket>>();
 
             channel1.Setup( c => c.ReceiverStream ).Returns( receiver1 );
             channel1.Setup( c => c.IsConnected ).Returns( true );
 
-            Subject<IMonitored<IPacket>> receiver2 = new Subject<IMonitored<IPacket>>();
+            Subject<Mon<IPacket>> receiver2 = new Subject<Mon<IPacket>>();
             Mock<IMqttChannel<IPacket>> channel2 = new Mock<IMqttChannel<IPacket>>();
 
             channel2.Setup( c => c.ReceiverStream ).Returns( receiver2 );

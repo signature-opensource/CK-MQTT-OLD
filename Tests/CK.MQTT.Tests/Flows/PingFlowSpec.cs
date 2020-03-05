@@ -22,8 +22,8 @@ namespace Tests.Flows
             Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
             IPacket sentPacket = default;
 
-            channel.Setup( c => c.SendAsync( It.IsAny<Monitored<IPacket>>() ) )
-                .Callback<IMonitored<IPacket>>( packet => sentPacket = packet.Item )
+            channel.Setup( c => c.SendAsync( It.IsAny<Mon<IPacket>>() ) )
+                .Callback<Mon<IPacket>>( packet => sentPacket = packet.Item )
                 .Returns( Task.Delay( 0 ) );
 
             PingFlow flow = new PingFlow();

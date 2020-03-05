@@ -8,10 +8,10 @@ namespace CK.MQTT.Sdk.Bindings
 {
     internal class PrivateChannelListener : IMqttChannelListener
     {
-        readonly ISubject<IMonitored<PrivateStream>> _privateStreamListener;
+        readonly ISubject<Mon<PrivateStream>> _privateStreamListener;
         readonly MqttConfiguration _configuration;
 
-        public PrivateChannelListener( ISubject<IMonitored<PrivateStream>> privateStreamListener, MqttConfiguration configuration )
+        public PrivateChannelListener( ISubject<Mon<PrivateStream>> privateStreamListener, MqttConfiguration configuration )
         {
             _privateStreamListener = privateStreamListener;
             _configuration = configuration;

@@ -19,7 +19,7 @@ namespace CK.MQTT.Sdk
         bool _isProtocolConnected;
         IPacketListener _packetListener;
         IDisposable _packetsSubscription;
-        Subject<IMonitored<MqttApplicationMessage>> _receiver;
+        Subject<Mon<MqttApplicationMessage>> _receiver;
         readonly IActivityMonitor _m;
         readonly IPacketChannelFactory _channelFactory;
         readonly IProtocolFlowProvider _flowProvider;
@@ -35,7 +35,7 @@ namespace CK.MQTT.Sdk
             IPacketIdProvider packetIdProvider,
             MqttConfiguration configuration )
         {
-            _receiver = new Subject<IMonitored<MqttApplicationMessage>>();
+            _receiver = new Subject<Mon<MqttApplicationMessage>>();
             _m = m;
             _channelFactory = channelFactory;
             _flowProvider = flowProvider;
@@ -55,7 +55,7 @@ namespace CK.MQTT.Sdk
             return _isProtocolConnected && Channel.IsConnected;
         }
 
-        public IObservable<IMonitored<MqttApplicationMessage>> MessageStream => _receiver;
+        public IObservable<Mon<MqttApplicationMessage>> MessageStream => _receiver;
 
         internal IMqttChannel<IPacket> Channel { get; private set; }
 
@@ -91,13 +91,13 @@ namespace CK.MQTT.Sdk
                     KeepAlive = _configuration.KeepAliveSecs
                 };
 
-                await SendPacketAsync( Monitored<IPacket>.Create( m, connect ) );
+                await SendPacketAsync( new Mon<IPacket>( m, connect ) );
 
                 TimeSpan connectTimeout = TimeSpan.FromSeconds( _configuration.WaitTimeoutSecs );
                 ConnectAck ack = (await _packetListener
                     .PacketStream
                     .ObserveOn( NewThreadScheduler.Default )
-                    .OfMonitoredType<ConnectAck>()
+                    .OfMonitoredType<ConnectAck, IPacket>()
                     .FirstOrDefaultAsync()
                     .Timeout( connectTimeout )).Item;
 
@@ -157,12 +157,12 @@ namespace CK.MQTT.Sdk
                 SubscribeAck ack = default;
                 TimeSpan subscribeTimeout = TimeSpan.FromSeconds( _configuration.WaitTimeoutSecs );
 
-                await SendPacketAsync( Monitored<IPacket>.Create( m, subscribe ) );
+                await SendPacketAsync( new Mon<IPacket>( m, subscribe ) );
 
                 ack = (await _packetListener
                     .PacketStream
                     .ObserveOn( NewThreadScheduler.Default )
-                    .OfMonitoredType<SubscribeAck>()
+                    .OfMonitoredType<SubscribeAck, IPacket>()
                     .FirstOrDefaultAsync( x => x.Item.PacketId == packetId )
                     .Timeout( subscribeTimeout )).Item;
 
@@ -250,12 +250,12 @@ namespace CK.MQTT.Sdk
                 UnsubscribeAck ack = default;
                 TimeSpan unsubscribeTimeout = TimeSpan.FromSeconds( _configuration.WaitTimeoutSecs );
 
-                await SendPacketAsync( Monitored<IPacket>.Create( m, unsubscribe ) );
+                await SendPacketAsync( new Mon<IPacket>( m, unsubscribe ) );
 
                 ack = (await _packetListener
                     .PacketStream
                     .ObserveOn( NewThreadScheduler.Default )
-                    .OfMonitoredType<UnsubscribeAck>()
+                    .OfMonitoredType<UnsubscribeAck, IPacket>()
                     .FirstOrDefaultAsync( x => x.Item.PacketId == packetId )
                     .Timeout( unsubscribeTimeout )).Item;
 
@@ -306,7 +306,7 @@ namespace CK.MQTT.Sdk
 
                 _packetsSubscription?.Dispose();
 
-                await SendPacketAsync( Monitored<IPacket>.Create( m, new Disconnect() ) );
+                await SendPacketAsync( new Mon<IPacket>( m, new Disconnect() ) );
 
                 await _packetListener
                     .PacketStream
@@ -412,7 +412,7 @@ namespace CK.MQTT.Sdk
             }
         }
 
-        async Task SendPacketAsync( IMonitored<IPacket> packet )
+        async Task SendPacketAsync( Mon<IPacket> packet )
         {
             await _clientSender.Run( async () => await Channel.SendAsync( packet ) );
         }
@@ -437,7 +437,7 @@ namespace CK.MQTT.Sdk
                          Publish publish = packet.Item as Publish;
                          MqttApplicationMessage message = new MqttApplicationMessage( publish.Topic, publish.Payload );
 
-                         _receiver.OnNext( Monitored<MqttApplicationMessage>.Create( packet.Monitor, message ) );
+                         _receiver.OnNext( new Mon<MqttApplicationMessage>( packet.Monitor, message ) );
                          packet.Monitor.Info( ClientProperties.Client_NewApplicationMessageReceived( Id, publish.Topic ) );
                      }
                  }, ex =>
@@ -455,7 +455,7 @@ namespace CK.MQTT.Sdk
         void ResetReceiver()
         {
             _receiver?.OnCompleted();
-            _receiver = new Subject<IMonitored<MqttApplicationMessage>>();
+            _receiver = new Subject<Mon<MqttApplicationMessage>>();
         }
     }
 }

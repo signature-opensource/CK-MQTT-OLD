@@ -15,8 +15,8 @@ namespace CK.MQTT.Sdk.Bindings
         readonly IActivityMonitor _m;
         readonly PrivateStream _stream;
         readonly EndpointIdentifier _identifier;
-        readonly ReplaySubject<IMonitored<byte[]>> _receiver;
-        readonly ReplaySubject<IMonitored<byte[]>> _sender;
+        readonly ReplaySubject<Mon<byte[]>> _receiver;
+        readonly ReplaySubject<Mon<byte[]>> _sender;
         readonly IDisposable _streamSubscription;
 
         public PrivateChannel( IActivityMonitor m, PrivateStream stream, EndpointIdentifier identifier, MqttConfiguration configuration )
@@ -24,18 +24,18 @@ namespace CK.MQTT.Sdk.Bindings
             _m = m;
             _stream = stream;
             _identifier = identifier;
-            _receiver = new ReplaySubject<IMonitored<byte[]>>( window: TimeSpan.FromSeconds( configuration.WaitTimeoutSecs ) );
-            _sender = new ReplaySubject<IMonitored<byte[]>>( window: TimeSpan.FromSeconds( configuration.WaitTimeoutSecs ) );
+            _receiver = new ReplaySubject<Mon<byte[]>>( window: TimeSpan.FromSeconds( configuration.WaitTimeoutSecs ) );
+            _sender = new ReplaySubject<Mon<byte[]>>( window: TimeSpan.FromSeconds( configuration.WaitTimeoutSecs ) );
             _streamSubscription = SubscribeStream();
         }
 
         public bool IsConnected => !_stream.IsDisposed;
 
-        public IObservable<IMonitored<byte[]>> ReceiverStream => _receiver;
+        public IObservable<Mon<byte[]>> ReceiverStream => _receiver;
 
-        public IObservable<IMonitored<byte[]>> SenderStream => _sender;
+        public IObservable<Mon<byte[]>> SenderStream => _sender;
 
-        public Task SendAsync( IMonitored<byte[]> message )
+        public Task SendAsync( Mon<byte[]> message )
         {
             if( _disposed ) throw new ObjectDisposedException( nameof( PrivateChannel ) );
 
