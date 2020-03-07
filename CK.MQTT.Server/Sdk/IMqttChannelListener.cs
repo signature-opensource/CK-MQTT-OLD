@@ -14,6 +14,6 @@ namespace CK.MQTT.Sdk
         /// Provides the stream of incoming channels on top of an underlying transport protocol
         /// </summary>
         /// <returns>An observable sequence of <see cref="IMqttChannel{T}"/> of byte[]</returns>
-		IObservable<IMqttChannel<byte[]>> GetChannelStream();
+		IObservable<Mon<IMqttChannel<byte[]>>> GetChannelStream();
     }
 }

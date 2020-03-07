@@ -48,11 +48,11 @@ namespace CK.MQTT.Sdk
         {
             if( _disposed ) throw new ObjectDisposedException( GetType().FullName );
 
-            _listenerDisposable = new CompositeDisposable(
-                ListenFirstPacket(),
-                ListenNextPackets(),
-                ListenCompletionAndErrors(),
-                ListenSentPackets() );
+            _listenerDisposable = new CompositeDisposable();
+            _listenerDisposable.Add( ListenFirstPacket() );
+            _listenerDisposable.Add( ListenNextPackets() );
+            _listenerDisposable.Add( ListenCompletionAndErrors() );
+            _listenerDisposable.Add( ListenSentPackets() );
         }
 
         public void Dispose()
@@ -265,7 +265,7 @@ namespace CK.MQTT.Sdk
         {
             m.Error( ServerProperties.ServerPacketListener_Error( _clientId ?? "N/A" ), exception );
 
-            _listenerDisposable?.Dispose();
+            _listenerDisposable.Dispose();
             RemoveClient( m );
             await SendLastWillAsync( m );
             _packets.OnError( exception );

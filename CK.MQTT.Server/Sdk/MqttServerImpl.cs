@@ -63,12 +63,12 @@ namespace CK.MQTT.Sdk
         {
             if( _disposed ) throw new ObjectDisposedException( nameof( MqttServerImpl ) );
 
-            IEnumerable<IObservable<IMqttChannel<byte[]>>> channelStreams = _binaryChannelListeners.Select( listener => listener.GetChannelStream() );
+            var channelStreams = _binaryChannelListeners.Select( listener => listener.GetChannelStream() );
 
             _channelSubscription = Observable
                 .Merge( channelStreams )
                 .Subscribe(
-                    binaryChannel => ProcessChannel( _m, binaryChannel ),
+                    binaryChannel => ProcessChannel( binaryChannel.Monitor, binaryChannel.Item ),
                     ex =>
                     {
                         var m = new ActivityMonitor();//TODO: Remove monitor in onerror.

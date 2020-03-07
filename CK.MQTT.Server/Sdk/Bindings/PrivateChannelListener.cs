@@ -17,10 +17,14 @@ namespace CK.MQTT.Sdk.Bindings
             _configuration = configuration;
         }
 
-        public IObservable<IMqttChannel<byte[]>> GetChannelStream()
+        public IObservable<Mon<IMqttChannel<byte[]>>> GetChannelStream()
         {
             return _privateStreamListener
-                .Select( stream => new PrivateChannel(stream.Monitor, stream.Item, EndpointIdentifier.Server, _configuration ) );
+                .Select( stream => new Mon<IMqttChannel<byte[]>>(
+                    stream.Monitor,
+                    new PrivateChannel( stream.Monitor, stream.Item, EndpointIdentifier.Server, _configuration )
+                )
+            );
         }
 
         public void Dispose()
