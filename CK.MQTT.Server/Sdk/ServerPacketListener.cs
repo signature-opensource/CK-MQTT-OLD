@@ -58,13 +58,12 @@ namespace CK.MQTT.Sdk
         public void Dispose()
         {
             if( _disposed ) return;
-
+            _disposed = true;
             _m.Info( ClientProperties.Mqtt_Disposing( GetType().FullName ) );
 
             _listenerDisposable.Dispose();
             _packets.OnCompleted();
             (_flowRunner as IDisposable)?.Dispose();
-            _disposed = true;
         }
 
         IDisposable ListenFirstPacket()
@@ -183,13 +182,13 @@ namespace CK.MQTT.Sdk
         void MonitorKeepAliveAsync()
         {
             TimeSpan tolerance = GetKeepAliveTolerance();
-
+            var m = new ActivityMonitor();//TODO: avoid creating a new Monitor. 
+            m.Trace( $"Starting to monitor client '{_clientId}' keep alives." );
             IDisposable keepAliveSubscription = _channel
                 .ReceiverStream
                 .Timeout( tolerance )
                 .Subscribe( _ => { }, async ex =>
                 {
-                    var m = new ActivityMonitor();//TODO: avoid creating a new Monitor. 
                     if( !(ex is TimeoutException timeEx) )
                     {
                         await NotifyErrorAsync( m, ex );
@@ -197,8 +196,8 @@ namespace CK.MQTT.Sdk
                     else
                     {
                         string message = ServerProperties.ServerPacketListener_KeepAliveTimeExceeded( tolerance, _clientId );
-
-                        await NotifyErrorAsync( m, message, timeEx );
+                        m.Info( message );
+                        await StopListening( m );
                     }
                 } );
 
@@ -223,29 +222,34 @@ namespace CK.MQTT.Sdk
 
             try
             {
-                _packets.OnNext( packet );
+                using(packet.Monitor.OpenTrace("Dispatching packet."))
+                {
+                    _packets.OnNext( packet );
+                }
 
                 await _flowRunner.Run( async () =>
                 {
+                    IDisposableGroup diposeGroup;
                     if( packet.Item.Type == MqttPacketType.Publish )
                     {
                         Publish publish = packet.Item as Publish;
 
-                        packet.Monitor.Info( ServerProperties.ServerPacketListener_DispatchingPublish( flow.GetType().Name, _clientId, publish.Topic ) );
+                        diposeGroup = packet.Monitor.OpenInfo( ServerProperties.ServerPacketListener_DispatchingPublish( flow.GetType().Name, _clientId, publish.Topic ) );
                     }
                     else if( packet.Item.Type == MqttPacketType.Subscribe )
                     {
                         Subscribe subscribe = packet.Item as Subscribe;
                         IEnumerable<string> topics = subscribe.Subscriptions == null ? new List<string>() : subscribe.Subscriptions.Select( s => s.TopicFilter );
 
-                        packet.Monitor.Info( ServerProperties.ServerPacketListener_DispatchingSubscribe( flow.GetType().Name, _clientId, string.Join( ", ", topics ) ) );
+                        diposeGroup = packet.Monitor.OpenInfo( ServerProperties.ServerPacketListener_DispatchingSubscribe( flow.GetType().Name, _clientId, string.Join( ", ", topics ) ) );
                     }
                     else
                     {
-                        packet.Monitor.Info( ServerProperties.ServerPacketListener_DispatchingMessage( packet.Item.Type, flow.GetType().Name, _clientId ) );
+                        diposeGroup = packet.Monitor.OpenInfo( ServerProperties.ServerPacketListener_DispatchingMessage( packet.Item.Type, flow.GetType().Name, _clientId ) );
                     }
 
                     await flow.ExecuteAsync( packet.Monitor, _clientId, packet.Item, _channel );
+                    diposeGroup.Dispose();
                 } );
             }
             catch( Exception ex )
@@ -258,6 +262,17 @@ namespace CK.MQTT.Sdk
                 {
                     await NotifyErrorAsync( packet.Monitor, ex );
                 }
+            }
+        }
+
+        async Task StopListening( IActivityMonitor m )
+        {
+            using( m.OpenTrace( "Stopping to listen." ) )
+            {
+                _listenerDisposable.Dispose();
+                RemoveClient( m );
+                await SendLastWillAsync( m );
+                CompletePacketStream( m );
             }
         }
 

@@ -1,3 +1,4 @@
+using CK.Core;
 using CK.MQTT;
 using IntegrationTests.Context;
 using NUnit.Framework;
@@ -21,9 +22,9 @@ namespace IntegrationTests
         [Test]
         public async Task when_keep_alive_enabled_and_client_is_disposed_then_server_refresh_active_client_list()
         {
-            IMqttClient client = await GetClientAsync();
+            (IMqttClient client, IActivityMonitor m) = await GetClientAsync();
 
-            await client.ConnectAsync( TestHelper.Monitor, new MqttClientCredentials( MqttTestHelper.GetClientId() ) );
+            await client.ConnectAsync( m, new MqttClientCredentials( MqttTestHelper.GetClientId() ) );
 
             string clientId = client.Id;
             bool existClientAfterConnect = Server.ActiveClients.Any( c => c == clientId );
@@ -72,18 +73,20 @@ namespace IntegrationTests
         [Test]
         public async Task when_keep_alive_enabled_and_no_packets_are_sent_then_connection_is_maintained()
         {
-            IMqttClient client = await GetClientAsync();
-            string clientId = MqttTestHelper.GetClientId();
+            (IMqttClient client, IActivityMonitor m) = await GetClientAsync();
+            using( client )
+            {
+                string clientId = MqttTestHelper.GetClientId();
 
-            await client.ConnectAsync( TestHelper.Monitor, new MqttClientCredentials( clientId ) );
+                await client.ConnectAsync( m, new MqttClientCredentials( clientId ) );
 
-            await Task.Delay( TimeSpan.FromSeconds( KeepAliveSecs * 5 ) );
+                await Task.Delay( TimeSpan.FromSeconds( KeepAliveSecs * 5 ) );
 
-            Assert.True( Server.ActiveClients.Any( c => c == clientId ) );
-            Assert.True( client.IsConnected( TestHelper.Monitor ) );
-            Assert.False( string.IsNullOrEmpty( client.Id ) );
+                Assert.True( Server.ActiveClients.Any( c => c == clientId ) );
+                Assert.True( client.IsConnected( m ) );
+                Assert.False( string.IsNullOrEmpty( client.Id ) );
+            }
 
-            client.Dispose();
         }
     }
 }

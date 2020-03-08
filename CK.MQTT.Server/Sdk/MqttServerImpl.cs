@@ -63,7 +63,7 @@ namespace CK.MQTT.Sdk
         {
             if( _disposed ) throw new ObjectDisposedException( nameof( MqttServerImpl ) );
 
-            var channelStreams = _binaryChannelListeners.Select( listener => listener.GetChannelStream() );
+            var channelStreams = _binaryChannelListeners.Select( listener => listener.ChannelStream );
 
             _channelSubscription = Observable
                 .Merge( channelStreams )

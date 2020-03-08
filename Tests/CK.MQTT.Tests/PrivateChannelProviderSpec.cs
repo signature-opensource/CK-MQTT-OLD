@@ -23,7 +23,7 @@ namespace Tests
             int channelsCreated = 0;
 
             provider
-                .GetChannelStream()
+                .ChannelStream
                 .Subscribe( channel =>
                 {
                     channelsCreated++;
@@ -48,7 +48,7 @@ namespace Tests
             int channelsCreated = 0;
 
             provider
-                .GetChannelStream()
+                .ChannelStream
                 .Subscribe( channel =>
                 {
                     channelsCreated++;

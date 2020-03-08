@@ -36,9 +36,9 @@ namespace IntegrationTests.Context
         [SetUp]
         public void Setup()
         {
-            TestHelper.Monitor.Info("Starting tests !");
+            TestHelper.Monitor.Info( "Starting tests !" );
             var m = new ActivityMonitor( "Server Monitor." );
-            Server = MqttServer.Create( m, Configuration, MqttServerBinding, _authenticationProvider ) ;
+            Server = MqttServer.Create( m, Configuration, MqttServerBinding, _authenticationProvider );
             Server.Start();
         }
 
@@ -55,15 +55,16 @@ namespace IntegrationTests.Context
         protected IMqttServer Server { get; private set; }
 
         int _i = 0;
-        protected virtual async Task<IMqttClient> GetClientAsync()
+        protected virtual async Task<(IMqttClient, IActivityMonitor m)> GetClientAsync( string name = null )
         {
-            var m = new ActivityMonitor( "Test Client Monitor " + _i++ );
-            return await MqttClient.CreateAsync( m, IPAddress.Loopback.ToString(), Configuration, MqttBinding );
+            ActivityMonitor m = new ActivityMonitor( name ?? ("Test Client Monitor " + _i++) );
+            return (await MqttClient.CreateAsync( m, IPAddress.Loopback.ToString(), Configuration, MqttBinding ), m);
         }
 
         [TearDown]
         public void Dispose()
         {
+            TestHelper.Monitor.Info( "IntegrationContext TearDown." );
             Server.Dispose();
         }
     }

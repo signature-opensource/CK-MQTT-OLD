@@ -1,8 +1,10 @@
 using CK.Core;
 using CK.MQTT.Sdk;
 using CK.MQTT.Sdk.Bindings;
+using System;
 using System.Net.Security;
 using System.Net.Sockets;
+using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 
 namespace CK.MQTT.Ssl
@@ -10,27 +12,48 @@ namespace CK.MQTT.Ssl
     public class SslTcpChanneClientFactory
     {
         readonly SslTcpConfig _config;
-        private readonly MqttConfiguration _mqqtConfig;
+        private readonly MqttConfiguration _mqttConfig;
         readonly string _hostName;
 
         public SslTcpChanneClientFactory( SslTcpConfig config, MqttConfiguration mqqtConfig, string hostName )
         {
             _config = config;
-            _mqqtConfig = mqqtConfig;
+            _mqttConfig = mqqtConfig;
             _hostName = hostName;
         }
 
         public async Task<IChannelClient> CreateAsync( IActivityMonitor m )
         {
+            TimeSpan timeout = TimeSpan.FromSeconds( _mqttConfig.ConnectionTimeoutSecs );
             TcpClient client = new TcpClient( _config.AddressFamily );
-            await client.ConnectAsync( _hostName, _mqqtConfig.Port );
+            Task connectTask = client.ConnectAsync( _hostName, _mqttConfig.Port );
+            Task connectTimeout = Task.Delay( timeout );
+            await Task.WhenAny( connectTask, connectTimeout );
+            if( !connectTask.IsCompleted )
+            {
+                throw new TimeoutException( "Server did not respond in the given time." );
+            }
+            if( connectTask.IsFaulted )
+            {
+                ExceptionDispatchInfo.Capture( connectTask.Exception.InnerException ).Throw();
+            }
             SslStream ssl = new SslStream(
                 client.GetStream(),
                 false,
                 _config.RemoteCertificateValidationCallback,
                 _config.LocalCertificateSelectionCallback,
                 EncryptionPolicy.RequireEncryption );
-            await ssl.AuthenticateAsClientAsync( _hostName );
+            Task authTask = ssl.AuthenticateAsClientAsync( _hostName );
+            Task authTimeout = Task.Delay( timeout );
+            await Task.WhenAny( authTask, authTimeout );
+            if( !authTask.IsCompleted )
+            {
+                throw new TimeoutException( "Could not authenticate with the server in the given time." );
+            }
+            if( authTask.IsFaulted )
+            {
+                ExceptionDispatchInfo.Capture( connectTask.Exception.InnerException ).Throw();
+            }
             return new SslTcpChannelClient( client, ssl );
         }
 

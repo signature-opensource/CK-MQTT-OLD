@@ -27,6 +27,6 @@ namespace CK.MQTT.Ssl
         /// </param>
         /// <returns>A listener to accept and provide incoming MQTT channels on top of TCP</returns>
         public IMqttChannelListener GetChannelListener( IActivityMonitor m, MqttConfiguration config )
-            => new GenericListener<GenericChannel>( m, config, ( conf ) => new SslTcpChannelListener( config, _sslTcpConfig, _config ) );
+            => new GenericListener<GenericChannel>( config, ( conf ) => new SslTcpChannelListener( config, _sslTcpConfig, _config ) );
     }
 }

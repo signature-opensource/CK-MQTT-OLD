@@ -1,3 +1,4 @@
+using CK.Core;
 using CK.MQTT;
 using System.Threading.Tasks;
 
@@ -13,10 +14,13 @@ namespace IntegrationTests.Context
         }
         public bool CleanSession { get; set; }
 
-        protected override async Task<IMqttClient> GetClientAsync()
+        protected override async Task<(IMqttClient, IActivityMonitor)> GetClientAsync(string name = null)
         {
-            IMqttClient client = await base.GetClientAsync();
-            await client.ConnectAsync( TestHelper.Monitor, new MqttClientCredentials( MqttTestHelper.GetClientId() ), cleanSession: CleanSession );
+            var client = await base.GetClientAsync( name );
+            await client.Item1.ConnectAsync(
+                client.m,
+                new MqttClientCredentials( MqttTestHelper.GetClientId() ), cleanSession: CleanSession
+            );
             return client;
         }
     }

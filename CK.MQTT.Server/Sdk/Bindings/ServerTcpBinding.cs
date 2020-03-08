@@ -17,6 +17,6 @@ namespace CK.MQTT.Sdk.Bindings
         /// </param>
         /// <returns>A listener to accept and provide incoming MQTT channels on top of TCP</returns>
         public IMqttChannelListener GetChannelListener( IActivityMonitor m, MqttConfiguration configuration )
-            => new GenericListener<GenericChannel>( m, configuration, ( conf ) => new TcpChannelListener( configuration ) );
+            => new GenericListener<GenericChannel>( configuration, ( conf ) => new TcpChannelListener( configuration ) );
     }
 }

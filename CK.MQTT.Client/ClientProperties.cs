@@ -39,7 +39,7 @@ namespace CK.MQTT
         public static string ClientPacketListener_DispatchingMessage( string clientId, MqttPacketType packetType, string flowTypeName ) => $"Client {clientId} - Dispatching {packetType} message to flow {flowTypeName}";
         public static string ClientPacketListener_DispatchingPublish( string clientId, string packetType, string flowTypeName ) => $"Client {clientId} - Dispatching Publish message to flow {packetType} and topic {flowTypeName}";
         public static string ClientPacketListener_FirstPacketReceived( string clientId, MqttPacketType packetType ) => $"Client {clientId} - First packet from Server has been received. Type: {packetType}";
-        public static string ClientPacketListener_SendingKeepAlive( string clientId, int seconds ) => $"Client {clientId} - No packet has been sent in {seconds} seconds. Sending Ping to Server to maintain Keep Alive";
+        public static string ClientPacketListener_SendingKeepAlive( string clientId, int seconds ) => $"Client '{clientId}' - No packet has been sent in {seconds} seconds. Sending Ping to Server to maintain Keep Alive";
         public static string ClientPacketListener_PacketChannelCompleted( string clientId ) => $"Client {clientId} - Packet Channel observable sequence has been completed";
         public static string Client_DeletedSessionOnDisconnect( string clientId ) => $"Client {clientId} - Removed client session";
         public static string ConnectFormatter_ClientIdMaxLengthExceeded => "Client Id cannot exceed 23 bytes";
@@ -62,7 +62,6 @@ namespace CK.MQTT
         public static string MqttChannel_SendingPacket( int length ) => $"Sending packet of {length} bytes";
         public static string ConnectAckFormatter_InvalidSessionPresentForErrorReturnCode => "Session Present flag must be set to 0 for non-zero return codes";
         public static string PublishFlow_RetryingQoSFlow( MqttPacketType type, string clientId ) => $"The ack for message {type} has not been received. Re sending message for client {clientId}";
-        public static string Client_ConnectionDisconnected( string clientId ) => $"The client {clientId} has been disconnected while trying to perform the connection";
         public static string Client_SubscriptionDisconnected( string clientId, string topicName ) => $"The client {clientId} has been disconnected while trying to perform the subscription to topic {topicName}";
         public static string Client_UnsubscribeDisconnected( string clientId, string topics ) => $"The client {clientId} has been disconnected while trying to perform the unsubscribe to topics: {topics}";
         public static string Client_ConnectNotAccepted( string clientId, MqttConnectionStatus status ) => $"The connect packet of client {clientId} has not been accepted by the server. Status: {status}. The connection will be closed";

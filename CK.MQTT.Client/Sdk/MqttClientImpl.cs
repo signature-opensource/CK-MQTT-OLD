@@ -62,7 +62,6 @@ namespace CK.MQTT.Sdk
         public async Task<SessionState> ConnectAsync( IActivityMonitor m, MqttClientCredentials credentials, MqttLastWill will = null, bool cleanSession = false )
         {
             if( _disposed ) throw new ObjectDisposedException( GetType().FullName );
-            m.Trace( "Connecting to server..." );
             try
             {
                 if( IsConnected( m ) )
@@ -78,41 +77,42 @@ namespace CK.MQTT.Sdk
                 Id = string.IsNullOrEmpty( credentials.ClientId ) ?
                     MqttClient.GetAnonymousClientId() :
                     credentials.ClientId;
-
-                OpenClientSession( m, cleanSession );
-
-                await InitializeChannelAsync( m );
-
-                Connect connect = new Connect( Id, cleanSession, MqttProtocol.SupportedLevel )
+                using( m.OpenTrace( $"Connecting to server with id {Id}..." ) )
                 {
-                    UserName = credentials.UserName,
-                    Password = credentials.Password,
-                    Will = will,
-                    KeepAlive = _configuration.KeepAliveSecs
-                };
 
-                await SendPacketAsync( new Mon<IPacket>( m, connect ) );
+                    OpenClientSession( m, cleanSession );
 
-                TimeSpan connectTimeout = TimeSpan.FromSeconds( _configuration.WaitTimeoutSecs );
-                ConnectAck ack = (await _packetListener
-                    .PacketStream
-                    .ObserveOn( NewThreadScheduler.Default )
-                    .OfMonitoredType<ConnectAck, IPacket>()
-                    .FirstOrDefaultAsync()
-                    .Timeout( connectTimeout )).Item;
+                    await InitializeChannelAsync( m );
 
-                if( ack == null )
-                {
-                    string message = ClientProperties.Client_ConnectionDisconnected( Id );
+                    Connect connect = new Connect( Id, cleanSession, MqttProtocol.SupportedLevel )
+                    {
+                        UserName = credentials.UserName,
+                        Password = credentials.Password,
+                        Will = will,
+                        KeepAlive = _configuration.KeepAliveSecs
+                    };
 
-                    throw new MqttClientException( message );
+                    await SendPacketAsync( new Mon<IPacket>( m, connect ) );
+
+                    TimeSpan connectTimeout = TimeSpan.FromSeconds( _configuration.WaitTimeoutSecs );
+                    ConnectAck ack = (await _packetListener
+                        .PacketStream
+                        .ObserveOn( NewThreadScheduler.Default )
+                        .OfMonitoredType<ConnectAck, IPacket>()
+                        .FirstOrDefaultAsync()
+                        .Timeout( connectTimeout )).Item;
+
+                    if( ack == null )
+                    {
+                        throw new MqttClientException( $"The client {Id} has been disconnected while trying to perform the connection" );
+                    }
+
+                    if( ack.Status != MqttConnectionStatus.Accepted ) throw new MqttConnectionException( ack.Status );
+
+                    _isProtocolConnected = true;
+
+                    return ack.SessionPresent ? SessionState.SessionPresent : SessionState.CleanSession;
                 }
-
-                if( ack.Status != MqttConnectionStatus.Accepted ) throw new MqttConnectionException( ack.Status );
-
-                _isProtocolConnected = true;
-
-                return ack.SessionPresent ? SessionState.SessionPresent : SessionState.CleanSession;
             }
             catch( TimeoutException timeEx )
             {

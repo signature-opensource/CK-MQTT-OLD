@@ -4,6 +4,7 @@ using System;
 using System.Diagnostics;
 using System.Net.Sockets;
 using System.Reactive.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace CK.MQTT.Sdk.Bindings
@@ -34,16 +35,15 @@ namespace CK.MQTT.Sdk.Bindings
         /// <returns></returns>
         bool InitListener( IActivityMonitor m )
         {
-            IListener<TChannel> listener;
             lock( _initLock )
             {
                 if( _disposed ) return false;
                 if( _listener != null ) return true;
-                listener = _listenerFactory( _configuration );
+                _listener = _listenerFactory( _configuration );
             }
             try
             {
-                listener.Start();
+                _listener.Start();
                 return true;
             }
             catch( SocketException socketEx )
@@ -61,6 +61,11 @@ namespace CK.MQTT.Sdk.Bindings
                 if( _disposed ) throw new ObjectDisposedException( GetType().FullName );
                 if( _channelStream == null )
                 {
+                    //_channelStream = Observable
+                    //    .FromAsync( SafeAcceptClient )
+                    //    .DoWhile( () => _disposed )
+                    //    .Select( client => new Mon<IMqttChannel<byte[]>>( client.Monitor, client.Item ) );
+
                     _channelStream = Observable
                         .FromAsync( SafeAcceptClient )
                         .Repeat()
@@ -70,16 +75,17 @@ namespace CK.MQTT.Sdk.Bindings
                 return _channelStream;
             }
         }
-        async Task<Mon<TChannel>> SafeAcceptClient()
+        async Task<Mon<TChannel>> SafeAcceptClient( CancellationToken cancellationToken )
         {
             var m = new ActivityMonitor();
+            if( _listener == null )
+            {
+                if( !InitListener( m ) ) return default;
+            }
             while( true )
             {
                 if( _disposed ) return default;
-                if( _listener == null )
-                {
-                    if( !InitListener( m ) ) return default;
-                }
+                if( cancellationToken.IsCancellationRequested ) return default;
                 try
                 {
 

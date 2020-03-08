@@ -162,7 +162,7 @@ namespace CK.MQTT.Sdk
                  {
                      try
                      {
-                         monitor.Warn( ClientProperties.ClientPacketListener_SendingKeepAlive( _clientId, _configuration.KeepAliveSecs ) );
+                         monitor.Info( ClientProperties.ClientPacketListener_SendingKeepAlive( _clientId, _configuration.KeepAliveSecs ) );
 
                          PingRequest ping = new PingRequest();
 
@@ -189,22 +189,26 @@ namespace CK.MQTT.Sdk
             {
                 try
                 {
-                    _packets.OnNext( packet );
+                    using(packet.Monitor.OpenTrace("Emitting packet to packet stream."))
+                    {
+                        _packets.OnNext( packet );
+                    }
 
                     await _flowRunner.Run( async () =>
                     {
                         Publish publish = packet.Item as Publish;
-
+                        IDisposableGroup group;
                         if( publish == null )
                         {
-                            packet.Monitor.Info( ClientProperties.ClientPacketListener_DispatchingMessage( _clientId, packet.Item.Type, flow.GetType().Name ) );
+                            group = packet.Monitor.OpenInfo( ClientProperties.ClientPacketListener_DispatchingMessage( _clientId, packet.Item.Type, flow.GetType().Name ) );
                         }
                         else
                         {
-                            packet.Monitor.Info( ClientProperties.ClientPacketListener_DispatchingPublish( _clientId, flow.GetType().Name, publish.Topic ) );
+                            group = packet.Monitor.OpenInfo( ClientProperties.ClientPacketListener_DispatchingPublish( _clientId, flow.GetType().Name, publish.Topic ) );
                         }
 
                         await flow.ExecuteAsync( packet.Monitor, _clientId, packet.Item, _channel );
+                        group.Dispose();
                     } );
                 }
                 catch( Exception ex )

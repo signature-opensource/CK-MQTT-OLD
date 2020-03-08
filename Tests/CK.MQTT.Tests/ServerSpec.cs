@@ -8,6 +8,7 @@ using FluentAssertions;
 using Moq;
 using NUnit.Framework;
 using System;
+using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading.Tasks;
 
@@ -20,11 +21,11 @@ namespace Tests
         [Test]
         public void when_server_does_not_start_then_connections_are_ignored()
         {
-            Subject<IMqttChannel<byte[]>> sockets = new Subject<IMqttChannel<byte[]>>();
+            var sockets = new Subject<Mon<IMqttChannel<byte[]>>>();
             Mock<IMqttChannelListener> channelProvider = new Mock<IMqttChannelListener>();
 
             channelProvider
-                .Setup( p => p.GetChannelStream() )
+                .Setup( p => p.ChannelStream )
                 .Returns( sockets );
 
             MqttConfiguration configuration = Mock.Of<MqttConfiguration>( c => c.WaitTimeoutSecs == 60 );
@@ -48,9 +49,9 @@ namespace Tests
 
             MqttServerImpl server = new MqttServerImpl( TestHelper.Monitor, channelProvider.Object, factory, flowProvider, connectionProvider.Object, Mock.Of<ISubject<MqttUndeliveredMessage>>(), configuration );
 
-            sockets.OnNext( Mock.Of<IMqttChannel<byte[]>>( x => x.ReceiverStream == new Subject<Mon<byte[]>>() ) );
-            sockets.OnNext( Mock.Of<IMqttChannel<byte[]>>( x => x.ReceiverStream == new Subject<Mon<byte[]>>() ) );
-            sockets.OnNext( Mock.Of<IMqttChannel<byte[]>>( x => x.ReceiverStream == new Subject<Mon<byte[]>>() ) );
+            sockets.OnNext( new Mon<IMqttChannel<byte[]>>( TestHelper.Monitor, Mock.Of<IMqttChannel<byte[]>>( x => x.ReceiverStream == new Subject<Mon<byte[]>>() ) ) );
+            sockets.OnNext( new Mon<IMqttChannel<byte[]>>( TestHelper.Monitor, Mock.Of<IMqttChannel<byte[]>>( x => x.ReceiverStream == new Subject<Mon<byte[]>>() ) ) );
+            sockets.OnNext( new Mon<IMqttChannel<byte[]>>( TestHelper.Monitor, Mock.Of<IMqttChannel<byte[]>>( x => x.ReceiverStream == new Subject<Mon<byte[]>>() ) ) );
 
             0.Should().Be( server.ActiveConnections );
         }
@@ -58,11 +59,11 @@ namespace Tests
         [Test]
         public void when_connection_established_then_active_connections_increases()
         {
-            Subject<IMqttChannel<byte[]>> sockets = new Subject<IMqttChannel<byte[]>>();
+            var sockets = new Subject<Mon<IMqttChannel<byte[]>>>();
             Mock<IMqttChannelListener> channelProvider = new Mock<IMqttChannelListener>();
 
             channelProvider
-                .Setup( p => p.GetChannelStream() )
+                .Setup( p => p.ChannelStream )
                 .Returns( sockets );
 
             MqttConfiguration configuration = Mock.Of<MqttConfiguration>( c => c.WaitTimeoutSecs == 60 );
@@ -88,21 +89,21 @@ namespace Tests
 
             server.Start();
 
-            sockets.OnNext( Mock.Of<IMqttChannel<byte[]>>( x => x.ReceiverStream == new Subject<Mon<byte[]>>() ) );
-            sockets.OnNext( Mock.Of<IMqttChannel<byte[]>>( x => x.ReceiverStream == new Subject<Mon<byte[]>>() ) );
-            sockets.OnNext( Mock.Of<IMqttChannel<byte[]>>( x => x.ReceiverStream == new Subject<Mon<byte[]>>() ) );
+            sockets.OnNext( new Mon<IMqttChannel<byte[]>>( TestHelper.Monitor, Mock.Of<IMqttChannel<byte[]>>( x => x.ReceiverStream == new Subject<Mon<byte[]>>() ) ) );
+            sockets.OnNext( new Mon<IMqttChannel<byte[]>>( TestHelper.Monitor, Mock.Of<IMqttChannel<byte[]>>( x => x.ReceiverStream == new Subject<Mon<byte[]>>() ) ) );
+            sockets.OnNext( new Mon<IMqttChannel<byte[]>>( TestHelper.Monitor, Mock.Of<IMqttChannel<byte[]>>( x => x.ReceiverStream == new Subject<Mon<byte[]>>() ) ) );
 
-            3.Should().Be( server.ActiveConnections );
+            server.ActiveConnections.Should().Be( 3 );
         }
 
         [Test]
         public void when_server_closed_then_pending_connection_is_closed()
         {
-            Subject<IMqttChannel<byte[]>> sockets = new Subject<IMqttChannel<byte[]>>();
+            var sockets = new Subject<Mon<IMqttChannel<byte[]>>>();
             Mock<IMqttChannelListener> channelProvider = new Mock<IMqttChannelListener>();
 
             channelProvider
-                .Setup( p => p.GetChannelStream() )
+                .Setup( p => p.ChannelStream )
                 .Returns( sockets );
 
             Mock<IMqttChannel<IPacket>> packetChannel = new Mock<IMqttChannel<IPacket>>();
@@ -129,7 +130,7 @@ namespace Tests
 
             Mock<IMqttChannel<byte[]>> socket = new Mock<IMqttChannel<byte[]>>();
 
-            sockets.OnNext( socket.Object );
+            sockets.OnNext( new Mon<IMqttChannel<byte[]>>( TestHelper.Monitor, socket.Object ) );
 
             server.Stop();
 
@@ -139,11 +140,11 @@ namespace Tests
         [Test]
         public async Task when_receiver_error_then_closes_connection()
         {
-            Subject<IMqttChannel<byte[]>> sockets = new Subject<IMqttChannel<byte[]>>();
+            var sockets = new Subject<Mon<IMqttChannel<byte[]>>>();
             Mock<IMqttChannelListener> channelProvider = new Mock<IMqttChannelListener>();
 
             channelProvider
-                .Setup( p => p.GetChannelStream() )
+                .Setup( p => p.ChannelStream )
                 .Returns( sockets );
 
             MqttConfiguration configuration = Mock.Of<MqttConfiguration>( c => c.WaitTimeoutSecs == 60 );
@@ -177,7 +178,7 @@ namespace Tests
 
             server.Start();
 
-            sockets.OnNext( socket.Object );
+            sockets.OnNext( new Mon<IMqttChannel<byte[]>>( TestHelper.Monitor, socket.Object ) );
 
             try
             {

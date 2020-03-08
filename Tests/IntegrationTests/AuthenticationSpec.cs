@@ -1,3 +1,4 @@
+using CK.Core;
 using CK.MQTT;
 using FluentAssertions;
 using IntegrationTests.Context;
@@ -21,9 +22,9 @@ namespace IntegrationTests
         {
             string username = "foo";
             string password = "foo123456";
-            IMqttClient client = await GetClientAsync();
+            (IMqttClient client, IActivityMonitor m) = await GetClientAsync();
 
-            AggregateException aggregateEx = Assert.Throws<AggregateException>( () => client.ConnectAsync( TestHelper.Monitor, new MqttClientCredentials( MqttTestHelper.GetClientId(), username, password ) ).Wait() );
+            AggregateException aggregateEx = Assert.Throws<AggregateException>( () => client.ConnectAsync( m, new MqttClientCredentials( MqttTestHelper.GetClientId(), username, password ) ).Wait() );
 
             Assert.NotNull( aggregateEx.InnerException );
             Assert.True( aggregateEx.InnerException is MqttClientException );
@@ -38,11 +39,11 @@ namespace IntegrationTests
         {
             string username = "foo";
             string password = "foo123";
-            IMqttClient client = await GetClientAsync();
+            (IMqttClient client, IActivityMonitor m) = await GetClientAsync();
 
-            await client.ConnectAsync( TestHelper.Monitor, new MqttClientCredentials( MqttTestHelper.GetClientId(), username, password ) );
+            await client.ConnectAsync( m, new MqttClientCredentials( MqttTestHelper.GetClientId(), username, password ) );
 
-            Assert.True( client.IsConnected( TestHelper.Monitor ) );
+            Assert.True( client.IsConnected( m ) );
             Assert.False( string.IsNullOrEmpty( client.Id ) );
         }
     }

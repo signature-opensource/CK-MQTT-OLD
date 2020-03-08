@@ -1,3 +1,4 @@
+using CK.Core;
 using CK.MQTT;
 using FluentAssertions;
 using IntegrationTests.Context;
@@ -13,7 +14,7 @@ using static CK.Testing.MonitorTestHelper;
 namespace IntegrationTests
 {
     public abstract class BadPacketsTests : IntegrationContext, IDisposable
-        {
+    {
         [TestCase( "Files/RandomPacketIFoundOnMyPc.bin" )]
         public async Task mqtt_stay_alive_after_bad_packet_instead_of_ssl_handshake( string packetPath )
         {
@@ -54,12 +55,14 @@ namespace IntegrationTests
             {
                 connected = true;
             }
-            using( var correctClient = await GetClientAsync() )
+            (IMqttClient clientThatWork, IActivityMonitor m) = await GetClientAsync( "Client testing that server is alive." );
+            using( clientThatWork )
             {
                 Server.ClientConnected += Connected;
-                var task = correctClient.ConnectAsync( TestHelper.Monitor);
+                var task = clientThatWork.ConnectAsync( m );
                 Task.WaitAny( Task.Delay( 2000 ), task );
                 task.IsCompleted.Should().BeTrue();
+                await Task.Delay( 50 );
                 connected.Should().BeTrue();
                 Server.ClientConnected -= Connected;
             }
