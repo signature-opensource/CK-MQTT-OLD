@@ -167,7 +167,10 @@ namespace CK.MQTT.Sdk
                          PingRequest ping = new PingRequest();
 
                          _channel.SendAsync( new Mon<IPacket>( monitor, ping ) );
-                         _channel.ReceiverStream.OfMonitoredType<PingResponse, IPacket>().Timeout( TimeSpan.FromSeconds( _configuration.WaitTimeoutSecs ) );
+                         _channel.ReceiverStream
+                             .OfMonitoredType<PingResponse, IPacket>()
+                             .Timeout(TimeSpan.FromSeconds( _configuration.WaitTimeoutSecs ) )
+                             .FirstOrDefaultAsync();
                      }
                      catch( Exception ex )
                      {

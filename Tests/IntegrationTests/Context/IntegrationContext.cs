@@ -1,10 +1,8 @@
 using CK.Core;
 using CK.MQTT;
 using CK.MQTT.Sdk.Bindings;
-using CK.Testing;
 using NUnit.Framework;
 using System;
-using System.Diagnostics;
 using System.Net;
 using System.Threading.Tasks;
 
@@ -36,6 +34,7 @@ namespace IntegrationTests.Context
         [SetUp]
         public void Setup()
         {
+            ActivityMonitor.AutoConfiguration += m => m.AutoTags = m.AutoTags.Union( ActivityMonitor.Tags.StackTrace );
             TestHelper.Monitor.Info( "Starting tests !" );
             var m = new ActivityMonitor( "Server Monitor." );
             Server = MqttServer.Create( m, Configuration, MqttServerBinding, _authenticationProvider );
