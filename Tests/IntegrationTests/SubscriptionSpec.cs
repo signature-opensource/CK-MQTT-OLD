@@ -47,7 +47,7 @@ namespace IntegrationTests
 
                 await client.SubscribeAsync( m, topicFilter, MqttQualityOfService.AtMostOnce );
 
-                Assert.True( client.IsConnected( m ) );
+                Assert.True( client.CheckConnection( m ) );
 
                 await client.UnsubscribeAsync( m, topicFilter );
             }
@@ -73,7 +73,7 @@ namespace IntegrationTests
 
                 await Task.WhenAll( tasks );
 
-                Assert.True( client.IsConnected( m ) );
+                Assert.True( client.CheckConnection( m ) );
 
                 await client.UnsubscribeAsync( m, topics.ToArray() );
             }
@@ -138,7 +138,7 @@ namespace IntegrationTests
                 await Task.WhenAll( tasks );
                 await client.UnsubscribeAsync( m, topics.ToArray() );
 
-                Assert.True( client.IsConnected( m ) );
+                Assert.True( client.CheckConnection( m ) );
             }
         }
 

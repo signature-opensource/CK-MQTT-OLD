@@ -26,7 +26,7 @@ namespace IntegrationTests
 
             await client.ConnectAsync( m, new MqttClientCredentials( MqttTestHelper.GetClientId() ) );
 
-            string clientId = client.Id;
+            string clientId = client.ClientId;
             bool existClientAfterConnect = Server.ActiveClients.Any( c => c == clientId );
             ManualResetEventSlim clientClosed = new ManualResetEventSlim();
 
@@ -83,8 +83,8 @@ namespace IntegrationTests
                 await Task.Delay( TimeSpan.FromSeconds( KeepAliveSecs * 5 ) );
 
                 Assert.True( Server.ActiveClients.Any( c => c == clientId ) );
-                Assert.True( client.IsConnected( m ) );
-                Assert.False( string.IsNullOrEmpty( client.Id ) );
+                Assert.True( client.CheckConnection( m ) );
+                Assert.False( string.IsNullOrEmpty( client.ClientId ) );
             }
 
         }

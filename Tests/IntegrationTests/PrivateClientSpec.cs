@@ -20,9 +20,9 @@ namespace IntegrationTests
             IMqttConnectedClient client = await Server.CreateClientAsync( TestHelper.Monitor );
 
             Assert.NotNull( client );
-            Assert.True( client.IsConnected( TestHelper.Monitor ) );
-            Assert.False( string.IsNullOrEmpty( client.Id ) );
-            Assert.True( client.Id.StartsWith( "private" ) );
+            Assert.True( client.CheckConnection( TestHelper.Monitor ) );
+            Assert.False( string.IsNullOrEmpty( client.ClientId ) );
+            Assert.True( client.ClientId.StartsWith( "private" ) );
 
             client.Dispose();
         }
@@ -35,7 +35,7 @@ namespace IntegrationTests
 
             await client.SubscribeAsync( TestHelper.Monitor, topicFilter, MqttQualityOfService.AtMostOnce );
 
-            Assert.True( client.IsConnected( TestHelper.Monitor ) );
+            Assert.True( client.CheckConnection( TestHelper.Monitor ) );
 
             await client.UnsubscribeAsync( TestHelper.Monitor, topicFilter );
 
@@ -50,7 +50,7 @@ namespace IntegrationTests
 
             await client.SubscribeAsync( TestHelper.Monitor, topicFilter, MqttQualityOfService.AtMostOnce );
 
-            Assert.True( client.IsConnected( TestHelper.Monitor ) );
+            Assert.True( client.CheckConnection( TestHelper.Monitor ) );
 
             await client.UnsubscribeAsync( TestHelper.Monitor, topicFilter );
 
@@ -73,7 +73,7 @@ namespace IntegrationTests
             await client.PublishAsync( TestHelper.Monitor, message, MqttQualityOfService.AtLeastOnce );
             await client.PublishAsync( TestHelper.Monitor, message, MqttQualityOfService.ExactlyOnce );
 
-            Assert.True( client.IsConnected( TestHelper.Monitor ) );
+            Assert.True( client.CheckConnection( TestHelper.Monitor ) );
 
             client.Dispose();
         }
@@ -94,7 +94,7 @@ namespace IntegrationTests
             await client.PublishAsync( TestHelper.Monitor, message, MqttQualityOfService.AtLeastOnce );
             await client.PublishAsync( TestHelper.Monitor, message, MqttQualityOfService.ExactlyOnce );
 
-            Assert.True( client.IsConnected( TestHelper.Monitor ) );
+            Assert.True( client.CheckConnection( TestHelper.Monitor ) );
 
             client.Dispose();
         }
@@ -103,13 +103,13 @@ namespace IntegrationTests
         public async Task when_in_process_client_disconnect_then_succeeds()
         {
             IMqttConnectedClient client = await Server.CreateClientAsync( TestHelper.Monitor );
-            string clientId = client.Id;
+            string clientId = client.ClientId;
 
             await client.DisconnectAsync( TestHelper.Monitor );
 
             Assert.False( Server.ActiveClients.Any( c => c == clientId ) );
-            Assert.False( client.IsConnected( TestHelper.Monitor ) );
-            Assert.True( string.IsNullOrEmpty( client.Id ) );
+            Assert.False( client.CheckConnection( TestHelper.Monitor ) );
+            Assert.True( string.IsNullOrEmpty( client.ClientId ) );
 
             client.Dispose();
         }
@@ -140,8 +140,8 @@ namespace IntegrationTests
 
             await Task.Delay( TimeSpan.FromMilliseconds( 1000 ) );
 
-            Assert.True( fooClient.IsConnected( TestHelper.Monitor ) );
-            Assert.True( barClient.IsConnected( TestHelper.Monitor ) );
+            Assert.True( fooClient.CheckConnection( TestHelper.Monitor ) );
+            Assert.True( barClient.CheckConnection( TestHelper.Monitor ) );
             messagesReceived.Should().Be( 3 );
 
             fooClient.Dispose();
@@ -195,8 +195,8 @@ namespace IntegrationTests
 
                     await Task.Delay( TimeSpan.FromMilliseconds( 1000 ) );
 
-                    Assert.True( inProcessClient.IsConnected( mInProcess ) );
-                    Assert.True( remoteClient.IsConnected( mRemote ) );
+                    Assert.True( inProcessClient.CheckConnection( mInProcess ) );
+                    Assert.True( remoteClient.CheckConnection( mRemote ) );
                     fooMessagesReceived.Should().Be( 3 );
                     barMessagesReceived.Should().Be( 3 );
                 }

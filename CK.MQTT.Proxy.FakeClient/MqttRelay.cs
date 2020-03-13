@@ -81,7 +81,7 @@ namespace CK.MQTT.Proxy.FakeClient
                         await _client.UnsubscribeAsync( m, (string[])payload.Dequeue() );
                         break;
                     case StubClientHeader.IsConnected:
-                        await _pf.SendPayloadAsync( m, _client.IsConnected( m ) );
+                        await _pf.SendPayloadAsync( m, _client.CheckConnection( m ) );
                         break;
                     default:
                         throw new InvalidOperationException( "Unknown ClientHeader." );

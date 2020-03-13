@@ -150,8 +150,8 @@ namespace IntegrationTests
             await Task.WhenAll( tasks );
 
             Server.ActiveClients.Where( c => clientIds.Contains( c ) ).Should().HaveCount( count );
-            Assert.True( clients.All( c => c.Item1.IsConnected( c.m ) ) );
-            Assert.True( clients.All( c => !string.IsNullOrEmpty( c.Item1.Id ) ) );
+            Assert.True( clients.All( c => c.Item1.CheckConnection( c.m ) ) );
+            Assert.True( clients.All( c => !string.IsNullOrEmpty( c.Item1.ClientId ) ) );
 
             foreach( var client in clients )
             {
@@ -267,9 +267,9 @@ namespace IntegrationTests
             {
                 await client.ConnectAsync( m );
 
-                Assert.True( client.IsConnected( m ) );
-                Assert.False( string.IsNullOrEmpty( client.Id ) );
-                client.Id.Should().StartWith( "anonymous" );
+                Assert.True( client.CheckConnection( m ) );
+                Assert.False( string.IsNullOrEmpty( client.ClientId ) );
+                client.ClientId.Should().StartWith( "anonymous" );
             }
         }
 
@@ -281,9 +281,9 @@ namespace IntegrationTests
             {
                 await client.ConnectAsync( m, new MqttClientCredentials( clientId: null ), cleanSession: true );
 
-                Assert.True( client.IsConnected( m ) );
-                Assert.False( string.IsNullOrEmpty( client.Id ) );
-                client.Id.Should().StartWith( "anonymous" );
+                Assert.True( client.CheckConnection( m ) );
+                Assert.False( string.IsNullOrEmpty( client.ClientId ) );
+                client.ClientId.Should().StartWith( "anonymous" );
             }
         }
 
@@ -395,7 +395,7 @@ namespace IntegrationTests
 
             while( !disconnectedSignal.IsSet )
             {
-                if( Server.ActiveClients.Where( c => clientIds.Contains( c ) ).Count() == 0 && clients.All( c => !c.Item1.IsConnected( c.Item2 ) ) )
+                if( Server.ActiveClients.Where( c => clientIds.Contains( c ) ).Count() == 0 && clients.All( c => !c.Item1.CheckConnection( c.Item2 ) ) )
                 {
                     disconnectedSignal.Set();
                 }
@@ -403,8 +403,8 @@ namespace IntegrationTests
 
             initialConnectedClients.Should().Be( clients.Count );
             Server.ActiveClients.Where( c => clientIds.Contains( c ) ).Should().BeEmpty();
-            Assert.True( clients.All( c => !c.Item1.IsConnected( c.Item2 ) ) );
-            Assert.True( clients.All( c => string.IsNullOrEmpty( c.Item1.Id ) ) );
+            Assert.True( clients.All( c => !c.Item1.CheckConnection( c.Item2 ) ) );
+            Assert.True( clients.All( c => string.IsNullOrEmpty( c.Item1.ClientId ) ) );
 
             foreach( var client in clients )
             {
@@ -421,7 +421,7 @@ namespace IntegrationTests
 
                 await client.ConnectAsync( m, new MqttClientCredentials( MqttTestHelper.GetClientId() ) );
 
-                string clientId = client.Id;
+                string clientId = client.ClientId;
                 bool existClientAfterConnect = Server.ActiveClients.Any( c => c == clientId );
 
                 await client.DisconnectAsync( m );

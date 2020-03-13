@@ -43,8 +43,8 @@ namespace IntegrationTests
 
             await client.ConnectAsync( m, new MqttClientCredentials( MqttTestHelper.GetClientId(), username, password ) );
 
-            Assert.True( client.IsConnected( m ) );
-            Assert.False( string.IsNullOrEmpty( client.Id ) );
+            Assert.True( client.CheckConnection( m ) );
+            Assert.False( string.IsNullOrEmpty( client.ClientId ) );
         }
     }
 }

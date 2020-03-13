@@ -47,9 +47,9 @@ namespace CK.MQTT.Sdk
 
         public event EventHandler<MqttEndpointDisconnected> Disconnected = ( sender, args ) => { };
 
-        public string Id { get; private set; }
+        public string ClientId { get; private set; }
 
-        public bool IsConnected( IActivityMonitor m )
+        public bool CheckConnection( IActivityMonitor m )
         {
             CheckUnderlyingConnection( m );
             return _isProtocolConnected && Channel.IsConnected;
@@ -64,9 +64,9 @@ namespace CK.MQTT.Sdk
             if( _disposed ) throw new ObjectDisposedException( GetType().FullName );
             try
             {
-                if( IsConnected( m ) )
+                if( CheckConnection( m ) )
                 {
-                    throw new MqttClientException( ClientProperties.Client_AlreadyConnected( Id ) );
+                    throw new MqttClientException( ClientProperties.Client_AlreadyConnected( ClientId ) );
                 }
 
                 if( string.IsNullOrEmpty( credentials.ClientId ) && !cleanSession )
@@ -74,17 +74,17 @@ namespace CK.MQTT.Sdk
                     throw new MqttClientException( ClientProperties.Client_AnonymousClientWithoutCleanSession );
                 }
 
-                Id = string.IsNullOrEmpty( credentials.ClientId ) ?
+                ClientId = string.IsNullOrEmpty( credentials.ClientId ) ?
                     MqttClient.GetAnonymousClientId() :
                     credentials.ClientId;
-                using( m.OpenTrace( $"Connecting to server with id {Id}..." ) )
+                using( m.OpenTrace( $"Connecting to server with id {ClientId}..." ) )
                 {
 
                     OpenClientSession( m, cleanSession );
 
                     await InitializeChannelAsync( m );
 
-                    Connect connect = new Connect( Id, cleanSession, MqttProtocol.SupportedLevel )
+                    Connect connect = new Connect( ClientId, cleanSession, MqttProtocol.SupportedLevel )
                     {
                         UserName = credentials.UserName,
                         Password = credentials.Password,
@@ -104,7 +104,7 @@ namespace CK.MQTT.Sdk
 
                     if( ack == null )
                     {
-                        throw new MqttClientException( $"The client {Id} has been disconnected while trying to perform the connection" );
+                        throw new MqttClientException( $"The client {ClientId} has been disconnected while trying to perform the connection" );
                     }
 
                     if( ack.Status != MqttConnectionStatus.Accepted ) throw new MqttConnectionException( ack.Status );
@@ -117,13 +117,13 @@ namespace CK.MQTT.Sdk
             catch( TimeoutException timeEx )
             {
                 Close( m, timeEx );
-                throw new MqttClientException( ClientProperties.Client_ConnectionTimeout( Id ), timeEx );
+                throw new MqttClientException( ClientProperties.Client_ConnectionTimeout( ClientId ), timeEx );
             }
             catch( MqttConnectionException connectionEx )
             {
                 Close( m, connectionEx );
 
-                string message = ClientProperties.Client_ConnectNotAccepted( Id, connectionEx.ReturnCode );
+                string message = ClientProperties.Client_ConnectNotAccepted( ClientId, connectionEx.ReturnCode );
 
                 throw new MqttClientException( message, connectionEx );
             }
@@ -135,7 +135,7 @@ namespace CK.MQTT.Sdk
             catch( Exception ex )
             {
                 Close( m, ex );
-                throw new MqttClientException( ClientProperties.Client_ConnectionError( Id ), ex );
+                throw new MqttClientException( ClientProperties.Client_ConnectionError( ClientId ), ex );
             }
         }
 
@@ -168,7 +168,7 @@ namespace CK.MQTT.Sdk
 
                 if( ack == null )
                 {
-                    string message = ClientProperties.Client_SubscriptionDisconnected( Id, topicFilter );
+                    string message = ClientProperties.Client_SubscriptionDisconnected( ClientId, topicFilter );
 
                     m.Error( message );
 
@@ -177,7 +177,7 @@ namespace CK.MQTT.Sdk
 
                 if( ack.ReturnCodes.FirstOrDefault() == SubscribeReturnCode.Failure )
                 {
-                    string message = ClientProperties.Client_SubscriptionRejected( Id, topicFilter );
+                    string message = ClientProperties.Client_SubscriptionRejected( ClientId, topicFilter );
 
                     m.Error( message );
 
@@ -188,7 +188,7 @@ namespace CK.MQTT.Sdk
             {
                 Close( m, timeEx );
 
-                string message = ClientProperties.Client_SubscribeTimeout( Id, topicFilter );
+                string message = ClientProperties.Client_SubscribeTimeout( ClientId, topicFilter );
 
                 throw new MqttClientException( message, timeEx );
             }
@@ -201,7 +201,7 @@ namespace CK.MQTT.Sdk
             {
                 Close( m, ex );
 
-                string message = ClientProperties.Client_SubscribeError( Id, topicFilter );
+                string message = ClientProperties.Client_SubscribeError( ClientId, topicFilter );
 
                 throw new MqttClientException( message, ex );
             }
@@ -226,7 +226,7 @@ namespace CK.MQTT.Sdk
 
                 await _clientSender.Run( async () =>
                  {
-                     await senderFlow.SendPublishAsync( m, Id, publish, Channel );
+                     await senderFlow.SendPublishAsync( m, ClientId, publish, Channel );
                  } );
             }
             catch( Exception ex )
@@ -261,7 +261,7 @@ namespace CK.MQTT.Sdk
 
                 if( ack == null )
                 {
-                    string message = ClientProperties.Client_UnsubscribeDisconnected( Id, string.Join( ", ", topics ) );
+                    string message = ClientProperties.Client_UnsubscribeDisconnected( ClientId, string.Join( ", ", topics ) );
 
                     m.Error( message );
 
@@ -272,7 +272,7 @@ namespace CK.MQTT.Sdk
             {
                 Close( m, timeEx );
 
-                string message = ClientProperties.Client_UnsubscribeTimeout( Id, string.Join( ", ", topics ) );
+                string message = ClientProperties.Client_UnsubscribeTimeout( ClientId, string.Join( ", ", topics ) );
 
                 m.Error( message );
 
@@ -287,7 +287,7 @@ namespace CK.MQTT.Sdk
             {
                 Close( m, ex );
 
-                string message = ClientProperties.Client_UnsubscribeError( Id, string.Join( ", ", topics ) );
+                string message = ClientProperties.Client_UnsubscribeError( ClientId, string.Join( ", ", topics ) );
 
                 m.Error( message );
 
@@ -299,7 +299,7 @@ namespace CK.MQTT.Sdk
         {
             try
             {
-                if( !IsConnected( m ) )
+                if( !CheckConnection( m ) )
                 {
                     throw new MqttClientException( ClientProperties.Client_AlreadyDisconnected );
                 }
@@ -332,7 +332,7 @@ namespace CK.MQTT.Sdk
 
             if( disposing )
             {
-                if( IsConnected( m ) )
+                if( CheckConnection( m ) )
                 {
                     await DisconnectAsync( m );
                 }
@@ -350,7 +350,7 @@ namespace CK.MQTT.Sdk
 
         void Close( IActivityMonitor m, DisconnectedReason reason, string message = null )
         {
-            m.Info( ClientProperties.Client_Closing( Id, reason ) );
+            m.Info( ClientProperties.Client_Closing( ClientId, reason ) );
 
             CloseClientSession( m );
             _packetsSubscription?.Dispose();
@@ -358,7 +358,7 @@ namespace CK.MQTT.Sdk
             ResetReceiver();
             Channel?.Dispose();
             _isProtocolConnected = false;
-            Id = null;
+            ClientId = null;
 
             Disconnected( this, new MqttEndpointDisconnected( reason, message ) );
         }
@@ -375,29 +375,29 @@ namespace CK.MQTT.Sdk
 
         void OpenClientSession( IActivityMonitor m, bool cleanSession )
         {
-            ClientSession session = string.IsNullOrEmpty( Id ) ? default : _sessionRepository.Read( Id );
+            ClientSession session = string.IsNullOrEmpty( ClientId ) ? default : _sessionRepository.Read( ClientId );
 
             if( cleanSession && session != null )
             {
                 _sessionRepository.Delete( session.Id );
                 session = null;
 
-                m.Info( ClientProperties.Client_CleanedOldSession( Id ) );
+                m.Info( ClientProperties.Client_CleanedOldSession( ClientId ) );
             }
 
             if( session == null )
             {
-                session = new ClientSession( Id, cleanSession );
+                session = new ClientSession( ClientId, cleanSession );
 
                 _sessionRepository.Create( session );
 
-                m.Info( ClientProperties.Client_CreatedSession( Id ) );
+                m.Info( ClientProperties.Client_CreatedSession( ClientId ) );
             }
         }
 
         void CloseClientSession( IActivityMonitor m )
         {
-            ClientSession session = string.IsNullOrEmpty( Id ) ? default : _sessionRepository.Read( Id );
+            ClientSession session = string.IsNullOrEmpty( ClientId ) ? default : _sessionRepository.Read( ClientId );
 
             if( session == null )
             {
@@ -408,7 +408,7 @@ namespace CK.MQTT.Sdk
             {
                 _sessionRepository.Delete( session.Id );
 
-                m.Info( ClientProperties.Client_DeletedSessionOnDisconnect( Id ) );
+                m.Info( ClientProperties.Client_DeletedSessionOnDisconnect( ClientId ) );
             }
         }
 
@@ -438,7 +438,7 @@ namespace CK.MQTT.Sdk
                          MqttApplicationMessage message = new MqttApplicationMessage( publish.Topic, publish.Payload );
 
                          _receiver.OnNext( new Mon<MqttApplicationMessage>( packet.Monitor, message ) );
-                         packet.Monitor.Info( ClientProperties.Client_NewApplicationMessageReceived( Id, publish.Topic ) );
+                         packet.Monitor.Info( ClientProperties.Client_NewApplicationMessageReceived( ClientId, publish.Topic ) );
                      }
                  }, ex =>
                  {

@@ -40,7 +40,7 @@ namespace IntegrationTests
 
                 await Task.WhenAll( tasks );
 
-                Assert.True( client.IsConnected( m ) );
+                Assert.True( client.CheckConnection( m ) );
             }
         }
 
@@ -78,7 +78,7 @@ namespace IntegrationTests
 
                 await Task.WhenAll( tasks );
 
-                Assert.True( client.IsConnected( m ) );
+                Assert.True( client.CheckConnection( m ) );
                 Assert.True( publishAckPackets >= count );
             }
         }
@@ -121,7 +121,7 @@ namespace IntegrationTests
 
                 await Task.WhenAll( tasks );
 
-                Assert.True( client.IsConnected( m ) );
+                Assert.True( client.CheckConnection( m ) );
                 Assert.True( publishReceivedPackets >= count );
                 Assert.True( publishCompletePackets >= count );
             }
@@ -323,7 +323,7 @@ namespace IntegrationTests
 
                 await Task.WhenAll( tasks );
 
-                Assert.True( client.IsConnected( m ) );
+                Assert.True( client.CheckConnection( m ) );
             }
         }
 
@@ -347,7 +347,7 @@ namespace IntegrationTests
 
                 await Task.WhenAll( tasks );
 
-                Assert.True( client.IsConnected( m ) );
+                Assert.True( client.CheckConnection( m ) );
             }
         }
 
@@ -372,7 +372,7 @@ namespace IntegrationTests
 
                 await Task.WhenAll( tasks );
 
-                Assert.True( client.IsConnected( m ) );
+                Assert.True( client.CheckConnection( m ) );
             }
         }
 
@@ -414,7 +414,7 @@ namespace IntegrationTests
             using( client1 )
             using( client2 )
             {
-                string client2Id = client2.Id;
+                string client2Id = client2.ClientId;
                 ManualResetEventSlim client2Done = new ManualResetEventSlim();
                 int client2Received = 0;
 
@@ -539,7 +539,7 @@ namespace IntegrationTests
             using( publisher )
             using( subscriber )
             {
-                string subscriberId = subscriber.Id;
+                string subscriberId = subscriber.ClientId;
 
                 ManualResetEventSlim subscriberDone = new ManualResetEventSlim();
                 int subscriberReceived = 0;
@@ -612,7 +612,7 @@ namespace IntegrationTests
             using( publisher )
             using( subscriber )
             {
-                string subscriberId = subscriber.Id;
+                string subscriberId = subscriber.ClientId;
 
                 ManualResetEventSlim subscriberDone = new ManualResetEventSlim();
                 int subscriberReceived = 0;
@@ -667,7 +667,7 @@ namespace IntegrationTests
             using( publisher )
             using( subscriber )
             {
-                string subscriberId = subscriber.Id;
+                string subscriberId = subscriber.ClientId;
 
                 int goal = default;
                 ManualResetEventSlim goalAchieved = new ManualResetEventSlim();
