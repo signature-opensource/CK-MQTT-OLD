@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace CK.MQTT.Sdk
@@ -24,7 +25,7 @@ namespace CK.MQTT.Sdk
                 {
                     TryExecuteTask( task );
                 }
-            }, TaskCreationOptions.LongRunning );
+            } );
 
             _runner.Start( Default );
         }
