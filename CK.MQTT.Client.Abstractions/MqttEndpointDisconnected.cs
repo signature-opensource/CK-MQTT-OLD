@@ -1,4 +1,4 @@
-﻿namespace CK.MQTT
+namespace CK.MQTT
 {
     /// <summary>
     /// Reason of an MQTT Client or Server disconnection

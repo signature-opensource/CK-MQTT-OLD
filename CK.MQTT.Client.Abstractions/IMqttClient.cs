@@ -6,24 +6,42 @@ using System.Threading.Tasks;
 
 namespace CK.MQTT
 {
-
     /// <summary>
     /// Represents an MQTT Client
     /// </summary>
     public interface IMqttClient : IDisposable
     {
         /// <summary>
-        /// Event raised when the Client gets disconnected.
+        /// Event raised when the Client gets disconnected in asynchronous way, each async handler being called in parallel
+        /// with the other ones.
         /// The Client disconnection could be caused by a protocol disconnect, an error or a remote disconnection
         /// produced by the Server.
         /// See <see cref="MqttEndpointDisconnected"/> for more details on the disconnection information
         /// </summary>
-        event EventHandler<MqttEndpointDisconnected> Disconnected;
+        event ParallelEventHandlerAync<MqttEndpointDisconnected> ParallelDisconnectedAsync;
+
+        /// <summary>
+        /// Event raised when the Client gets disconnected, synchronously.
+        /// The Client disconnection could be caused by a protocol disconnect, an error or a remote disconnection
+        /// produced by the Server.
+        /// See <see cref="MqttEndpointDisconnected"/> for more details on the disconnection information
+        /// </summary>
+        event SequentialEventHandler<MqttEndpointDisconnected> Disconnected;
+
+        /// <summary>
+        /// Event raised when the Client gets disconnected in asynchronous way, each async handler being called
+        /// one after the other.
+        /// The Client disconnection could be caused by a protocol disconnect, an error or a remote disconnection
+        /// produced by the Server.
+        /// See <see cref="MqttEndpointDisconnected"/> for more details on the disconnection information
+        /// </summary>
+        event SequentialEventHandlerAync<MqttEndpointDisconnected> DisconnectedAsync;
 
         /// <summary>
         /// Id of the connected Client.
         /// This Id correspond to the <see cref="MqttClientCredentials.ClientId"/> parameter passed to 
-        /// <see cref="ConnectAsync(IActivityMonitor, MqttClientCredentials, MqttLastWill, bool)"/> method
+        /// <see cref="ConnectAsync(IActivityMonitor, MqttClientCredentials, MqttLastWill, bool)"/> method or
+        /// has been provided by the server.
         /// </summary>
         string ClientId { get; }
 
@@ -36,9 +54,21 @@ namespace CK.MQTT
         bool CheckConnection( IActivityMonitor m );
 
         /// <summary>
-        /// Event raised for each received message.
+        /// Event raised for each received message in asynchronous way, each async handler being called in parallel
+        /// with the other ones.
         /// </summary>
-        event EventHandler<MqttMessageEventArgs> MessageReceived;
+        event ParallelEventHandlerAync<MqttApplicationMessage> ParallelMessageReceivedAsync;
+
+        /// <summary>
+        /// Event raised for each received message, synchronously.
+        /// </summary>
+        event SequentialEventHandler<MqttApplicationMessage> MessageReceived;
+
+        /// <summary>
+        /// Event raised for each received message in asynchronous way, each async handler being called
+        /// one after the other.
+        /// </summary>
+        event SequentialEventHandlerAync<MqttApplicationMessage> MessageReceivedAsync;
 
         /// <summary>
         /// Represents the protocol connection, which consists of sending a CONNECT packet
@@ -135,4 +165,5 @@ namespace CK.MQTT
         /// </remarks>
         Task DisconnectAsync( IActivityMonitor m );
     }
+
 }
