@@ -34,16 +34,11 @@ namespace Tests
         {
             MqttConfiguration configuration = new MqttConfiguration { ConnectionTimeoutSecs = 2 };
             TcpChannelClientFactory factory = new TcpChannelClientFactory( IPAddress.Loopback.ToString(), configuration );
-            AggregateException ex = Assert.Throws<AggregateException>( () =>
-           {
-               var a = factory.CreateAsync( TestHelper.Monitor ).Result;//Why this variable must exist ????
-           } );
+            Assert.Throws<AggregateException>( () =>
+            {
+                var a = factory.CreateAsync( TestHelper.Monitor ).Result;//Why this variable must exist ????
+            } );
 
-            Assert.NotNull( ex );
-            Assert.NotNull( ex.InnerException );
-            Assert.True( ex.InnerException is MqttException );
-            Assert.NotNull( ex.InnerException.InnerException );
-            Assert.True( ex.InnerException.InnerException is SocketException );
         }
     }
 }

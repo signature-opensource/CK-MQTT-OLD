@@ -1,3 +1,4 @@
+using CK.Core;
 using CK.MQTT;
 using FluentAssertions;
 using IntegrationTests.Context;
@@ -15,29 +16,40 @@ namespace IntegrationTests
         [Test]
         public async Task when_server_is_closed_then_error_occurs_when_client_send_message()
         {
-            IMqttClient client = await GetClientAsync();
+            try
+            {
+                (IMqttClient client, IActivityMonitor m) = await GetClientAsync();
+                using( client )
+                {
+                    Server.Stop();
 
-            Server.Stop();
+                    AggregateException aggregateException = Assert.Throws<AggregateException>( () => client.SubscribeAsync( TestHelper.Monitor, "test\foo", MqttQualityOfService.AtLeastOnce ).Wait() );
 
-            AggregateException aggregateException = Assert.Throws<AggregateException>( () => client.SubscribeAsync( TestHelper.Monitor, "test\foo", MqttQualityOfService.AtLeastOnce ).Wait() );
+                    Assert.NotNull( aggregateException );
+                    Assert.NotNull( aggregateException.InnerException );
+                    Assert.True( aggregateException.InnerException is MqttClientException || aggregateException.InnerException is ObjectDisposedException );
+                }
+            }
+            finally
+            {
+                Setup();
+            }
 
-            Assert.NotNull( aggregateException );
-            Assert.NotNull( aggregateException.InnerException );
-            Assert.True( aggregateException.InnerException is MqttClientException || aggregateException.InnerException is ObjectDisposedException );
         }
 
         [Test]
         public async Task when_subscribe_topic_then_succeeds()
         {
-            using( IMqttClient client = await GetClientAsync() )
+            (IMqttClient client, IActivityMonitor m) = await GetClientAsync();
+            using( client )
             {
                 string topicFilter = Guid.NewGuid().ToString() + "/#";
 
-                await client.SubscribeAsync( TestHelper.Monitor, topicFilter, MqttQualityOfService.AtMostOnce );
+                await client.SubscribeAsync( m, topicFilter, MqttQualityOfService.AtMostOnce );
 
-                Assert.True( client.IsConnected( TestHelper.Monitor ) );
+                Assert.True( client.IsConnected( m ) );
 
-                await client.UnsubscribeAsync( TestHelper.Monitor, topicFilter );
+                await client.UnsubscribeAsync( m, topicFilter );
             }
         }
 
@@ -45,7 +57,8 @@ namespace IntegrationTests
         [TestCase( 200 )]
         public async Task when_subscribe_multiple_topics_then_succeeds( int topicsToSubscribe )
         {
-            using( IMqttClient client = await GetClientAsync() )
+            (IMqttClient client, IActivityMonitor m) = await GetClientAsync();
+            using( client )
             {
                 List<string> topics = new List<string>();
                 List<Task> tasks = new List<Task>();
@@ -54,15 +67,15 @@ namespace IntegrationTests
                 {
                     string topicFilter = Guid.NewGuid().ToString();
 
-                    tasks.Add( client.SubscribeAsync( TestHelper.Monitor, topicFilter, MqttQualityOfService.AtMostOnce ) );
+                    tasks.Add( client.SubscribeAsync( m, topicFilter, MqttQualityOfService.AtMostOnce ) );
                     topics.Add( topicFilter );
                 }
 
                 await Task.WhenAll( tasks );
 
-                Assert.True( client.IsConnected( TestHelper.Monitor ) );
+                Assert.True( client.IsConnected( m ) );
 
-                await client.UnsubscribeAsync( TestHelper.Monitor, topics.ToArray() );
+                await client.UnsubscribeAsync( m, topics.ToArray() );
             }
         }
 
@@ -73,30 +86,34 @@ namespace IntegrationTests
         [TestCase( "foo/#/bar" )]
         public async Task when_subscribing_invalid_topic_then_fails( string topicFilter )
         {
-            IMqttClient client = await GetClientAsync();
+            (IMqttClient client, IActivityMonitor m) = await GetClientAsync();
+            using( client )
+            {
+                AggregateException ex = Assert.Throws<AggregateException>( () => client.SubscribeAsync( m, topicFilter, MqttQualityOfService.AtMostOnce ).Wait() );
 
-            AggregateException ex = Assert.Throws<AggregateException>( () => client.SubscribeAsync( TestHelper.Monitor, topicFilter, MqttQualityOfService.AtMostOnce ).Wait() );
-
-            Assert.NotNull( ex );
-            Assert.NotNull( ex.InnerException );
-            Assert.True( ex.InnerException is MqttClientException );
-            Assert.NotNull( ex.InnerException.InnerException );
-            Assert.NotNull( ex.InnerException.InnerException is MqttException );
-            ex.InnerException.InnerException.Message.Should().Be( ClientProperties.SubscribeFormatter_InvalidTopicFilter( topicFilter ) );
+                Assert.NotNull( ex );
+                Assert.NotNull( ex.InnerException );
+                Assert.True( ex.InnerException is MqttClientException );
+                Assert.NotNull( ex.InnerException.InnerException );
+                Assert.NotNull( ex.InnerException.InnerException is MqttException );
+                ex.InnerException.InnerException.Message.Should().Be( ClientProperties.SubscribeFormatter_InvalidTopicFilter( topicFilter ) );
+            }
         }
 
         [Test]
         public async Task when_subscribing_emtpy_topic_then_fails_with_protocol_violation()
         {
-            IMqttClient client = await GetClientAsync();
+            (IMqttClient client, IActivityMonitor m) = await GetClientAsync();
+            using( client )
+            {
+                AggregateException ex = Assert.Throws<AggregateException>( () => client.SubscribeAsync( m, string.Empty, MqttQualityOfService.AtMostOnce ).Wait() );
 
-            AggregateException ex = Assert.Throws<AggregateException>( () => client.SubscribeAsync( TestHelper.Monitor, string.Empty, MqttQualityOfService.AtMostOnce ).Wait() );
-
-            Assert.NotNull( ex );
-            Assert.NotNull( ex.InnerException );
-            Assert.True( ex.InnerException is MqttClientException );
-            Assert.NotNull( ex.InnerException.InnerException );
-            Assert.NotNull( ex.InnerException.InnerException is MqttProtocolViolationException );
+                Assert.NotNull( ex );
+                Assert.NotNull( ex.InnerException );
+                Assert.True( ex.InnerException is MqttClientException );
+                Assert.NotNull( ex.InnerException.InnerException );
+                Assert.NotNull( ex.InnerException.InnerException is MqttProtocolViolationException );
+            }
         }
 
         [TestCase( 100 )]
@@ -104,7 +121,8 @@ namespace IntegrationTests
         [TestCase( 500 )]
         public async Task when_unsubscribe_topic_then_succeeds( int topicsToSubscribe )
         {
-            using( IMqttClient client = await GetClientAsync() )
+            (IMqttClient client, IActivityMonitor m) = await GetClientAsync();
+            using( client )
             {
                 List<string> topics = new List<string>();
                 List<Task> tasks = new List<Task>();
@@ -113,29 +131,31 @@ namespace IntegrationTests
                 {
                     string topicFilter = Guid.NewGuid().ToString();
 
-                    tasks.Add( client.SubscribeAsync( TestHelper.Monitor, topicFilter, MqttQualityOfService.AtMostOnce ) );
+                    tasks.Add( client.SubscribeAsync( m, topicFilter, MqttQualityOfService.AtMostOnce ) );
                     topics.Add( topicFilter );
                 }
 
                 await Task.WhenAll( tasks );
-                await client.UnsubscribeAsync( TestHelper.Monitor, topics.ToArray() );
+                await client.UnsubscribeAsync( m, topics.ToArray() );
 
-                Assert.True( client.IsConnected( TestHelper.Monitor ) );
+                Assert.True( client.IsConnected( m ) );
             }
         }
 
         [Test]
         public async Task when_unsubscribing_emtpy_topic_then_fails_with_protocol_violation()
         {
-            IMqttClient client = await GetClientAsync();
+            (IMqttClient client, IActivityMonitor m) = await GetClientAsync();
+            using( client )
+            {
+                AggregateException ex = Assert.Throws<AggregateException>( () => client.UnsubscribeAsync( m, null ).Wait() );
 
-            AggregateException ex = Assert.Throws<AggregateException>( () => client.UnsubscribeAsync( TestHelper.Monitor, null ).Wait() );
-
-            Assert.NotNull( ex );
-            Assert.NotNull( ex.InnerException );
-            Assert.True( ex.InnerException is MqttClientException );
-            Assert.NotNull( ex.InnerException.InnerException );
-            Assert.NotNull( ex.InnerException.InnerException is MqttProtocolViolationException );
+                Assert.NotNull( ex );
+                Assert.NotNull( ex.InnerException );
+                Assert.True( ex.InnerException is MqttClientException );
+                Assert.NotNull( ex.InnerException.InnerException );
+                Assert.NotNull( ex.InnerException.InnerException is MqttProtocolViolationException );
+            }
 
         }
     }

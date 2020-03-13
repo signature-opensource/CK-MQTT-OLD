@@ -116,7 +116,7 @@ namespace CK.MQTT.Sdk.Bindings
             {
                 byte[] buffer = new byte[_client.PreferedReceiveBufferSize];
 
-                return Observable.FromAsync<int>( () =>
+                return Observable.FromAsync( () =>
                 {
                     return _client.GetStream().ReadAsync( buffer, 0, buffer.Length );
                 } )
@@ -134,9 +134,10 @@ namespace CK.MQTT.Sdk.Bindings
                     {
                         foreach( var packet in packets )
                         {
-                            m.Trace( "Received packet of {packet.Length} bytes" );
-
-                            _receiver.OnNext( new Mon<byte[]>( m, packet ) );
+                            using( m.OpenTrace( $"Received packet of {packet.Length} bytes" ) )
+                            {
+                                _receiver.OnNext( new Mon<byte[]>( m, packet ) );
+                            }
                         }
                     }
                 }
