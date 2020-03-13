@@ -62,7 +62,7 @@ namespace CK.MQTT.Sdk
         public async Task<SessionState> ConnectAsync( IActivityMonitor m, MqttClientCredentials credentials, MqttLastWill will = null, bool cleanSession = false )
         {
             if( _disposed ) throw new ObjectDisposedException( GetType().FullName );
-
+            m.Trace( "Connecting to server..." );
             try
             {
                 if( IsConnected( m ) )

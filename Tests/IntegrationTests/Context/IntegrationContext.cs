@@ -1,5 +1,7 @@
+using CK.Core;
 using CK.MQTT;
 using CK.MQTT.Sdk.Bindings;
+using CK.Testing;
 using NUnit.Framework;
 using System;
 using System.Diagnostics;
@@ -31,11 +33,12 @@ namespace IntegrationTests.Context
                 AllowWildcardsInTopicFilters = AllowWildcardsInTopicFilters
             };
         }
-
         [SetUp]
         public void Setup()
         {
-            Server = MqttServer.Create( TestHelper.Monitor, Configuration, MqttServerBinding, _authenticationProvider ) ;
+            TestHelper.Monitor.Info("Starting tests !");
+            var m = new ActivityMonitor( "Server Monitor." );
+            Server = MqttServer.Create( m, Configuration, MqttServerBinding, _authenticationProvider ) ;
             Server.Start();
         }
 
@@ -51,9 +54,11 @@ namespace IntegrationTests.Context
 
         protected IMqttServer Server { get; private set; }
 
+        int _i = 0;
         protected virtual async Task<IMqttClient> GetClientAsync()
         {
-            return await MqttClient.CreateAsync( TestHelper.Monitor, IPAddress.Loopback.ToString(), Configuration, MqttBinding );
+            var m = new ActivityMonitor( "Test Client Monitor " + _i++ );
+            return await MqttClient.CreateAsync( m, IPAddress.Loopback.ToString(), Configuration, MqttBinding );
         }
 
         [TearDown]

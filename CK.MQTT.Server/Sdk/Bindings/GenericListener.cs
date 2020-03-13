@@ -12,54 +12,78 @@ namespace CK.MQTT.Sdk.Bindings
         where TChannel : IMqttChannel<byte[]>
     {
         readonly MqttConfiguration _configuration;
+        readonly Func<MqttConfiguration, IListener<TChannel>> _listenerFactory;
         /// <summary>
         /// A lazy initialized listener. Start the listener at the initialisation.
         /// </summary>
-        readonly Lazy<IListener<TChannel>> _listener;
+        IListener<TChannel> _listener;
         bool _disposed;
+        readonly object _initLock = new object();
+        IObservable<Mon<IMqttChannel<byte[]>>> _channelStream;
 
-        public GenericListener( IActivityMonitor m, MqttConfiguration configuration, Func<MqttConfiguration, IListener<TChannel>> listenerFactory )
+        public GenericListener( MqttConfiguration configuration, Func<MqttConfiguration, IListener<TChannel>> listenerFactory )
         {
             _configuration = configuration;
-            _listener = new Lazy<IListener<TChannel>>( () =>
-            {
-                IListener<TChannel> listener = listenerFactory( _configuration );
-
-                try
-                {
-                    listener.Start();
-                }
-                catch( SocketException socketEx )
-                {
-                    m.Error( ClientProperties.TcpChannelProvider_TcpListener_Failed, socketEx );
-
-                    throw new MqttException( ClientProperties.TcpChannelProvider_TcpListener_Failed, socketEx );
-                }
-
-                return listener;
-            } );
+            _listenerFactory = listenerFactory ?? throw new ArgumentNullException( nameof( listenerFactory ) );
         }
 
-        public IObservable<IMqttChannel<byte[]>> GetChannelStream()
+        /// <summary>
+        /// return false if disposed.
+        /// </summary>
+        /// <param name="m"></param>
+        /// <returns></returns>
+        bool InitListener( IActivityMonitor m )
+        {
+            IListener<TChannel> listener;
+            lock( _initLock )
+            {
+                if( _disposed ) return false;
+                if( _listener != null ) return true;
+                listener = _listenerFactory( _configuration );
+            }
+            try
+            {
+                listener.Start();
+                return true;
+            }
+            catch( SocketException socketEx )
+            {
+                m.Error( ClientProperties.TcpChannelProvider_TcpListener_Failed, socketEx );
+                throw new MqttException( ClientProperties.TcpChannelProvider_TcpListener_Failed, socketEx );
+            }
+        }
+
+
+        public IObservable<Mon<IMqttChannel<byte[]>>> ChannelStream
+        {
+            get
+            {
+                if( _disposed ) throw new ObjectDisposedException( GetType().FullName );
+                if( _channelStream == null )
+                {
+                    _channelStream = Observable
+                        .FromAsync( SafeAcceptClient )
+                        .Repeat()
+                        .Select( client => new Mon<IMqttChannel<byte[]>>( client.Monitor, client.Item ) );
+                }
+
+                return _channelStream;
+            }
+        }
+        async Task<Mon<TChannel>> SafeAcceptClient()
         {
             var m = new ActivityMonitor();
-            if( _disposed )
-            {
-                throw new ObjectDisposedException( GetType().FullName );
-            }
-
-            return Observable
-                .FromAsync( () => SafeAcceptClient( m ) )
-                .Repeat()
-                .Select( client => (IMqttChannel<byte[]>)client );
-        }
-        async Task<TChannel> SafeAcceptClient( IActivityMonitor m )
-        {
             while( true )
             {
+                if( _disposed ) return default;
+                if( _listener == null )
+                {
+                    if( !InitListener( m ) ) return default;
+                }
                 try
                 {
-                    return await _listener.Value.AcceptClientAsync( m );
+
+                    return new Mon<TChannel>( m, await _listener.AcceptClientAsync( m ) );
                 }
                 catch( Exception e )
                 {
@@ -71,9 +95,11 @@ namespace CK.MQTT.Sdk.Bindings
         public void Dispose()
         {
             if( _disposed ) return;
-
-            _listener.Value.Stop();
             _disposed = true;
+            lock( _initLock )
+            {
+                _listener?.Stop();
+            }
         }
     }
 }

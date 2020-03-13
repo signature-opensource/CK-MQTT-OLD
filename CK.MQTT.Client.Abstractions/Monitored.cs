@@ -6,17 +6,16 @@ namespace CK.Core
 {
     public static class Mon
     {
-        public static Mon<T> From<T, TOther>( this in Mon<TOther> other ) where T : TOther
-            => new Mon<T>( other.Monitor, (T)other.Item );
+        public static Mon<TOut> Cast<TOut, TIn>( this in Mon<TIn> other ) where TOut : TIn
+            => new Mon<TOut>( other.Monitor, (TOut)other.Item );
 
-        //public static IObservable<Mon<TOut>> OfMonitoredType<TOut, IPacket>( this IObservable<Mon<object>> @this )
-        //    => @this.Where( p => p.Item is TOut )
-        //        .Select( s => s.From<TOut, object>() );
+        public static Mon<TOut> From<TOut, TIn>( this in Mon<TIn> other ) where TIn : TOut
+            => new Mon<TOut>( other.Monitor, other.Item );
 
         public static IObservable<Mon<TOut>> OfMonitoredType<TOut, TIn>( this IObservable<Mon<TIn>> @this )
             where TOut : TIn
             => @this.Where( p => p.Item is TOut )
-                .Select( s => s.From<TOut, TIn>() );
+                .Select( s => s.Cast<TOut, TIn>() );
     }
 
     public readonly struct Mon<T>
