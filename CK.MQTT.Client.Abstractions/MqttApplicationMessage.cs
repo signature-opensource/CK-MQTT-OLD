@@ -8,6 +8,8 @@ namespace CK.MQTT
     /// </summary>
 	public class MqttApplicationMessage
     {
+        readonly ReadOnlyMemory<byte> _payload;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="MqttApplicationMessage" /> class,
         /// specifying the topic and payload of the message
@@ -17,10 +19,10 @@ namespace CK.MQTT
         /// Any subscriber of this topic should receive the corresponding messages
         /// </param>
         /// <param name="payload">Content of the message, as a byte array</param>
-		public MqttApplicationMessage( string topic, ReadOnlyMemory<byte> payload )
+        public MqttApplicationMessage( string topic, ReadOnlyMemory<byte> payload )
         {
             Topic = topic;
-            Payload = payload;
+            _payload = payload;
         }
 
         /// <summary>
@@ -32,6 +34,6 @@ namespace CK.MQTT
         /// <summary>
         /// Content of the message. This must be accessed only during the handling of the message.
         /// </summary>
-		public ReadOnlyMemory<byte> Payload { get; }
+		public ReadOnlySpan<byte> Payload => _payload.Span;
     }
 }

@@ -13,7 +13,7 @@ namespace CK.MQTT
     /// </summary>
     /// <param name="token">The activity token to use in any other monitor.</param>
     /// <param name="sender">The source of the event.</param>
-    /// <param name="e">An object that contains no event data (<see cref="EventArgs.Empty"/> should be used).</param>
+    /// <param name="e">Event payload.</param>
     public delegate Task ParallelEventHandlerAync<T>( ActivityMonitor.DependentToken token, IMqttClient sender, T e );
 
     /// <summary>
