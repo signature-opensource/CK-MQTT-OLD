@@ -69,13 +69,13 @@ namespace CK.MQTT.Client.Abstractions.Tests
             remove { _eSeqMessage.Remove( value ); }
         }
 
-        public event SequentialEventHandlerAync<MqttApplicationMessage> MessageReceivedAsync
+        public event SequentialEventHandlerAsync<MqttApplicationMessage> MessageReceivedAsync
         {
             add { _eSeqMessageAsync.Add( value ); }
             remove { _eSeqMessageAsync.Remove( value ); }
         }
 
-        public event ParallelEventHandlerAync<MqttApplicationMessage> ParallelMessageReceivedAsync
+        public event ParallelEventHandlerAsync<MqttApplicationMessage> ParallelMessageReceivedAsync
         {
             add { _eParMessageAsync.Add( value ); }
             remove { _eParMessageAsync.Remove( value ); }
@@ -87,13 +87,13 @@ namespace CK.MQTT.Client.Abstractions.Tests
             remove { _eSeqDisconnect.Remove( value ); }
         }
 
-        public event SequentialEventHandlerAync<MqttEndpointDisconnected> DisconnectedAsync
+        public event SequentialEventHandlerAsync<MqttEndpointDisconnected> DisconnectedAsync
         {
             add { _eSeqDisconnectAsync.Add( value ); }
             remove { _eSeqDisconnectAsync.Remove( value ); }
         }
 
-        public event ParallelEventHandlerAync<MqttEndpointDisconnected> ParallelDisconnectedAsync
+        public event ParallelEventHandlerAsync<MqttEndpointDisconnected> ParallelDisconnectedAsync
         {
             add { _eParDisconnectAsync.Add( value ); }
             remove { _eParDisconnectAsync.Remove( value ); }

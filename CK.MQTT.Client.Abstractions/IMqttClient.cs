@@ -18,7 +18,7 @@ namespace CK.MQTT
         /// produced by the Server.
         /// See <see cref="MqttEndpointDisconnected"/> for more details on the disconnection information
         /// </summary>
-        event ParallelEventHandlerAync<MqttEndpointDisconnected> ParallelDisconnectedAsync;
+        event ParallelEventHandlerAsync<MqttEndpointDisconnected> ParallelDisconnectedAsync;
 
         /// <summary>
         /// Event raised when the Client gets disconnected, synchronously.
@@ -35,7 +35,7 @@ namespace CK.MQTT
         /// produced by the Server.
         /// See <see cref="MqttEndpointDisconnected"/> for more details on the disconnection information
         /// </summary>
-        event SequentialEventHandlerAync<MqttEndpointDisconnected> DisconnectedAsync;
+        event SequentialEventHandlerAsync<MqttEndpointDisconnected> DisconnectedAsync;
 
         /// <summary>
         /// Id of the connected Client.
@@ -57,7 +57,7 @@ namespace CK.MQTT
         /// Event raised for each received message in asynchronous way, each async handler being called in parallel
         /// with the other ones.
         /// </summary>
-        event ParallelEventHandlerAync<MqttApplicationMessage> ParallelMessageReceivedAsync;
+        event ParallelEventHandlerAsync<MqttApplicationMessage> ParallelMessageReceivedAsync;
 
         /// <summary>
         /// Event raised for each received message, synchronously.
@@ -68,7 +68,7 @@ namespace CK.MQTT
         /// Event raised for each received message in asynchronous way, each async handler being called
         /// one after the other.
         /// </summary>
-        event SequentialEventHandlerAync<MqttApplicationMessage> MessageReceivedAsync;
+        event SequentialEventHandlerAsync<MqttApplicationMessage> MessageReceivedAsync;
 
         /// <summary>
         /// Represents the protocol connection, which consists of sending a CONNECT packet
