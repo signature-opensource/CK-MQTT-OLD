@@ -40,9 +40,7 @@ namespace Tests.Flows
 
             string topic = "foo/bar";
             ushort? packetId = (ushort?)new Random().Next( 0, ushort.MaxValue );
-            Publish publish = new Publish( topic, MqttQualityOfService.AtLeastOnce, retain: false, duplicated: false, packetId: packetId );
-
-            publish.Payload = Encoding.UTF8.GetBytes( "Publish Receiver Flow Test" );
+            Publish publish = new Publish( topic, Encoding.UTF8.GetBytes( "Publish Receiver Flow Test" ), MqttQualityOfService.AtLeastOnce, retain: false, duplicated: false, packetId: packetId );
 
             Subject<Mon<IPacket>> receiver = new Subject<Mon<IPacket>>();
             Subject<Mon<IPacket>> sender = new Subject<Mon<IPacket>>();
@@ -104,9 +102,7 @@ namespace Tests.Flows
 
             string topic = "foo/bar";
             ushort? packetId = (ushort?)new Random().Next( 0, ushort.MaxValue );
-            Publish publish = new Publish( topic, MqttQualityOfService.ExactlyOnce, retain: false, duplicated: false, packetId: packetId );
-
-            publish.Payload = Encoding.UTF8.GetBytes( "Publish Receiver Flow Test" );
+            Publish publish = new Publish( topic, Encoding.UTF8.GetBytes( "Publish Receiver Flow Test" ), MqttQualityOfService.ExactlyOnce, retain: false, duplicated: false, packetId: packetId );
 
             Subject<Mon<IPacket>> receiver = new Subject<Mon<IPacket>>();
             Subject<Mon<IPacket>> sender = new Subject<Mon<IPacket>>();

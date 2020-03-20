@@ -112,11 +112,9 @@ namespace CK.MQTT.Sdk.Flows
                     ushort? packetId = subscription.MaximumQualityOfService == MqttQualityOfService.AtMostOnce ?
                         null : (ushort?)_packetIdProvider.GetPacketId();
                     Publish publish = new Publish( topic: retainedMessage.Id,
+                        retainedMessage.Payload,
                         qualityOfService: subscription.MaximumQualityOfService,
-                        retain: true, duplicated: false, packetId: packetId )
-                    {
-                        Payload = retainedMessage.Payload
-                    };
+                        retain: true, duplicated: false, packetId: packetId );
 
                     await _senderFlow.SendPublishAsync( m, subscription.ClientId, publish, channel );
                 }

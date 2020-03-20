@@ -1,9 +1,9 @@
 using CK.Core;
-
 using CK.MQTT.Sdk.Flows;
 using CK.MQTT.Sdk.Packets;
 using CK.MQTT.Sdk.Storage;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Concurrency;
@@ -19,7 +19,6 @@ namespace CK.MQTT.Sdk
         bool _isProtocolConnected;
         IPacketListener _packetListener;
         IDisposable _packetsSubscription;
-        Subject<Mon<MqttApplicationMessage>> _receiver;
         readonly IActivityMonitor _m;
         readonly IPacketChannelFactory _channelFactory;
         readonly IProtocolFlowProvider _flowProvider;
@@ -35,7 +34,6 @@ namespace CK.MQTT.Sdk
             IPacketIdProvider packetIdProvider,
             MqttConfiguration configuration )
         {
-            _receiver = new Subject<Mon<MqttApplicationMessage>>();
             _m = m;
             _channelFactory = channelFactory;
             _flowProvider = flowProvider;
@@ -45,7 +43,61 @@ namespace CK.MQTT.Sdk
             _clientSender = TaskRunner.Get();
         }
 
-        public event EventHandler<MqttEndpointDisconnected> Disconnected = ( sender, args ) => { };
+        SequentialEventHandlerSender<MqttEndpointDisconnected> _eSeqDisconnect;
+        public event SequentialEventHandler<MqttEndpointDisconnected> Disconnected
+        {
+            add => _eSeqDisconnect.Add( value );
+            remove => _eSeqDisconnect.Remove( value );
+        }
+
+        SequentialEventHandlerAsyncSender<MqttEndpointDisconnected> _eSeqDisconnectAsync;
+        public event SequentialEventHandlerAsync<MqttEndpointDisconnected> DisconnectedAsync
+        {
+            add => _eSeqDisconnectAsync.Add( value );
+            remove => _eSeqDisconnectAsync.Remove( value );
+        }
+
+        ParallelEventHandlerAsyncSender<MqttEndpointDisconnected> _eParDisconnectAsync;
+        public event ParallelEventHandlerAsync<MqttEndpointDisconnected> ParallelDisconnectedAsync
+        {
+            add => _eParDisconnectAsync.Add( value );
+            remove => _eParDisconnectAsync.Add( value );
+        }
+
+        public Task RaiseDisconnectAsync( IActivityMonitor m, MqttEndpointDisconnected disconnect )
+        {
+            Task task = _eParDisconnectAsync.RaiseAsync( m, this, disconnect );
+            _eSeqDisconnect.Raise( m, this, disconnect );
+            return Task.WhenAll( task, _eSeqDisconnectAsync.RaiseAsync( m, this, disconnect ) );
+        }
+
+        ParallelEventHandlerAsyncSender<MqttApplicationMessage> _eParMessageAsync;
+        public event ParallelEventHandlerAsync<MqttApplicationMessage> ParallelMessageReceivedAsync
+        {
+            add => _eParMessageAsync.Add( value );
+            remove => _eParMessageAsync.Remove( value );
+        }
+
+        SequentialEventHandlerSender<MqttApplicationMessage> _eSeqMessage;
+        public event SequentialEventHandler<MqttApplicationMessage> MessageReceived
+        {
+            add => _eSeqMessage.Add( value );
+            remove => _eSeqMessage.Remove( value );
+        }
+
+        SequentialEventHandlerAsyncSender<MqttApplicationMessage> _eSeqMessageAsync;
+        public event SequentialEventHandlerAsync<MqttApplicationMessage> MessageReceivedAsync
+        {
+            add => _eSeqMessageAsync.Add( value );
+            remove => _eSeqMessageAsync.Remove( value );
+        }
+
+        public Task RaiseMessageAsync( IActivityMonitor m, MqttApplicationMessage message )
+        {
+            Task task = _eParMessageAsync.RaiseAsync( m, this, message );
+            _eSeqMessage.Raise( m, this, message );
+            return Task.WhenAll( task, _eSeqMessageAsync.RaiseAsync( m, this, message ) );
+        }
 
         public string ClientId { get; private set; }
 
@@ -54,8 +106,6 @@ namespace CK.MQTT.Sdk
             CheckUnderlyingConnection( m );
             return _isProtocolConnected && Channel.IsConnected;
         }
-
-        public IObservable<Mon<MqttApplicationMessage>> MessageStream => _receiver;
 
         internal IMqttChannel<IPacket> Channel { get; private set; }
 
@@ -207,7 +257,7 @@ namespace CK.MQTT.Sdk
             }
         }
 
-        public async Task PublishAsync( IActivityMonitor m, MqttApplicationMessage message, MqttQualityOfService qos, bool retain = false )
+        public async Task PublishAsync( IActivityMonitor m, string topic, ReadOnlyMemory<byte> payload, MqttQualityOfService qos, bool retain = false )
         {
             if( _disposed )
             {
@@ -217,10 +267,7 @@ namespace CK.MQTT.Sdk
             try
             {
                 ushort? packetId = qos == MqttQualityOfService.AtMostOnce ? null : (ushort?)_packetIdProvider.GetPacketId();
-                Publish publish = new Publish( message.Topic, qos, retain, duplicated: false, packetId: packetId )
-                {
-                    Payload = message.Payload
-                };
+                Publish publish = new Publish( topic, payload, qos, retain, duplicated: false, packetId: packetId );
 
                 PublishSenderFlow senderFlow = _flowProvider.GetFlow<PublishSenderFlow>();
 
@@ -236,13 +283,13 @@ namespace CK.MQTT.Sdk
             }
         }
 
-        public async Task UnsubscribeAsync( IActivityMonitor m, params string[] topics )
+        public async Task UnsubscribeAsync( IActivityMonitor m, IEnumerable<string> topics )
         {
             if( _disposed ) throw new ObjectDisposedException( GetType().FullName );
 
             try
             {
-                topics = topics ?? Array.Empty<string>();
+                topics ??= Array.Empty<string>();
 
                 ushort packetId = _packetIdProvider.GetPacketId();
                 Unsubscribe unsubscribe = new Unsubscribe( packetId, topics );
@@ -312,7 +359,7 @@ namespace CK.MQTT.Sdk
                     .PacketStream
                     .LastOrDefaultAsync();
 
-                Close( m, DisconnectedReason.SelfDisconnected );
+                await CloseAsync( m, DisconnectedReason.SelfDisconnected );
             }
             catch( Exception ex )
             {
@@ -345,22 +392,21 @@ namespace CK.MQTT.Sdk
         void Close( IActivityMonitor m, Exception ex )
         {
             m.Error( ex );
-            Close( m, DisconnectedReason.Error, ex.Message );
+            CloseAsync( m, DisconnectedReason.Error, ex.Message );
         }
 
-        void Close( IActivityMonitor m, DisconnectedReason reason, string message = null )
+        Task CloseAsync( IActivityMonitor m, DisconnectedReason reason, string message = null )
         {
             m.Info( ClientProperties.Client_Closing( ClientId, reason ) );
 
             CloseClientSession( m );
             _packetsSubscription?.Dispose();
             _packetListener?.Dispose();
-            ResetReceiver();
             Channel?.Dispose();
             _isProtocolConnected = false;
             ClientId = null;
-
-            Disconnected( this, new MqttEndpointDisconnected( reason, message ) );
+            var disconnect = new MqttEndpointDisconnected( reason, message );
+            return RaiseDisconnectAsync( m, disconnect );
         }
 
         async Task InitializeChannelAsync( IActivityMonitor m )
@@ -421,7 +467,7 @@ namespace CK.MQTT.Sdk
         {
             if( _isProtocolConnected && !Channel.IsConnected )
             {
-                Close( m, DisconnectedReason.Error, ClientProperties.Client_UnexpectedChannelDisconnection );
+                CloseAsync( m, DisconnectedReason.Error, ClientProperties.Client_UnexpectedChannelDisconnection );
             }
         }
 
@@ -436,9 +482,10 @@ namespace CK.MQTT.Sdk
                      {
                          Publish publish = packet.Item as Publish;
                          MqttApplicationMessage message = new MqttApplicationMessage( publish.Topic, publish.Payload );
-
-                         _receiver.OnNext( new Mon<MqttApplicationMessage>( packet.Monitor, message ) );
-                         packet.Monitor.Info( ClientProperties.Client_NewApplicationMessageReceived( ClientId, publish.Topic ) );
+                         using( packet.Monitor.OpenInfo( ClientProperties.Client_NewApplicationMessageReceived( ClientId, publish.Topic ) ) )
+                         {
+                             RaiseMessageAsync( packet.Monitor, message ).Wait();
+                         }
                      }
                  }, ex =>
                  {
@@ -448,14 +495,8 @@ namespace CK.MQTT.Sdk
                  {
                      var m = new ActivityMonitor();//TODO: Remove monitor in oncomplete.
                      m.Warn( ClientProperties.Client_PacketsObservableCompleted );
-                     Close( m, DisconnectedReason.RemoteDisconnected );
+                     CloseAsync( m, DisconnectedReason.RemoteDisconnected );
                  } );
-        }
-
-        void ResetReceiver()
-        {
-            _receiver?.OnCompleted();
-            _receiver = new Subject<Mon<MqttApplicationMessage>>();
         }
     }
 }

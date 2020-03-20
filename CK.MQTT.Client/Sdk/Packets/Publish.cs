@@ -7,13 +7,14 @@ namespace CK.MQTT.Sdk.Packets
 {
     internal class Publish : IPacket, IEquatable<Publish>
     {
-        public Publish( string topic, MqttQualityOfService qualityOfService, bool retain, bool duplicated, ushort? packetId = null )
+        public Publish( string topic, ReadOnlyMemory<byte> payload, MqttQualityOfService qualityOfService, bool retain, bool duplicated, ushort? packetId = null )
         {
             QualityOfService = qualityOfService;
             Duplicated = duplicated;
             Retain = retain;
             Topic = topic;
             PacketId = packetId;
+            Payload = payload;
         }
 
         public MqttPacketType Type => MqttPacketType.Publish;
@@ -28,7 +29,7 @@ namespace CK.MQTT.Sdk.Packets
 
         public ushort? PacketId { get; }
 
-        public ReadOnlyMemory<byte> Payload { get; set; }
+        public ReadOnlyMemory<byte> Payload { get; }
 
         public bool Equals( Publish other )
         {

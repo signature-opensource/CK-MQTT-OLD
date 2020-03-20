@@ -42,7 +42,7 @@ namespace Tests
 
             string clientId = Guid.NewGuid().ToString();
             Connect connect = new Connect( clientId, cleanSession: true, MqttProtocol.SupportedLevel );
-            Publish publish = new Publish( Guid.NewGuid().ToString(), MqttQualityOfService.AtMostOnce, false, false );
+            Publish publish = new Publish( Guid.NewGuid().ToString(), new ReadOnlyMemory<byte>() , MqttQualityOfService.AtMostOnce, false, false );
 
             receiver.OnNext( new Mon<IPacket>( TestHelper.Monitor, connect ) );
             receiver.OnNext( new Mon<IPacket>( TestHelper.Monitor, publish ) );

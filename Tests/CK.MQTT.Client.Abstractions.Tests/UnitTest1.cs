@@ -120,7 +120,7 @@ namespace CK.MQTT.Client.Abstractions.Tests
         {
         }
 
-        public Task PublishAsync( IActivityMonitor m, MqttApplicationMessage message, MqttQualityOfService qos, bool retain = false )
+        public Task PublishAsync( IActivityMonitor m, string topic, ReadOnlyMemory<byte> payload, MqttQualityOfService qos, bool retain = false )
         {
             throw new NotImplementedException();
         }

@@ -101,11 +101,8 @@ namespace CK.MQTT.Sdk.Flows
                     {
                         m.Warn( ClientProperties.PublishFlow_RetryingQoSFlow( sentMessage.Type, clientId ) );
 
-                        Publish duplicated = new Publish( sentMessage.Topic, sentMessage.QualityOfService,
-                            sentMessage.Retain, duplicated: true, packetId: sentMessage.PacketId )
-                        {
-                            Payload = sentMessage.Payload
-                        };
+                        Publish duplicated = new Publish( sentMessage.Topic, sentMessage.Payload, sentMessage.QualityOfService,
+                            sentMessage.Retain, duplicated: true, packetId: sentMessage.PacketId );
 
                         await channel.SendAsync( new Mon<IPacket>( m, duplicated ) );
                     }
@@ -169,7 +166,7 @@ namespace CK.MQTT.Sdk.Flows
                 Retain = message.Retain,
                 Topic = message.Topic,
                 PacketId = message.PacketId,
-                Payload = message.Payload
+                Payload = message.Payload.ToArray()//TODO: Spanify this.
             };
 
             session.AddPendingMessage( savedMessage );

@@ -241,7 +241,7 @@ namespace Tests.Flows
             senderFlow.Verify( f => f.SendPublishAsync(TestHelper.Monitor, It.Is<string>( s => s == clientId ),
                 It.Is<Publish>( p => p.Topic == retainedTopic &&
                     p.QualityOfService == fooQoS &&
-                    p.Payload.ToList().SequenceEqual( retainedPayload ) &&
+                    p.Payload.ToArray().SequenceEqual( retainedPayload.ToArray() ) &&
                     p.PacketId.HasValue &&
                     p.Retain ),
                 It.Is<IMqttChannel<IPacket>>( c => c == channel.Object ),

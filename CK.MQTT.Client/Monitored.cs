@@ -1,4 +1,5 @@
 using System;
+using System.Reactive.Linq;
 using System.Runtime.CompilerServices;
 
 namespace CK.Core

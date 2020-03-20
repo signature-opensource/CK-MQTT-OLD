@@ -40,10 +40,7 @@ namespace CK.MQTT.Sdk.Flows
 
             if( will != null && will.Will != null )
             {
-                Publish willPublish = new Publish( will.Will.Topic, will.Will.QualityOfService, will.Will.Retain, duplicated: false )
-                {
-                    Payload = will.Will.Payload
-                };
+                Publish willPublish = new Publish( will.Will.Topic, will.Will.Payload, will.Will.QualityOfService, will.Will.Retain, duplicated: false );
 
                 m.Info( ServerProperties.ServerPublishReceiverFlow_SendingWill( clientId, willPublish.Topic ) );
 
@@ -62,11 +59,11 @@ namespace CK.MQTT.Sdk.Flows
                     retainedRepository.Delete( existingRetainedMessage.Id );
                 }
 
-                if( publish.Payload != null && publish.Payload.Length > 0 )
+                if( publish.Payload.Length > 0 )
                 {
                     RetainedMessage retainedMessage = new RetainedMessage( publish.Topic,
                         publish.QualityOfService,
-                        publish.Payload );
+                        publish.Payload.ToArray() );//Spanify this.
 
                     retainedRepository.Create( retainedMessage );
                 }
@@ -113,10 +110,7 @@ namespace CK.MQTT.Sdk.Flows
             MqttQualityOfService supportedQos = configuration.GetSupportedQos( requestedQos );
             bool retain = isWill ? publish.Retain : false;
             ushort? packetId = supportedQos == MqttQualityOfService.AtMostOnce ? null : (ushort?)_packetIdProvider.GetPacketId();
-            Publish subscriptionPublish = new Publish( publish.Topic, supportedQos, retain, duplicated: false, packetId: packetId )
-            {
-                Payload = publish.Payload
-            };
+            Publish subscriptionPublish = new Publish( publish.Topic, publish.Payload, supportedQos, retain, duplicated: false, packetId: packetId );
             IMqttChannel<IPacket> clientChannel = _connectionProvider.GetConnection( m, subscription.ClientId );
 
             await _senderFlow.SendPublishAsync( m, subscription.ClientId, subscriptionPublish, clientChannel );

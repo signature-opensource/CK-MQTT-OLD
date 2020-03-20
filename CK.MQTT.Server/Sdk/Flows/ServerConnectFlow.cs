@@ -85,11 +85,8 @@ namespace CK.MQTT.Sdk.Flows
         {
             foreach( PendingMessage pendingMessage in session.GetPendingMessages() )
             {
-                Publish publish = new Publish( pendingMessage.Topic, pendingMessage.QualityOfService,
-                    pendingMessage.Retain, pendingMessage.Duplicated, pendingMessage.PacketId )
-                {
-                    Payload = pendingMessage.Payload
-                };
+                Publish publish = new Publish( pendingMessage.Topic, pendingMessage.Payload, pendingMessage.QualityOfService,
+                    pendingMessage.Retain, pendingMessage.Duplicated, pendingMessage.PacketId );
 
                 if( pendingMessage.Status == PendingMessageStatus.PendingToSend )
                 {

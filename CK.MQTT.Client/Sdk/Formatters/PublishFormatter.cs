@@ -48,15 +48,16 @@ namespace CK.MQTT.Sdk.Formatters
                 packetId = bytes.Bytes( nextIndex, 2 ).ToUInt16();
                 variableHeaderLength += 2;
             }
-
-            Publish publish = new Publish( topic, qos, retainFlag, duplicated, packetId );
-
+            Memory<byte> payload = new Memory<byte>();
             if( remainingLength > variableHeaderLength )
             {
                 int payloadStartIndex = 1 + remainingLengthBytesLength + variableHeaderLength;
 
-                publish.Payload = bytes.Bytes( payloadStartIndex );
+                payload = bytes.Bytes( payloadStartIndex );
             }
+            Publish publish = new Publish( topic, payload, qos, retainFlag, duplicated, packetId );
+
+
 
             return publish;
         }
@@ -66,17 +67,13 @@ namespace CK.MQTT.Sdk.Formatters
             List<byte> bytes = new List<byte>();
 
             byte[] variableHeader = GetVariableHeader( packet );
-            int payloadLength = packet.Payload == null ? 0 : packet.Payload.Length;
+            int payloadLength = packet.Payload.Length;
             byte[] remainingLength = MqttProtocol.Encoding.EncodeRemainingLength( variableHeader.Length + payloadLength );
             byte[] fixedHeader = GetFixedHeader( packet, remainingLength );
 
             bytes.AddRange( fixedHeader );
             bytes.AddRange( variableHeader );
-
-            if( packet.Payload != null )
-            {
-                bytes.AddRange( packet.Payload );
-            }
+            bytes.AddRange( packet.Payload.ToArray() );//TODO: Spanify this.
 
             return bytes.ToArray();
         }

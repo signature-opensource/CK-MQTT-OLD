@@ -2,7 +2,9 @@ using CK.Core;
 using CK.MQTT;
 
 using CK.MQTT.Sdk;
+using CK.MQTT.Sdk.Bindings;
 using CK.MQTT.Sdk.Packets;
+using CK.MQTT.Tests.Files.Packets;
 using FluentAssertions;
 using Moq;
 using NUnit.Framework;
@@ -33,34 +35,37 @@ namespace Tests
             Assert.NotNull( channel );
         }
 
-        [Theory]
-        [TestCase( "Files/Binaries/Connect_Full.packet", "Files/Packets/Connect_Full.json", typeof( Connect ) )]
-        [TestCase( "Files/Binaries/Connect_Min.packet", "Files/Packets/Connect_Min.json", typeof( Connect ) )]
-        [TestCase( "Files/Binaries/ConnectAck.packet", "Files/Packets/ConnectAck.json", typeof( ConnectAck ) )]
-        [TestCase( "Files/Binaries/Publish_Full.packet", "Files/Packets/Publish_Full.json", typeof( Publish ) )]
-        [TestCase( "Files/Binaries/Publish_Min.packet", "Files/Packets/Publish_Min.json", typeof( Publish ) )]
-        [TestCase( "Files/Binaries/PublishAck.packet", "Files/Packets/PublishAck.json", typeof( PublishAck ) )]
-        [TestCase( "Files/Binaries/PublishComplete.packet", "Files/Packets/PublishComplete.json", typeof( PublishComplete ) )]
-        [TestCase( "Files/Binaries/PublishReceived.packet", "Files/Packets/PublishReceived.json", typeof( PublishReceived ) )]
-        [TestCase( "Files/Binaries/PublishRelease.packet", "Files/Packets/PublishRelease.json", typeof( PublishRelease ) )]
-        [TestCase( "Files/Binaries/Subscribe_MultiTopic.packet", "Files/Packets/Subscribe_MultiTopic.json", typeof( Subscribe ) )]
-        [TestCase( "Files/Binaries/Subscribe_SingleTopic.packet", "Files/Packets/Subscribe_SingleTopic.json", typeof( Subscribe ) )]
-        [TestCase( "Files/Binaries/SubscribeAck_MultiTopic.packet", "Files/Packets/SubscribeAck_MultiTopic.json", typeof( SubscribeAck ) )]
-        [TestCase( "Files/Binaries/SubscribeAck_SingleTopic.packet", "Files/Packets/SubscribeAck_SingleTopic.json", typeof( SubscribeAck ) )]
-        [TestCase( "Files/Binaries/Unsubscribe_MultiTopic.packet", "Files/Packets/Unsubscribe_MultiTopic.json", typeof( Unsubscribe ) )]
-        [TestCase( "Files/Binaries/Unsubscribe_SingleTopic.packet", "Files/Packets/Unsubscribe_SingleTopic.json", typeof( Unsubscribe ) )]
-        [TestCase( "Files/Binaries/UnsubscribeAck.packet", "Files/Packets/UnsubscribeAck.json", typeof( UnsubscribeAck ) )]
-        public void when_reading_bytes_from_source_then_notifies_packet( string packetPath, string jsonPath, Type packetType )
+        static readonly object[] _cases0 = new object[]
+        {
+            new object[] { "Files/Binaries/Connect_Full.packet", Packets.Connect_Full },
+            new object[] { "Files/Binaries/Connect_Min.packet", Packets.Connect_Min},
+            new object[] { "Files/Binaries/ConnectAck.packet", Packets.ConnectAck },
+            new object[] { "Files/Binaries/Publish_Full.packet", Packets.Publish_Full },
+            new object[] { "Files/Binaries/Publish_Min.packet", Packets.Publish_Min },
+            new object[] { "Files/Binaries/PublishAck.packet", Packets.PublishAck },
+            new object[] { "Files/Binaries/PublishComplete.packet", Packets.PublishComplete },
+            new object[] { "Files/Binaries/PublishReceived.packet", Packets.PublishReceived },
+            new object[] { "Files/Binaries/PublishRelease.packet", Packets.PublishRelease },
+            new object[] { "Files/Binaries/Subscribe_MultiTopic.packet", Packets.Subscribe_MultiTopic },
+            new object[] { "Files/Binaries/Subscribe_SingleTopic.packet", Packets.Subscribe_SingleTopic },
+            new object[] { "Files/Binaries/SubscribeAck_MultiTopic.packet", Packets.SubscribeAck_MultiTopic },
+            new object[] { "Files/Binaries/SubscribeAck_SingleTopic.packet", Packets.SubscribeAck_SingleTopic },
+            new object[] { "Files/Binaries/Unsubscribe_MultiTopic.packet", Packets.Unsubscribe_MultiTopic},
+            new object[] { "Files/Binaries/Unsubscribe_SingleTopic.packet", Packets.Unsubscribe_SingleTopic },
+            new object[] { "Files/Binaries/UnsubscribeAck.packet", Packets.UnsubscribeAck }
+        };
+
+        [Test, TestCaseSource( nameof( _cases0 ) )]
+        public void when_reading_bytes_from_source_then_notifies_packet( string packetPath, IPacket packet )
         {
             MqttConfiguration configuration = new MqttConfiguration { WaitTimeoutSecs = 1 };
             Subject<Mon<byte[]>> receiver = new Subject<Mon<byte[]>>();
+
             Mock<IMqttChannel<byte[]>> innerChannel = new Mock<IMqttChannel<byte[]>>();
 
             innerChannel.Setup( x => x.ReceiverStream ).Returns( receiver );
 
-            jsonPath = Path.Combine( Environment.CurrentDirectory, jsonPath );
-
-            IPacket expectedPacket = Packet.ReadPacket( jsonPath, packetType ) as IPacket;
+            IPacket expectedPacket = packet;
 
             Mock<IPacketManager> manager = new Mock<IPacketManager>();
 
@@ -123,24 +128,28 @@ namespace Tests
             packetType.Should().Be( receivedPacket.GetType() );
         }
 
-        [Theory]
-        [TestCase( "Files/Binaries/Connect_Full.packet", "Files/Packets/Connect_Full.json", typeof( Connect ) )]
-        [TestCase( "Files/Binaries/Connect_Min.packet", "Files/Packets/Connect_Min.json", typeof( Connect ) )]
-        [TestCase( "Files/Binaries/ConnectAck.packet", "Files/Packets/ConnectAck.json", typeof( ConnectAck ) )]
-        [TestCase( "Files/Binaries/Publish_Full.packet", "Files/Packets/Publish_Full.json", typeof( Publish ) )]
-        [TestCase( "Files/Binaries/Publish_Min.packet", "Files/Packets/Publish_Min.json", typeof( Publish ) )]
-        [TestCase( "Files/Binaries/PublishAck.packet", "Files/Packets/PublishAck.json", typeof( PublishAck ) )]
-        [TestCase( "Files/Binaries/PublishComplete.packet", "Files/Packets/PublishComplete.json", typeof( PublishComplete ) )]
-        [TestCase( "Files/Binaries/PublishReceived.packet", "Files/Packets/PublishReceived.json", typeof( PublishReceived ) )]
-        [TestCase( "Files/Binaries/PublishRelease.packet", "Files/Packets/PublishRelease.json", typeof( PublishRelease ) )]
-        [TestCase( "Files/Binaries/Subscribe_MultiTopic.packet", "Files/Packets/Subscribe_MultiTopic.json", typeof( Subscribe ) )]
-        [TestCase( "Files/Binaries/Subscribe_SingleTopic.packet", "Files/Packets/Subscribe_SingleTopic.json", typeof( Subscribe ) )]
-        [TestCase( "Files/Binaries/SubscribeAck_MultiTopic.packet", "Files/Packets/SubscribeAck_MultiTopic.json", typeof( SubscribeAck ) )]
-        [TestCase( "Files/Binaries/SubscribeAck_SingleTopic.packet", "Files/Packets/SubscribeAck_SingleTopic.json", typeof( SubscribeAck ) )]
-        [TestCase( "Files/Binaries/Unsubscribe_MultiTopic.packet", "Files/Packets/Unsubscribe_MultiTopic.json", typeof( Unsubscribe ) )]
-        [TestCase( "Files/Binaries/Unsubscribe_SingleTopic.packet", "Files/Packets/Unsubscribe_SingleTopic.json", typeof( Unsubscribe ) )]
-        [TestCase( "Files/Binaries/UnsubscribeAck.packet", "Files/Packets/UnsubscribeAck.json", typeof( UnsubscribeAck ) )]
-        public async Task when_writing_packet_from_source_then_inner_channel_is_notified( string packetPath, string jsonPath, Type packetType )
+        static readonly object[] _cases1 = new object[]
+        {
+            new object[] { "Files/Binaries/Connect_Full.packet", Packets.Connect_Full, typeof( Connect ) },
+            new object[] { "Files/Binaries/Connect_Min.packet", Packets.Connect_Min, typeof( Connect ) },
+            new object[] { "Files/Binaries/ConnectAck.packet", Packets.ConnectAck, typeof( ConnectAck ) },
+            new object[] { "Files/Binaries/Publish_Full.packet", Packets.Publish_Full, typeof( Publish ) },
+            new object[] { "Files/Binaries/Publish_Min.packet", Packets.Publish_Min, typeof( Publish ) },
+            new object[] { "Files/Binaries/PublishAck.packet", Packets.PublishAck, typeof( PublishAck ) },
+            new object[] { "Files/Binaries/PublishComplete.packet", Packets.PublishComplete, typeof( PublishComplete ) },
+            new object[] { "Files/Binaries/PublishReceived.packet", Packets.PublishReceived, typeof( PublishReceived ) },
+            new object[] { "Files/Binaries/PublishRelease.packet", Packets.PublishRelease, typeof( PublishRelease ) },
+            new object[] { "Files/Binaries/Subscribe_MultiTopic.packet", Packets.Subscribe_MultiTopic, typeof( Subscribe ) },
+            new object[] { "Files/Binaries/Subscribe_SingleTopic.packet", Packets.Subscribe_SingleTopic, typeof( Subscribe ) },
+            new object[] { "Files/Binaries/SubscribeAck_MultiTopic.packet", Packets.SubscribeAck_MultiTopic, typeof( SubscribeAck ) },
+            new object[] { "Files/Binaries/SubscribeAck_SingleTopic.packet", Packets.SubscribeAck_SingleTopic, typeof( SubscribeAck ) },
+            new object[] { "Files/Binaries/Unsubscribe_MultiTopic.packet", Packets.Unsubscribe_MultiTopic, typeof( Unsubscribe ) },
+            new object[] { "Files/Binaries/Unsubscribe_SingleTopic.packet", Packets.Unsubscribe_SingleTopic, typeof( Unsubscribe ) },
+            new object[] { "Files/Binaries/UnsubscribeAck.packet", Packets.UnsubscribeAck, typeof( UnsubscribeAck ) },
+        };
+
+        [Test, TestCaseSource( nameof( _cases1 ) )]
+        public async Task when_writing_packet_from_source_then_inner_channel_is_notified( string packetPath, IPacket packet, Type packetType )
         {
             MqttConfiguration configuration = new MqttConfiguration { WaitTimeoutSecs = 1 };
 
@@ -154,10 +163,6 @@ namespace Tests
             innerChannel.Setup( x => x.ReceiverStream ).Returns( receiver );
             innerChannel.Setup( x => x.SendAsync( It.IsAny<Mon<byte[]>>() ) )
                 .Returns( Task.Delay( 0 ) );
-
-            jsonPath = Path.Combine( Environment.CurrentDirectory, jsonPath );
-
-            IPacket packet = Packet.ReadPacket( jsonPath, packetType ) as IPacket;
 
             Mock<IPacketManager> manager = new Mock<IPacketManager>();
 

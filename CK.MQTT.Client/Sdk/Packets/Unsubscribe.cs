@@ -6,7 +6,7 @@ namespace CK.MQTT.Sdk.Packets
 {
     internal class Unsubscribe : IPacket, IEquatable<Unsubscribe>
     {
-        public Unsubscribe( ushort packetId, params string[] topics )
+        public Unsubscribe( ushort packetId, IEnumerable<string> topics )
         {
             PacketId = packetId;
             Topics = topics;

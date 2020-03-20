@@ -47,11 +47,15 @@ namespace CK.MQTT.Sdk.Flows
         {
             foreach( PendingMessage pendingMessage in session.GetPendingMessages() )
             {
-                Publish publish = new Publish( pendingMessage.Topic, pendingMessage.QualityOfService,
-                    pendingMessage.Retain, pendingMessage.Duplicated, pendingMessage.PacketId );
-
-                await _senderFlow
-                    .SendPublishAsync( m, session.Id, publish, channel, PendingMessageStatus.PendingToAcknowledge );
+                Publish publish = new Publish(
+                    pendingMessage.Topic,
+                    pendingMessage.Payload,
+                    pendingMessage.QualityOfService,
+                    pendingMessage.Retain,
+                    pendingMessage.Duplicated,
+                    pendingMessage.PacketId
+                );
+                await _senderFlow.SendPublishAsync( m, session.Id, publish, channel, PendingMessageStatus.PendingToAcknowledge );
             }
         }
 

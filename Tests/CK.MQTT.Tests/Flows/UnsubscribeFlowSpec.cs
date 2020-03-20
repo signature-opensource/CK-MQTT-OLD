@@ -37,7 +37,7 @@ namespace Tests.Flows
             sessionRepository.Setup( r => r.Read( It.IsAny<string>() ) ).Returns( session );
             sessionRepository.Setup( r => r.Update( It.IsAny<ClientSession>() ) ).Callback<ClientSession>( s => updatedSession = s );
 
-            Unsubscribe unsubscribe = new Unsubscribe( packetId, topic );
+            Unsubscribe unsubscribe = new Unsubscribe( packetId, new string[] { topic } );
 
             Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
 
@@ -55,7 +55,7 @@ namespace Tests.Flows
 
             ServerUnsubscribeFlow flow = new ServerUnsubscribeFlow( sessionRepository.Object );
 
-            await flow.ExecuteAsync(TestHelper.Monitor, clientId, unsubscribe, channel.Object );
+            await flow.ExecuteAsync( TestHelper.Monitor, clientId, unsubscribe, channel.Object );
 
             Assert.NotNull( response );
             0.Should().Be( updatedSession.Subscriptions.Count );
@@ -76,7 +76,7 @@ namespace Tests.Flows
 
             sessionRepository.Setup( r => r.Read( It.IsAny<string>() ) ).Returns( session );
 
-            Unsubscribe unsubscribe = new Unsubscribe( packetId, "foo/bar" );
+            Unsubscribe unsubscribe = new Unsubscribe( packetId, new string[] { "foo/bar" } );
 
             Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
 
@@ -94,7 +94,7 @@ namespace Tests.Flows
 
             ServerUnsubscribeFlow flow = new ServerUnsubscribeFlow( sessionRepository.Object );
 
-            await flow.ExecuteAsync(TestHelper.Monitor, clientId, unsubscribe, channel.Object );
+            await flow.ExecuteAsync( TestHelper.Monitor, clientId, unsubscribe, channel.Object );
 
             sessionRepository.Verify( r => r.Delete( It.IsAny<string>() ), Times.Never );
             Assert.NotNull( response );

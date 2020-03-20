@@ -86,10 +86,7 @@ namespace Tests.Flows
                 .Setup( p => p.GetConnection( TestHelper.Monitor, It.Is<string>( s => s == subscribedClientId2 ) ) )
                 .Returns( client2Channel.Object );
 
-            Publish publish = new Publish( topic, MqttQualityOfService.AtMostOnce, retain: false, duplicated: false )
-            {
-                Payload = Encoding.UTF8.GetBytes( "Publish Receiver Flow Test" )
-            };
+            Publish publish = new Publish( topic, Encoding.UTF8.GetBytes( "Publish Receiver Flow Test" ), MqttQualityOfService.AtMostOnce, retain: false, duplicated: false );
 
             Subject<Mon<IPacket>> receiver = new Subject<Mon<IPacket>>();
             Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
@@ -101,11 +98,11 @@ namespace Tests.Flows
             retainedRepository.Verify( r => r.Create( It.IsAny<RetainedMessage>() ), Times.Never );
             publishSenderFlow.Verify( s => s.SendPublishAsync( TestHelper.Monitor, It.Is<string>( x => x == subscribedClientId1 ),
                 It.Is<Publish>( p => p.Topic == publish.Topic &&
-                    p.Payload.ToList().SequenceEqual( publish.Payload ) ),
+                    p.Payload.ToArray().SequenceEqual( publish.Payload.ToArray() ) ),//TODO: Spanify this.
                 It.Is<IMqttChannel<IPacket>>( c => c == client1Channel.Object ), It.Is<PendingMessageStatus>( x => x == PendingMessageStatus.PendingToSend ) ) );
             publishSenderFlow.Verify( s => s.SendPublishAsync( TestHelper.Monitor, It.Is<string>( x => x == subscribedClientId2 ),
                 It.Is<Publish>( p => p.Topic == publish.Topic &&
-                    p.Payload.ToList().SequenceEqual( publish.Payload ) ),
+                    p.Payload.ToArray().SequenceEqual( publish.Payload.ToArray() ) ),
                 It.Is<IMqttChannel<IPacket>>( c => c == client2Channel.Object ), It.Is<PendingMessageStatus>( x => x == PendingMessageStatus.PendingToSend ) ) );
             channel.Verify( c => c.SendAsync( It.IsAny<Mon<IPacket>>() ), Times.Never );
         }
@@ -159,10 +156,7 @@ namespace Tests.Flows
                 .Returns( clientChannel.Object );
 
             ushort? packetId = (ushort?)new Random().Next( 0, ushort.MaxValue );
-            Publish publish = new Publish( topic, MqttQualityOfService.AtLeastOnce, retain: false, duplicated: false, packetId: packetId )
-            {
-                Payload = Encoding.UTF8.GetBytes( "Publish Flow Test" )
-            };
+            Publish publish = new Publish( topic, Encoding.UTF8.GetBytes( "Publish Flow Test" ), MqttQualityOfService.AtLeastOnce, retain: false, duplicated: false, packetId: packetId );
 
             Subject<Mon<IPacket>> receiver = new Subject<Mon<IPacket>>();
             Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
@@ -175,7 +169,7 @@ namespace Tests.Flows
             retainedRepository.Verify( r => r.Create( It.IsAny<RetainedMessage>() ), Times.Never );
             publishSenderFlow.Verify( s => s.SendPublishAsync( TestHelper.Monitor, It.Is<string>( x => x == subscribedClientId ),
                 It.Is<Publish>( p => p.Topic == publish.Topic &&
-                    p.Payload.ToList().SequenceEqual( publish.Payload ) ),
+                    p.Payload.ToArray().SequenceEqual( publish.Payload.ToArray() ) ),
                 It.Is<IMqttChannel<IPacket>>( c => c == clientChannel.Object ), It.Is<PendingMessageStatus>( x => x == PendingMessageStatus.PendingToSend ) ) );
             channel.Verify( c => c.SendAsync( It.Is<Mon<IPacket>>( p => p.Item is PublishAck &&
                 ((PublishAck)p.Item).PacketId == packetId.Value ) ) );
@@ -234,10 +228,7 @@ namespace Tests.Flows
                 .Setup( p => p.GetConnection( TestHelper.Monitor, It.Is<string>( s => s == subscribedClientId ) ) )
                 .Returns( clientChannel.Object );
 
-            Publish publish = new Publish( topic, MqttQualityOfService.ExactlyOnce, retain: false, duplicated: false, packetId: packetId )
-            {
-                Payload = Encoding.UTF8.GetBytes( "Publish Flow Test" )
-            };
+            Publish publish = new Publish( topic, Encoding.UTF8.GetBytes( "Publish Flow Test" ), MqttQualityOfService.ExactlyOnce, retain: false, duplicated: false, packetId: packetId );
 
             Subject<Mon<IPacket>> receiver = new Subject<Mon<IPacket>>();
             Subject<Mon<IPacket>> sender = new Subject<Mon<IPacket>>();
@@ -272,7 +263,7 @@ namespace Tests.Flows
             Assert.True( ackSent );
             publishSenderFlow.Verify( s => s.SendPublishAsync( TestHelper.Monitor, It.Is<string>( x => x == subscribedClientId ),
                 It.Is<Publish>( p => p.Topic == publish.Topic &&
-                    p.Payload.ToList().SequenceEqual( publish.Payload ) ),
+                    p.Payload.ToArray().SequenceEqual( publish.Payload.ToArray() ) ),
                 It.Is<IMqttChannel<IPacket>>( c => c == clientChannel.Object ), It.Is<PendingMessageStatus>( x => x == PendingMessageStatus.PendingToSend ) ) );
             retainedRepository.Verify( r => r.Create( It.IsAny<RetainedMessage>() ), Times.Never );
             channelMock.Verify( c => c.SendAsync( It.Is<Mon<IPacket>>( p => p.Item is PublishReceived && (p.Item as PublishReceived).PacketId == packetId.Value ) ) );
@@ -326,10 +317,7 @@ namespace Tests.Flows
             sessionRepository.Setup( r => r.ReadAll() ).Returns( sessions.AsQueryable() );
 
             ushort? packetId = (ushort?)new Random().Next( 0, ushort.MaxValue );
-            Publish publish = new Publish( topic, MqttQualityOfService.ExactlyOnce, retain: false, duplicated: false, packetId: packetId )
-            {
-                Payload = Encoding.UTF8.GetBytes( "Publish Receiver Flow Test" )
-            };
+            Publish publish = new Publish( topic, Encoding.UTF8.GetBytes( "Publish Receiver Flow Test" ), MqttQualityOfService.ExactlyOnce, retain: false, duplicated: false, packetId: packetId );
 
             Subject<Mon<IPacket>> receiver = new Subject<Mon<IPacket>>();
             Subject<Mon<IPacket>> sender = new Subject<Mon<IPacket>>();
@@ -398,10 +386,7 @@ namespace Tests.Flows
 
             MqttQualityOfService qos = MqttQualityOfService.AtMostOnce;
             string payload = "Publish Flow Test";
-            Publish publish = new Publish( topic, qos, retain: true, duplicated: false )
-            {
-                Payload = Encoding.UTF8.GetBytes( payload )
-            };
+            Publish publish = new Publish( topic, Encoding.UTF8.GetBytes( payload ), qos, retain: true, duplicated: false );
 
             Subject<Mon<IPacket>> receiver = new Subject<Mon<IPacket>>();
             Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
@@ -413,7 +398,7 @@ namespace Tests.Flows
 
             await flow.ExecuteAsync( TestHelper.Monitor, clientId, publish, channel.Object );
 
-            retainedRepository.Verify( r => r.Create( It.Is<RetainedMessage>( m => m.Id == topic && m.QualityOfService == qos && m.Payload.ToList().SequenceEqual( publish.Payload ) ) ) );
+            retainedRepository.Verify( r => r.Create( It.Is<RetainedMessage>( m => m.Id == topic && m.QualityOfService == qos && m.Payload.ToArray().SequenceEqual( publish.Payload.ToArray() ) ) ) );
             channel.Verify( c => c.SendAsync( It.IsAny<Mon<IPacket>>() ), Times.Never );
         }
 
@@ -450,10 +435,7 @@ namespace Tests.Flows
 
             MqttQualityOfService qos = MqttQualityOfService.AtMostOnce;
             string payload = "Publish Flow Test";
-            Publish publish = new Publish( topic, qos, retain: true, duplicated: false )
-            {
-                Payload = Encoding.UTF8.GetBytes( payload )
-            };
+            Publish publish = new Publish( topic, Encoding.UTF8.GetBytes( payload ), qos, retain: true, duplicated: false );
 
             Subject<Mon<IPacket>> receiver = new Subject<Mon<IPacket>>();
             Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
@@ -466,7 +448,7 @@ namespace Tests.Flows
             await flow.ExecuteAsync( TestHelper.Monitor, clientId, publish, channel.Object );
 
             retainedRepository.Verify( r => r.Delete( It.Is<string>( m => m == existingRetainedMessage.Id ) ) );
-            retainedRepository.Verify( r => r.Create( It.Is<RetainedMessage>( m => m.Id == topic && m.QualityOfService == qos && m.Payload.ToList().SequenceEqual( publish.Payload ) ) ) );
+            retainedRepository.Verify( r => r.Create( It.Is<RetainedMessage>( m => m.Id == topic && m.QualityOfService == qos && m.Payload.ToArray().SequenceEqual( publish.Payload.ToArray() ) ) ) );
             channel.Verify( c => c.SendAsync( It.IsAny<Mon<IPacket>>() ), Times.Never );
         }
 
@@ -518,10 +500,7 @@ namespace Tests.Flows
                 .Returns( clientChannel.Object );
 
             ushort? packetId = (ushort?)new Random().Next( 0, ushort.MaxValue );
-            Publish publish = new Publish( topic, MqttQualityOfService.ExactlyOnce, retain: false, duplicated: false, packetId: packetId )
-            {
-                Payload = Encoding.UTF8.GetBytes( "Publish Flow Test" )
-            };
+            Publish publish = new Publish( topic,Encoding.UTF8.GetBytes( "Publish Flow Test" ), MqttQualityOfService.ExactlyOnce, retain: false, duplicated: false, packetId: packetId );
 
             Subject<Mon<IPacket>> receiver = new Subject<Mon<IPacket>>();
             Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
@@ -533,7 +512,7 @@ namespace Tests.Flows
 
             publishSenderFlow.Verify( s => s.SendPublishAsync( TestHelper.Monitor, It.Is<string>( x => x == subscribedClientId ),
                 It.Is<Publish>( p => p.Topic == publish.Topic &&
-                    p.Payload.ToList().SequenceEqual( publish.Payload ) ),
+                    p.Payload.ToArray().SequenceEqual( publish.Payload.ToArray() ) ),
                 It.Is<IMqttChannel<IPacket>>( c => c == clientChannel.Object ), It.Is<PendingMessageStatus>( x => x == PendingMessageStatus.PendingToSend ) ) );
             retainedRepository.Verify( r => r.Create( It.IsAny<RetainedMessage>() ), Times.Never );
             channel.Verify( c => c.SendAsync( It.Is<Mon<IPacket>>( p => p.Item is PublishAck && (p.Item as PublishAck).PacketId == packetId.Value ) ) );
@@ -568,10 +547,7 @@ namespace Tests.Flows
 
             sessionRepository.Setup( r => r.ReadAll() ).Returns( sessions.AsQueryable() );
 
-            Publish publish = new Publish( topic, MqttQualityOfService.AtLeastOnce, retain: false, duplicated: false )
-            {
-                Payload = Encoding.UTF8.GetBytes( "Publish Flow Test" )
-            };
+            Publish publish = new Publish( topic, Encoding.UTF8.GetBytes( "Publish Flow Test" ), MqttQualityOfService.AtLeastOnce, retain: false, duplicated: false );
 
             Subject<Mon<IPacket>> receiver = new Subject<Mon<IPacket>>();
             Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
@@ -647,10 +623,7 @@ namespace Tests.Flows
                 .Returns( clientChannel.Object );
 
             ushort? packetId = (ushort?)new Random().Next( 0, ushort.MaxValue );
-            Publish publish = new Publish( topic, MqttQualityOfService.ExactlyOnce, retain: false, duplicated: false, packetId: packetId )
-            {
-                Payload = Encoding.UTF8.GetBytes( "Publish Receiver Flow Test" )
-            };
+            Publish publish = new Publish( topic, Encoding.UTF8.GetBytes( "Publish Receiver Flow Test" ), MqttQualityOfService.ExactlyOnce, retain: false, duplicated: false, packetId: packetId );
 
             Subject<Mon<IPacket>> receiver = new Subject<Mon<IPacket>>();
             Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
@@ -661,7 +634,7 @@ namespace Tests.Flows
 
             publishSenderFlow.Verify( s => s.SendPublishAsync( TestHelper.Monitor, It.Is<string>( x => x == subscribedClientId ),
                 It.Is<Publish>( p => p.Topic == publish.Topic &&
-                    p.Payload.ToList().SequenceEqual( publish.Payload ) ),
+                    p.Payload.ToArray().SequenceEqual( publish.Payload.ToArray() ) ),
                 It.Is<IMqttChannel<IPacket>>( c => c == clientChannel.Object ), It.Is<PendingMessageStatus>( x => x == PendingMessageStatus.PendingToSend ) ), Times.Once );
             clientChannel.Verify( c => c.SendAsync( It.Is<Mon<IPacket>>( p => p.Item is Publish ) ), Times.Never );
         }
@@ -727,10 +700,7 @@ namespace Tests.Flows
                 .Returns( clientChannel.Object );
 
             ushort? packetId = (ushort?)new Random().Next( 0, ushort.MaxValue );
-            Publish publish = new Publish( topic, MqttQualityOfService.ExactlyOnce, retain: false, duplicated: false, packetId: packetId )
-            {
-                Payload = Encoding.UTF8.GetBytes( "Publish Receiver Flow Test" )
-            };
+            Publish publish = new Publish( topic, Encoding.UTF8.GetBytes( "Publish Receiver Flow Test" ), MqttQualityOfService.ExactlyOnce, retain: false, duplicated: false, packetId: packetId );
 
             Subject<Mon<IPacket>> receiver = new Subject<Mon<IPacket>>();
             Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
@@ -741,7 +711,7 @@ namespace Tests.Flows
 
             publishSenderFlow.Verify( s => s.SendPublishAsync( TestHelper.Monitor, It.Is<string>( x => x == subscribedClientId ),
                 It.Is<Publish>( p => p.Topic == publish.Topic &&
-                    p.Payload.ToList().SequenceEqual( publish.Payload ) ),
+                    p.Payload.ToArray().SequenceEqual( publish.Payload.ToArray() ) ),
                 It.Is<IMqttChannel<IPacket>>( c => c == clientChannel.Object ), It.Is<PendingMessageStatus>( x => x == PendingMessageStatus.PendingToSend ) ), Times.Once );
             clientChannel.Verify( c => c.SendAsync( It.Is<Mon<IPacket>>( p => p.Item is Publish ) ), Times.Never );
         }
@@ -811,10 +781,7 @@ namespace Tests.Flows
                 publishSenderFlow.Object, retainedRepository.Object, sessionRepository.Object, willRepository.Object,
                 packetIdProvider, undeliveredMessagesListener, configuration.Object );
 
-            Publish publish = new Publish( systemTopic, MqttQualityOfService.AtMostOnce, retain: false, duplicated: false )
-            {
-                Payload = Encoding.UTF8.GetBytes( "Publish Receiver Flow Test" )
-            };
+            Publish publish = new Publish( systemTopic,Encoding.UTF8.GetBytes( "Publish Receiver Flow Test" ), MqttQualityOfService.AtMostOnce, retain: false, duplicated: false );
 
             Subject<Mon<IPacket>> receiver = new Subject<Mon<IPacket>>();
             Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
@@ -862,10 +829,7 @@ namespace Tests.Flows
                 publishSenderFlow.Object, retainedRepository.Object, sessionRepository.Object, willRepository.Object,
                 packetIdProvider, undeliveredMessagesListener, configuration.Object );
 
-            Publish publish = new Publish( systemTopic, MqttQualityOfService.AtMostOnce, retain: false, duplicated: false )
-            {
-                Payload = Encoding.UTF8.GetBytes( "Publish Receiver Flow Test" )
-            };
+            Publish publish = new Publish( systemTopic,Encoding.UTF8.GetBytes( "Publish Receiver Flow Test" ), MqttQualityOfService.AtMostOnce, retain: false, duplicated: false );
 
             Subject<Mon<IPacket>> receiver = new Subject<Mon<IPacket>>();
             Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();

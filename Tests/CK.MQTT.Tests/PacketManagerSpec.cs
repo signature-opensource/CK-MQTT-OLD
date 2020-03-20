@@ -4,6 +4,7 @@ using CK.MQTT;
 using CK.MQTT.Sdk;
 using CK.MQTT.Sdk.Formatters;
 using CK.MQTT.Sdk.Packets;
+using CK.MQTT.Tests.Files.Packets;
 using FluentAssertions;
 using Moq;
 using NUnit.Framework;
@@ -18,67 +19,67 @@ namespace Tests
 {
     public class PacketManagerSpec
     {
-        [Theory]
-        [TestCase( "Files/Binaries/Connect_Full.packet", "Files/Packets/Connect_Full.json", typeof( Connect ), MqttPacketType.Connect )]
-        [TestCase( "Files/Binaries/Connect_Min.packet", "Files/Packets/Connect_Min.json", typeof( Connect ), MqttPacketType.Connect )]
-        [TestCase( "Files/Binaries/ConnectAck.packet", "Files/Packets/ConnectAck.json", typeof( ConnectAck ), MqttPacketType.ConnectAck )]
-        [TestCase( "Files/Binaries/Publish_Full.packet", "Files/Packets/Publish_Full.json", typeof( Publish ), MqttPacketType.Publish )]
-        [TestCase( "Files/Binaries/Publish_Min.packet", "Files/Packets/Publish_Min.json", typeof( Publish ), MqttPacketType.Publish )]
-        [TestCase( "Files/Binaries/PublishAck.packet", "Files/Packets/PublishAck.json", typeof( PublishAck ), MqttPacketType.PublishAck )]
-        [TestCase( "Files/Binaries/PublishComplete.packet", "Files/Packets/PublishComplete.json", typeof( PublishComplete ), MqttPacketType.PublishComplete )]
-        [TestCase( "Files/Binaries/PublishReceived.packet", "Files/Packets/PublishReceived.json", typeof( PublishReceived ), MqttPacketType.PublishReceived )]
-        [TestCase( "Files/Binaries/PublishRelease.packet", "Files/Packets/PublishRelease.json", typeof( PublishRelease ), MqttPacketType.PublishRelease )]
-        [TestCase( "Files/Binaries/Subscribe_MultiTopic.packet", "Files/Packets/Subscribe_MultiTopic.json", typeof( Subscribe ), MqttPacketType.Subscribe )]
-        [TestCase( "Files/Binaries/Subscribe_SingleTopic.packet", "Files/Packets/Subscribe_SingleTopic.json", typeof( Subscribe ), MqttPacketType.Subscribe )]
-        [TestCase( "Files/Binaries/SubscribeAck_MultiTopic.packet", "Files/Packets/SubscribeAck_MultiTopic.json", typeof( SubscribeAck ), MqttPacketType.SubscribeAck )]
-        [TestCase( "Files/Binaries/SubscribeAck_SingleTopic.packet", "Files/Packets/SubscribeAck_SingleTopic.json", typeof( SubscribeAck ), MqttPacketType.SubscribeAck )]
-        [TestCase( "Files/Binaries/Unsubscribe_MultiTopic.packet", "Files/Packets/Unsubscribe_MultiTopic.json", typeof( Unsubscribe ), MqttPacketType.Unsubscribe )]
-        [TestCase( "Files/Binaries/Unsubscribe_SingleTopic.packet", "Files/Packets/Unsubscribe_SingleTopic.json", typeof( Unsubscribe ), MqttPacketType.Unsubscribe )]
-        [TestCase( "Files/Binaries/UnsubscribeAck.packet", "Files/Packets/UnsubscribeAck.json", typeof( UnsubscribeAck ), MqttPacketType.UnsubscribeAck )]
-        public async Task when_managing_packet_bytes_then_succeeds( string packetPath, string jsonPath, Type packetType, MqttPacketType type )
+        static readonly object[] _cases0 = new object[] {
+            new object[] { "Files/Binaries/Connect_Full.packet", Packets.Connect_Full, typeof(Connect ), MqttPacketType.Connect },
+            new object[] { "Files/Binaries/Connect_Min.packet", Packets.Connect_Min, typeof(Connect ), MqttPacketType.Connect },
+            new object[] { "Files/Binaries/ConnectAck.packet", Packets.ConnectAck, typeof(ConnectAck ), MqttPacketType.ConnectAck },
+            new object[] { "Files/Binaries/Publish_Full.packet", Packets.Publish_Full, typeof(Publish ), MqttPacketType.Publish },
+            new object[] { "Files/Binaries/Publish_Min.packet", Packets.Publish_Min, typeof(Publish ), MqttPacketType.Publish },
+            new object[] { "Files/Binaries/PublishAck.packet", Packets.PublishAck, typeof(PublishAck ), MqttPacketType.PublishAck },
+            new object[] { "Files/Binaries/PublishComplete.packet", Packets.PublishComplete, typeof(PublishComplete ), MqttPacketType.PublishComplete },
+            new object[] { "Files/Binaries/PublishReceived.packet", Packets.PublishReceived, typeof(PublishReceived ), MqttPacketType.PublishReceived },
+            new object[] { "Files/Binaries/PublishRelease.packet", Packets.PublishRelease, typeof(PublishRelease ), MqttPacketType.PublishRelease },
+            new object[] { "Files/Binaries/Subscribe_MultiTopic.packet", Packets.Subscribe_MultiTopic, typeof(Subscribe ), MqttPacketType.Subscribe },
+            new object[] { "Files/Binaries/Subscribe_SingleTopic.packet", Packets.Subscribe_SingleTopic, typeof(Subscribe ), MqttPacketType.Subscribe },
+            new object[] { "Files/Binaries/SubscribeAck_MultiTopic.packet", Packets.SubscribeAck_MultiTopic, typeof(SubscribeAck ), MqttPacketType.SubscribeAck },
+            new object[] { "Files/Binaries/SubscribeAck_SingleTopic.packet", Packets.SubscribeAck_SingleTopic, typeof(SubscribeAck ), MqttPacketType.SubscribeAck },
+            new object[] { "Files/Binaries/Unsubscribe_MultiTopic.packet", Packets.Unsubscribe_MultiTopic, typeof(Unsubscribe ), MqttPacketType.Unsubscribe },
+            new object[] { "Files/Binaries/Unsubscribe_SingleTopic.packet", Packets.Unsubscribe_SingleTopic, typeof(Unsubscribe ), MqttPacketType.Unsubscribe },
+            new object[] { "Files/Binaries/UnsubscribeAck.packet", Packets.UnsubscribeAck, typeof(UnsubscribeAck ), MqttPacketType.UnsubscribeAck },
+        };
+
+        [Test, TestCaseSource( nameof( _cases0 ) )]
+        public async Task when_managing_packet_bytes_then_succeeds( string packetPath, IPacket packet, Type packetType, MqttPacketType type )
         {
             packetPath = Path.Combine( Environment.CurrentDirectory, packetPath );
 
             byte[] bytes = Packet.ReadAllBytes( packetPath );
 
-            jsonPath = Path.Combine( Environment.CurrentDirectory, jsonPath );
-
-            object packet = Packet.ReadPacket( jsonPath, packetType );
             Mock<IFormatter> formatter = new Mock<IFormatter>();
 
             formatter.Setup( f => f.PacketType ).Returns( type );
 
             formatter
                 .Setup( f => f.FormatAsync( It.Is<byte[]>( b => b.ToList().SequenceEqual( bytes ) ) ) )
-                .Returns( Task.FromResult( (IPacket)packet ) );
+                .Returns( Task.FromResult( packet ) );
 
             PacketManager packetManager = new PacketManager( formatter.Object );
             var result = await packetManager.GetPacketAsync( new Mon<byte[]>( TestHelper.Monitor, bytes ) );
             packet.Should().Be( result.Item );
         }
-
-        [TestCase( "Files/Binaries/Connect_Full.packet", "Files/Packets/Connect_Full.json", typeof( Connect ), MqttPacketType.Connect )]
-        [TestCase( "Files/Binaries/Connect_Min.packet", "Files/Packets/Connect_Min.json", typeof( Connect ), MqttPacketType.Connect )]
-        [TestCase( "Files/Binaries/ConnectAck.packet", "Files/Packets/ConnectAck.json", typeof( ConnectAck ), MqttPacketType.ConnectAck )]
-        [TestCase( "Files/Binaries/Publish_Full.packet", "Files/Packets/Publish_Full.json", typeof( Publish ), MqttPacketType.Publish )]
-        [TestCase( "Files/Binaries/Publish_Min.packet", "Files/Packets/Publish_Min.json", typeof( Publish ), MqttPacketType.Publish )]
-        [TestCase( "Files/Binaries/PublishAck.packet", "Files/Packets/PublishAck.json", typeof( PublishAck ), MqttPacketType.PublishAck )]
-        [TestCase( "Files/Binaries/PublishComplete.packet", "Files/Packets/PublishComplete.json", typeof( PublishComplete ), MqttPacketType.PublishComplete )]
-        [TestCase( "Files/Binaries/PublishReceived.packet", "Files/Packets/PublishReceived.json", typeof( PublishReceived ), MqttPacketType.PublishReceived )]
-        [TestCase( "Files/Binaries/PublishRelease.packet", "Files/Packets/PublishRelease.json", typeof( PublishRelease ), MqttPacketType.PublishRelease )]
-        [TestCase( "Files/Binaries/Subscribe_MultiTopic.packet", "Files/Packets/Subscribe_MultiTopic.json", typeof( Subscribe ), MqttPacketType.Subscribe )]
-        [TestCase( "Files/Binaries/Subscribe_SingleTopic.packet", "Files/Packets/Subscribe_SingleTopic.json", typeof( Subscribe ), MqttPacketType.Subscribe )]
-        [TestCase( "Files/Binaries/SubscribeAck_MultiTopic.packet", "Files/Packets/SubscribeAck_MultiTopic.json", typeof( SubscribeAck ), MqttPacketType.SubscribeAck )]
-        [TestCase( "Files/Binaries/SubscribeAck_SingleTopic.packet", "Files/Packets/SubscribeAck_SingleTopic.json", typeof( SubscribeAck ), MqttPacketType.SubscribeAck )]
-        [TestCase( "Files/Binaries/Unsubscribe_MultiTopic.packet", "Files/Packets/Unsubscribe_MultiTopic.json", typeof( Unsubscribe ), MqttPacketType.Unsubscribe )]
-        [TestCase( "Files/Binaries/Unsubscribe_SingleTopic.packet", "Files/Packets/Unsubscribe_SingleTopic.json", typeof( Unsubscribe ), MqttPacketType.Unsubscribe )]
-        [TestCase( "Files/Binaries/UnsubscribeAck.packet", "Files/Packets/UnsubscribeAck.json", typeof( UnsubscribeAck ), MqttPacketType.UnsubscribeAck )]
-        public async Task when_managing_packet_from_source_then_succeeds( string packetPath, string jsonPath, Type packetType, MqttPacketType type )
+        static readonly object[] _cases1 = new object[]
         {
-            jsonPath = Path.Combine( Environment.CurrentDirectory, jsonPath );
+            new object[] { "Files/Binaries/Connect_Full.packet", Packets.Connect_Full, typeof( Connect ), MqttPacketType.Connect },
+            new object[] { "Files/Binaries/Connect_Min.packet", Packets.Connect_Min, typeof( Connect ), MqttPacketType.Connect },
+            new object[] { "Files/Binaries/ConnectAck.packet", Packets.ConnectAck, typeof( ConnectAck ), MqttPacketType.ConnectAck },
+            new object[] { "Files/Binaries/Publish_Full.packet", Packets.Publish_Full, typeof( Publish ), MqttPacketType.Publish },
+            new object[] { "Files/Binaries/Publish_Min.packet", Packets.Publish_Min, typeof( Publish ), MqttPacketType.Publish },
+            new object[] { "Files/Binaries/PublishAck.packet", Packets.PublishAck, typeof( PublishAck ), MqttPacketType.PublishAck },
+            new object[] { "Files/Binaries/PublishComplete.packet", Packets.PublishComplete, typeof( PublishComplete ), MqttPacketType.PublishComplete },
+            new object[] { "Files/Binaries/PublishReceived.packet", Packets.PublishReceived, typeof( PublishReceived ), MqttPacketType.PublishReceived },
+            new object[] { "Files/Binaries/PublishRelease.packet", Packets.PublishRelease, typeof( PublishRelease ), MqttPacketType.PublishRelease },
+            new object[] { "Files/Binaries/Subscribe_MultiTopic.packet", Packets.Subscribe_MultiTopic, typeof( Subscribe ), MqttPacketType.Subscribe },
+            new object[] { "Files/Binaries/Subscribe_SingleTopic.packet", Packets.Subscribe_SingleTopic, typeof( Subscribe ), MqttPacketType.Subscribe },
+            new object[] { "Files/Binaries/SubscribeAck_MultiTopic.packet", Packets.SubscribeAck_MultiTopic, typeof( SubscribeAck ), MqttPacketType.SubscribeAck },
+            new object[] { "Files/Binaries/SubscribeAck_SingleTopic.packet", Packets.SubscribeAck_SingleTopic, typeof( SubscribeAck ), MqttPacketType.SubscribeAck },
+            new object[] { "Files/Binaries/Unsubscribe_MultiTopic.packet", Packets.Unsubscribe_MultiTopic, typeof( Unsubscribe ), MqttPacketType.Unsubscribe },
+            new object[] { "Files/Binaries/Unsubscribe_SingleTopic.packet", Packets.Unsubscribe_SingleTopic, typeof( Unsubscribe ), MqttPacketType.Unsubscribe },
+            new object[] { "Files/Binaries/UnsubscribeAck.packet", Packets.UnsubscribeAck, typeof( UnsubscribeAck ), MqttPacketType.UnsubscribeAck },
+        };
 
-            IPacket packet = Packet.ReadPacket( jsonPath, packetType ) as IPacket;
-
+        [Test, TestCaseSource( nameof( _cases1 ) )]
+        public async Task when_managing_packet_from_source_then_succeeds( string packetPath, IPacket packet, Type packetType, MqttPacketType type )
+        {
             packetPath = Path.Combine( Environment.CurrentDirectory, packetPath );
 
             byte[] bytes = Packet.ReadAllBytes( packetPath );
