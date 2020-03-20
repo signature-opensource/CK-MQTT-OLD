@@ -19,7 +19,7 @@ namespace CK.MQTT
     /// <summary>
     /// Implements a host for <see cref="SequentialEventHandler{T}"/> delegates.
     /// </summary>
-    public class SequentialEventHandlerSender<T>
+    public struct SequentialEventHandlerSender<T>
     {
         object _handler;
 

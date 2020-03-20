@@ -19,7 +19,7 @@ namespace CK.MQTT
     /// <summary>
     /// Implements a host for <see cref="ParallelEventHandlerAync"/> delegates.
     /// </summary>
-    public class ParallelEventHandlerAsyncSender<T>
+    public struct ParallelEventHandlerAsyncSender<T>
     {
         object _handler;
 
