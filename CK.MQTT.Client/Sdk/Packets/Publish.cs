@@ -1,5 +1,7 @@
 using System;
 using System.Linq;
+using System.Runtime.InteropServices;
+using System.Text;
 
 namespace CK.MQTT.Sdk.Packets
 {
@@ -26,7 +28,7 @@ namespace CK.MQTT.Sdk.Packets
 
         public ushort? PacketId { get; }
 
-        public byte[] Payload { get; set; }
+        public ReadOnlyMemory<byte> Payload { get; set; }
 
         public bool Equals( Publish other )
         {
@@ -38,11 +40,7 @@ namespace CK.MQTT.Sdk.Packets
                 Retain == other.Retain &&
                 Topic == other.Topic &&
                 PacketId == other.PacketId;
-
-            if( Payload != null )
-            {
-                equals &= Payload.ToList().SequenceEqual( other.Payload );
-            }
+            equals &= MemoryExtensions.SequenceEqual<byte>( Payload.Span, other.Payload.Span );
 
             return equals;
         }
@@ -79,10 +77,7 @@ namespace CK.MQTT.Sdk.Packets
                 Retain.GetHashCode() +
                 Topic.GetHashCode();
 
-            if( Payload != null )
-            {
-                hashCode += BitConverter.ToString( Payload ).GetHashCode();
-            }
+            hashCode += Encoding.ASCII.GetString( Payload.Span ).GetHashCode();
 
             if( PacketId.HasValue )
             {

@@ -10,6 +10,11 @@ namespace CK.Core
 
         public static Mon<TOut> From<TOut, TIn>( this in Mon<TIn> other ) where TIn : TOut
             => new Mon<TOut>( other.Monitor, other.Item );
+
+        public static IObservable<Mon<TOut>> OfMonitoredType<TOut, TIn>( this IObservable<Mon<TIn>> @this )
+            where TOut : TIn
+            => @this.Where( p => p.Item is TOut )
+                .Select( s => s.Cast<TOut, TIn>() );
     }
 
     public readonly struct Mon<T>
