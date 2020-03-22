@@ -17,7 +17,7 @@ namespace CK.MQTT
         /// Code that represents the status and reason of the failure
         /// See <see cref="MqttConnectionStatus" /> for more information about the possible connection status values 
         /// </param>
-        public MqttConnectionException( MqttConnectionStatus status )
+        public MqttConnectionException( MqttConnectionStatus status ) : base( status.ToString() )
         {
             ReturnCode = status;
         }

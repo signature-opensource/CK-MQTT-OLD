@@ -1,8 +1,11 @@
 using CK.Core;
+using CK.Monitoring;
+using CK.Monitoring.Handlers;
 using CK.MQTT;
 using CK.MQTT.Sdk.Bindings;
 using NUnit.Framework;
 using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
 
@@ -35,6 +38,13 @@ namespace IntegrationTests.Context
         public void Setup()
         {
             ActivityMonitor.AutoConfiguration += m => m.AutoTags = m.AutoTags.Union( ActivityMonitor.Tags.StackTrace );
+            var conf = new GrandOutputConfiguration();
+            conf.AddHandler( new TextFileConfiguration
+            {
+                Path = FileUtil.CreateUniqueTimedFolder( LogFile.RootLogPath + "Text/", null, DateTime.UtcNow ),
+                AutoFlushRate = 0
+            } );
+            //GrandOutput.Default.ApplyConfiguration()
             TestHelper.Monitor.Info( "Starting tests !" );
             var m = new ActivityMonitor( "Server Monitor." );
             Server = MqttServer.Create( m, Configuration, MqttServerBinding, _authenticationProvider );

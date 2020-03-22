@@ -102,7 +102,7 @@ namespace IntegrationTests
                 try
                 {
                     //Force an exception to be thrown by publishing null message
-                    await fooClient.PublishAsync( mFoo, message: null, qos: MqttQualityOfService.AtMostOnce );
+                    await fooClient.PublishAsync( mFoo, null, new ReadOnlyMemory<byte>(), qos: MqttQualityOfService.AtMostOnce );
                 }
                 catch
                 {
@@ -490,21 +490,15 @@ namespace IntegrationTests
                 await client3.SubscribeAsync( m3, topic, MqttQualityOfService.AtLeastOnce );
 
                 ManualResetEventSlim willReceivedSignal = new ManualResetEventSlim( initialState: false );
-
-                client2.MessageStream.Subscribe( m =>
-                 {
-                     if( m.Item.Topic == topic )
-                     {
-                         willReceivedSignal.Set();
-                     }
-                 } );
-                client3.MessageStream.Subscribe( m =>
-                 {
-                     if( m.Item.Topic == topic )
-                     {
-                         willReceivedSignal.Set();
-                     }
-                 } );
+                void WillReceiver( IActivityMonitor m, IMqttClient sender, MqttApplicationMessage message )
+                {
+                    if( message.Topic == topic )
+                    {
+                        willReceivedSignal.Set();
+                    }
+                }
+                client2.MessageReceived += WillReceiver;
+                client3.MessageReceived += WillReceiver;
 
                 await client1.DisconnectAsync( m1 );
 
@@ -540,23 +534,16 @@ namespace IntegrationTests
 
                 ManualResetEventSlim willReceivedSignal = new ManualResetEventSlim( initialState: false );
                 MqttApplicationMessage willApplicationMessage = default;
-
-                client2.MessageStream.Subscribe( m =>
-                 {
-                     if( m.Item.Topic == topic )
-                     {
-                         willApplicationMessage = m.Item;
-                         willReceivedSignal.Set();
-                     }
-                 } );
-                client3.MessageStream.Subscribe( m =>
-                 {
-                     if( m.Item.Topic == topic )
-                     {
-                         willApplicationMessage = m.Item;
-                         willReceivedSignal.Set();
-                     }
-                 } );
+                void WillSignaler( IActivityMonitor m, IMqttClient sender, MqttApplicationMessage message )
+                {
+                    if( message.Topic == topic )
+                    {
+                        willApplicationMessage = message;
+                        willReceivedSignal.Set();
+                    }
+                }
+                client2.MessageReceived += WillSignaler;
+                client3.MessageReceived += WillSignaler;
 
                 //Forces socket disconnection without using protocol Disconnect (Disconnect or Dispose Client method)
                 (client1 as MqttClientImpl).Channel.Dispose();
@@ -566,7 +553,7 @@ namespace IntegrationTests
                 Assert.True( willReceived );
                 Assert.NotNull( willMessage );
                 willApplicationMessage.Topic.Should().Be( topic );
-                FooWillMessage.GetMessage( willApplicationMessage.Payload ).Message.Should().Be( willMessage.Message );
+                FooWillMessage.GetMessage( willApplicationMessage.Payload.ToArray() ).Message.Should().Be( willMessage.Message );
 
             }
 
@@ -582,7 +569,7 @@ namespace IntegrationTests
 
                 await client.ConnectAsync(m, new MqttClientCredentials( MqttTestHelper.GetClientId() ) );
 
-                client.MessageStream.Subscribe( _ => { }, onCompleted: () => streamCompletedSignal.Set() );
+                client.Disconnected += (m, sender, disconnect) => streamCompletedSignal.Set();
 
                 await client.DisconnectAsync( m );
 

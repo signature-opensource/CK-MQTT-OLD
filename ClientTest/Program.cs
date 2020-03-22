@@ -2,6 +2,8 @@ using CK.Core;
 using CK.MQTT;
 using CK.MQTT.Ssl;
 using System;
+using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -16,15 +18,13 @@ namespace ClientTest
             Console.WriteLine( "Press any key to connect" );
             Console.ReadKey();
             await client.ConnectAsync( m, new MqttClientCredentials( "testclient" ) );
-            client.MessageStream.Subscribe( ( message ) =>
+            client.MessageReceived += ( m, sender, message ) =>
             {
-                if( message.Item.Payload?.Length > 0 ) Console.WriteLine( Encoding.UTF8.GetString( message.Item.Payload ) );
-            } );
+                if( message.Payload.Length > 0 ) Console.WriteLine( Encoding.UTF8.GetString( message.Payload ) );
+            };
             while( true )
             {
-                await client.PublishAsync( m,
-                    new MqttApplicationMessage( "test/hist_norm_cumul", Encoding.UTF8.GetBytes( Console.ReadLine() ) )
-                    , MqttQualityOfService.ExactlyOnce );
+                await client.PublishAsync( m, "test/hist_norm_cumul", Encoding.UTF8.GetBytes( Console.ReadLine() ), MqttQualityOfService.ExactlyOnce );
             }
         }
     }

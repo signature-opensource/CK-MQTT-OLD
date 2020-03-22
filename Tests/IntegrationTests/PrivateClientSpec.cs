@@ -37,7 +37,7 @@ namespace IntegrationTests
 
             Assert.True( client.CheckConnection( TestHelper.Monitor ) );
 
-            await client.UnsubscribeAsync( TestHelper.Monitor, topicFilter );
+            await client.UnsubscribeAsync( TestHelper.Monitor, new string[] { topicFilter } );
 
             client.Dispose();
         }
@@ -52,7 +52,7 @@ namespace IntegrationTests
 
             Assert.True( client.CheckConnection( TestHelper.Monitor ) );
 
-            await client.UnsubscribeAsync( TestHelper.Monitor, topicFilter );
+            await client.UnsubscribeAsync( TestHelper.Monitor, new string[] { topicFilter } );
 
             client.Dispose();
         }
@@ -67,11 +67,11 @@ namespace IntegrationTests
                 Name = string.Concat( "Message ", Guid.NewGuid().ToString().Substring( 0, 4 ) ),
                 Value = new Random().Next()
             };
-            MqttApplicationMessage message = new MqttApplicationMessage( topic, Serializer.Serialize( testMessage ) );
+            var payload = Serializer.Serialize( testMessage );
 
-            await client.PublishAsync( TestHelper.Monitor, message, MqttQualityOfService.AtMostOnce );
-            await client.PublishAsync( TestHelper.Monitor, message, MqttQualityOfService.AtLeastOnce );
-            await client.PublishAsync( TestHelper.Monitor, message, MqttQualityOfService.ExactlyOnce );
+            await client.PublishAsync( TestHelper.Monitor, topic, payload, MqttQualityOfService.AtMostOnce );
+            await client.PublishAsync( TestHelper.Monitor, topic, payload, MqttQualityOfService.AtLeastOnce );
+            await client.PublishAsync( TestHelper.Monitor, topic, payload, MqttQualityOfService.ExactlyOnce );
 
             Assert.True( client.CheckConnection( TestHelper.Monitor ) );
 
@@ -88,11 +88,11 @@ namespace IntegrationTests
                 Name = string.Concat( "Message ", Guid.NewGuid().ToString().Substring( 0, 4 ) ),
                 Value = new Random().Next()
             };
-            MqttApplicationMessage message = new MqttApplicationMessage( topic, Serializer.Serialize( testMessage ) );
+            var payload = Serializer.Serialize( testMessage );
 
-            await client.PublishAsync( TestHelper.Monitor, message, MqttQualityOfService.AtMostOnce );
-            await client.PublishAsync( TestHelper.Monitor, message, MqttQualityOfService.AtLeastOnce );
-            await client.PublishAsync( TestHelper.Monitor, message, MqttQualityOfService.ExactlyOnce );
+            await client.PublishAsync( TestHelper.Monitor, topic, payload, MqttQualityOfService.AtMostOnce );
+            await client.PublishAsync( TestHelper.Monitor, topic, payload, MqttQualityOfService.AtLeastOnce );
+            await client.PublishAsync( TestHelper.Monitor, topic, payload, MqttQualityOfService.ExactlyOnce );
 
             Assert.True( client.CheckConnection( TestHelper.Monitor ) );
 
@@ -125,18 +125,18 @@ namespace IntegrationTests
 
             int messagesReceived = 0;
 
-            fooClient.MessageStream.Subscribe( message =>
+            fooClient.MessageReceived += ( m, sender, message ) =>
             {
-                if( message.Item.Topic == fooTopic )
+                if( message.Topic == fooTopic )
                 {
                     messagesReceived++;
                 }
-            } );
+            };
 
-            await barClient.PublishAsync( TestHelper.Monitor, new MqttApplicationMessage( fooTopic, new byte[255] ), MqttQualityOfService.AtMostOnce );
-            await barClient.PublishAsync( TestHelper.Monitor, new MqttApplicationMessage( fooTopic, new byte[10] ), MqttQualityOfService.AtLeastOnce );
-            await barClient.PublishAsync( TestHelper.Monitor, new MqttApplicationMessage( "other/topic", new byte[500] ), MqttQualityOfService.ExactlyOnce );
-            await barClient.PublishAsync( TestHelper.Monitor, new MqttApplicationMessage( fooTopic, new byte[50] ), MqttQualityOfService.ExactlyOnce );
+            await barClient.PublishAsync( TestHelper.Monitor, fooTopic, new byte[255], MqttQualityOfService.AtMostOnce );
+            await barClient.PublishAsync( TestHelper.Monitor, fooTopic, new byte[10], MqttQualityOfService.AtLeastOnce );
+            await barClient.PublishAsync( TestHelper.Monitor, "other/topic", new byte[500], MqttQualityOfService.ExactlyOnce );
+            await barClient.PublishAsync( TestHelper.Monitor, fooTopic, new byte[50], MqttQualityOfService.ExactlyOnce );
 
             await Task.Delay( TimeSpan.FromMilliseconds( 1000 ) );
 
@@ -168,30 +168,30 @@ namespace IntegrationTests
                     int fooMessagesReceived = 0;
                     int barMessagesReceived = 0;
 
-                    inProcessClient.MessageStream.Subscribe( message =>
+                    inProcessClient.MessageReceived += ( m, sender, message ) =>
                     {
-                        if( message.Item.Topic == fooTopic )
+                        if( message.Topic == fooTopic )
                         {
                             fooMessagesReceived++;
                         }
-                    } );
-                    remoteClient.MessageStream.Subscribe( message =>
+                    };
+                    remoteClient.MessageReceived += ( m, sender, message ) =>
                     {
-                        if( message.Item.Topic == barTopic )
+                        if( message.Topic == barTopic )
                         {
                             barMessagesReceived++;
                         }
-                    } );
+                    };
 
-                    await remoteClient.PublishAsync( mRemote, new MqttApplicationMessage( fooTopic, new byte[255] ), MqttQualityOfService.AtMostOnce );
-                    await remoteClient.PublishAsync( mRemote, new MqttApplicationMessage( fooTopic, new byte[10] ), MqttQualityOfService.AtLeastOnce );
-                    await remoteClient.PublishAsync( mRemote, new MqttApplicationMessage( "other/topic", new byte[500] ), MqttQualityOfService.ExactlyOnce );
-                    await remoteClient.PublishAsync( mRemote, new MqttApplicationMessage( fooTopic, new byte[50] ), MqttQualityOfService.ExactlyOnce );
+                    await remoteClient.PublishAsync( mRemote, fooTopic, new byte[255], MqttQualityOfService.AtMostOnce );
+                    await remoteClient.PublishAsync( mRemote, fooTopic, new byte[10], MqttQualityOfService.AtLeastOnce );
+                    await remoteClient.PublishAsync( mRemote, "other/topic", new byte[500], MqttQualityOfService.ExactlyOnce );
+                    await remoteClient.PublishAsync( mRemote, fooTopic, new byte[50], MqttQualityOfService.ExactlyOnce );
 
-                    await inProcessClient.PublishAsync( mInProcess, new MqttApplicationMessage( barTopic, new byte[255] ), MqttQualityOfService.AtMostOnce );
-                    await inProcessClient.PublishAsync( mInProcess, new MqttApplicationMessage( barTopic, new byte[10] ), MqttQualityOfService.AtLeastOnce );
-                    await inProcessClient.PublishAsync( mInProcess, new MqttApplicationMessage( "other/topic", new byte[500] ), MqttQualityOfService.ExactlyOnce );
-                    await inProcessClient.PublishAsync( mInProcess, new MqttApplicationMessage( barTopic, new byte[50] ), MqttQualityOfService.ExactlyOnce );
+                    await inProcessClient.PublishAsync( mInProcess, barTopic, new byte[255], MqttQualityOfService.AtMostOnce );
+                    await inProcessClient.PublishAsync( mInProcess, barTopic, new byte[10], MqttQualityOfService.AtLeastOnce );
+                    await inProcessClient.PublishAsync( mInProcess, "other/topic", new byte[500], MqttQualityOfService.ExactlyOnce );
+                    await inProcessClient.PublishAsync( mInProcess, barTopic, new byte[50], MqttQualityOfService.ExactlyOnce );
 
                     await Task.Delay( TimeSpan.FromMilliseconds( 1000 ) );
 

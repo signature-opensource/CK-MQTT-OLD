@@ -15,15 +15,13 @@ namespace ServerTest
             server.Start();
             var client = await server.CreateClientAsync( m );
             await client.SubscribeAsync( m, "test", MqttQualityOfService.ExactlyOnce );
-            client.MessageStream.Subscribe( ( message ) =>
+            client.MessageReceived += ( m, sender, message ) =>
             {
-                if( message.Item.Payload?.Length > 0 ) Console.WriteLine( Encoding.UTF8.GetString( message.Item.Payload ) );
-            } );
+                if( message.Payload.Length > 0 ) Console.WriteLine( Encoding.UTF8.GetString( message.Payload ) );
+            };
             while( true )
             {
-                await client.PublishAsync( m,
-                    new MqttApplicationMessage( "test", Encoding.UTF8.GetBytes( Console.ReadLine() ) )
-                    , MqttQualityOfService.ExactlyOnce );
+                await client.PublishAsync( m, "test", Encoding.UTF8.GetBytes( Console.ReadLine() ) , MqttQualityOfService.ExactlyOnce );
             }
         }
     }

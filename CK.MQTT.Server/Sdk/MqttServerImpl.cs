@@ -152,7 +152,7 @@ namespace CK.MQTT.Sdk
             m.Trace( ServerProperties.Server_NewSocketAccepted );
 
             IMqttChannel<IPacket> packetChannel = _channelFactory.Create(m, binaryChannel );
-            ServerPacketListener packetListener = new ServerPacketListener( m, packetChannel, _connectionProvider, _flowProvider, _configuration );
+            ServerPacketListener packetListener = new ServerPacketListener( packetChannel, _connectionProvider, _flowProvider, _configuration );
 
             packetListener.Listen();
             packetListener
@@ -167,7 +167,7 @@ namespace CK.MQTT.Sdk
                 }, () =>
                 {
                     var monitor = new ActivityMonitor();//TODO: Remove monitor in oncomplete.
-                    monitor.Warn( ServerProperties.Server_PacketsObservableCompleted );
+                    monitor.Warn( "Server - Packet observable sequence has been completed, hence closing the channel");
                     packetChannel.Dispose();
                     packetListener.Dispose();
                 }

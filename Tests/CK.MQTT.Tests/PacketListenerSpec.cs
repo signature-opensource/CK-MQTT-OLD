@@ -36,7 +36,7 @@ namespace Tests
             packetChannel.Setup( c => c.ReceiverStream ).Returns( receiver );
             packetChannel.Setup( c => c.SenderStream ).Returns( new Subject<Mon<IPacket>>() );
 
-            ServerPacketListener listener = new ServerPacketListener( TestHelper.Monitor, packetChannel.Object, connectionProvider.Object, flowProvider.Object, configuration );
+            ServerPacketListener listener = new ServerPacketListener( packetChannel.Object, connectionProvider.Object, flowProvider.Object, configuration );
 
             listener.Listen();
 
@@ -90,7 +90,7 @@ namespace Tests
             packetChannel.Setup( c => c.ReceiverStream ).Returns( receiver );
             packetChannel.Setup( c => c.SenderStream ).Returns( new Subject<Mon<IPacket>>() );
 
-            ServerPacketListener listener = new ServerPacketListener( TestHelper.Monitor, packetChannel.Object, connectionProvider.Object, flowProvider, configuration );
+            ServerPacketListener listener = new ServerPacketListener( packetChannel.Object, connectionProvider.Object, flowProvider, configuration );
 
             listener.Listen();
 
@@ -116,7 +116,7 @@ namespace Tests
             packetChannel.Setup( c => c.ReceiverStream ).Returns( receiver );
             packetChannel.Setup( c => c.SenderStream ).Returns( new Subject<Mon<IPacket>>() );
 
-            ServerPacketListener listener = new ServerPacketListener( TestHelper.Monitor, packetChannel.Object, connectionProvider.Object, flowProvider, configuration );
+            ServerPacketListener listener = new ServerPacketListener( packetChannel.Object, connectionProvider.Object, flowProvider, configuration );
 
             listener.Listen();
 
@@ -146,7 +146,7 @@ namespace Tests
             packetChannel.Setup( c => c.ReceiverStream ).Returns( receiver );
             packetChannel.Setup( c => c.SenderStream ).Returns( new Subject<Mon<IPacket>>() );
 
-            ServerPacketListener listener = new ServerPacketListener( TestHelper.Monitor, packetChannel.Object, connectionProvider.Object, flowProvider, configuration );
+            ServerPacketListener listener = new ServerPacketListener( packetChannel.Object, connectionProvider.Object, flowProvider, configuration );
 
             listener.Listen();
 
@@ -178,7 +178,7 @@ namespace Tests
             packetChannel.Setup( c => c.ReceiverStream ).Returns( receiver );
             packetChannel.Setup( c => c.SenderStream ).Returns( new Subject<Mon<IPacket>>() );
 
-            ServerPacketListener listener = new ServerPacketListener( TestHelper.Monitor, packetChannel.Object, connectionProvider.Object, flowProvider, configuration );
+            ServerPacketListener listener = new ServerPacketListener( packetChannel.Object, connectionProvider.Object, flowProvider, configuration );
 
             listener.Listen();
 
@@ -212,7 +212,7 @@ namespace Tests
             packetChannel.Setup( c => c.ReceiverStream ).Returns( receiver );
             packetChannel.Setup( c => c.SenderStream ).Returns( new Subject<Mon<IPacket>>() );
 
-            ServerPacketListener listener = new ServerPacketListener( TestHelper.Monitor, packetChannel.Object, connectionProvider.Object, flowProvider.Object, configuration );
+            ServerPacketListener listener = new ServerPacketListener( packetChannel.Object, connectionProvider.Object, flowProvider.Object, configuration );
 
             listener.Listen();
 
@@ -259,7 +259,7 @@ namespace Tests
 
             IMqttChannel<IPacket> packetChannel = packetChannelMock.Object;
 
-            ServerPacketListener listener = new ServerPacketListener( TestHelper.Monitor, packetChannel, connectionProvider.Object, flowProvider.Object, configuration );
+            ServerPacketListener listener = new ServerPacketListener( packetChannel, connectionProvider.Object, flowProvider.Object, configuration );
 
             listener.Listen();
 
@@ -305,7 +305,7 @@ namespace Tests
             packetChannel.Setup( c => c.ReceiverStream ).Returns( receiver );
             packetChannel.Setup( c => c.SenderStream ).Returns( new Subject<Mon<IPacket>>() );
 
-            ServerPacketListener listener = new ServerPacketListener( TestHelper.Monitor, packetChannel.Object, connectionProvider.Object, flowProvider.Object, configuration );
+            ServerPacketListener listener = new ServerPacketListener( packetChannel.Object, connectionProvider.Object, flowProvider.Object, configuration );
 
             listener.Listen();
 
@@ -344,7 +344,7 @@ namespace Tests
             packetChannel.Setup( c => c.ReceiverStream ).Returns( receiver );
             packetChannel.Setup( c => c.SenderStream ).Returns( new Subject<Mon<IPacket>>() );
 
-            ServerPacketListener listener = new ServerPacketListener( TestHelper.Monitor, packetChannel.Object, connectionProvider.Object, flowProvider.Object, configuration );
+            ServerPacketListener listener = new ServerPacketListener( packetChannel.Object, connectionProvider.Object, flowProvider.Object, configuration );
 
             listener.Listen();
 

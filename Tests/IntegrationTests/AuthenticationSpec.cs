@@ -20,18 +20,21 @@ namespace IntegrationTests
         [Test]
         public async Task when_client_connects_with_invalid_credentials_and_authentication_is_supported_then_connection_is_closed()
         {
-            string username = "foo";
-            string password = "foo123456";
-            (IMqttClient client, IActivityMonitor m) = await GetClientAsync();
+            using( TestHelper.Monitor.OpenInfo( "when_client_connects_with_invalid_credentials_and_authentication_is_supported_then_connection_is_closed" ) )
+            {
 
-            AggregateException aggregateEx = Assert.Throws<AggregateException>( () => client.ConnectAsync( m, new MqttClientCredentials( MqttTestHelper.GetClientId(), username, password ) ).Wait() );
+                string username = "foo";
+                string password = "foo123456";
+                (IMqttClient client, IActivityMonitor m) = await GetClientAsync();
+                AggregateException aggregateEx = Assert.Throws<AggregateException>( () => client.ConnectAsync( m, new MqttClientCredentials( MqttTestHelper.GetClientId(), username, password ) ).Wait() );
 
-            Assert.NotNull( aggregateEx.InnerException );
-            Assert.True( aggregateEx.InnerException is MqttClientException );
-            Assert.NotNull( aggregateEx.InnerException.InnerException );
-            Assert.True( aggregateEx.InnerException.InnerException is MqttConnectionException );
+                Assert.NotNull( aggregateEx.InnerException );
+                Assert.True( aggregateEx.InnerException is MqttClientException );
+                Assert.NotNull( aggregateEx.InnerException.InnerException );
+                Assert.True( aggregateEx.InnerException.InnerException is MqttConnectionException );
 
-            ((MqttConnectionException)aggregateEx.InnerException.InnerException).ReturnCode.Should().Be( MqttConnectionStatus.BadUserNameOrPassword );
+                ((MqttConnectionException)aggregateEx.InnerException.InnerException).ReturnCode.Should().Be( MqttConnectionStatus.BadUserNameOrPassword );
+            }
         }
 
         [Test]

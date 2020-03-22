@@ -21,7 +21,6 @@ namespace CK.MQTT
         public static string Server_InitializeError => "An error occurred while initializing the server";
         public static string Server_NewSocketAccepted => "Server - A new TCP channel has been accepted";
         public static string Server_NotStartedError => "The Server has to be started first, in order to execute any operation";
-        public static string Server_PacketsObservableCompleted => "Server - Packet observable sequence has been completed, hence closing the channel";
         public static string Server_PacketsObservableError => "Server - Packet observable sequence had an error, hence closing the channel";
         public static string ServerPacketListener_ConnectionError( string clientId ) => $"Server - An error occurred while executing the connect flow. Client: {clientId}";
         public static string ServerPacketListener_ConnectPacketReceived( string clientId ) => $"Server - A connect packet has been received from client {clientId}";

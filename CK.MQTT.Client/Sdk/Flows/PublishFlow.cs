@@ -73,13 +73,13 @@ namespace CK.MQTT.Sdk.Flows
         {
             using( IDisposable intervalSubscription = Observable
                 .Interval( TimeSpan.FromSeconds( configuration.WaitTimeoutSecs ), NewThreadScheduler.Default )
-                .Subscribe( async _ =>
+                .Subscribe( _ =>
                 {
                     if( channel.IsConnected )
                     {
                         m.Warn( ClientProperties.PublishFlow_RetryingQoSFlow( sentMessage.Type, clientId ) );
 
-                        await channel.SendAsync( new Mon<IPacket>( m, sentMessage ) );
+                        channel.SendAsync( new Mon<IPacket>( m, sentMessage ) ).Wait();
                     }
                 } ) )
             {

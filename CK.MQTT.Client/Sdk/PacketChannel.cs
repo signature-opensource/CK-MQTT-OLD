@@ -31,11 +31,11 @@ namespace CK.MQTT.Sdk
             _sender = new ReplaySubject<Mon<IPacket>>( window: TimeSpan.FromSeconds( configuration.WaitTimeoutSecs ) );
             _subscription = innerChannel
                 .ReceiverStream
-                .Subscribe( async bytes =>
+                .Subscribe( bytes =>
                 {
                     try
                     {
-                        Mon<IPacket> packet = await _manager.GetPacketAsync( bytes );
+                        Mon<IPacket> packet = _manager.GetPacketAsync( bytes ).GetAwaiter().GetResult();
 
                         _receiver.OnNext( packet );
                     }

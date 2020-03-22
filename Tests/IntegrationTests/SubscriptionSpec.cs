@@ -49,7 +49,7 @@ namespace IntegrationTests
 
                 Assert.True( client.CheckConnection( m ) );
 
-                await client.UnsubscribeAsync( m, topicFilter );
+                await client.UnsubscribeAsync( m, new string[] { topicFilter } );
             }
         }
 

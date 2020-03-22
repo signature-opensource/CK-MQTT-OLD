@@ -119,7 +119,7 @@ namespace CK.MQTT.Sdk
                     throw new MqttClientException( ClientProperties.Client_AlreadyConnected( ClientId ) );
                 }
 
-                if( string.IsNullOrEmpty( credentials.ClientId ) && !cleanSession )
+                if( !cleanSession && string.IsNullOrEmpty( credentials?.ClientId ) )
                 {
                     throw new MqttClientException( ClientProperties.Client_AnonymousClientWithoutCleanSession );
                 }

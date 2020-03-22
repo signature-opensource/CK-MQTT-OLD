@@ -76,7 +76,7 @@ namespace CK.MQTT.Sdk
             return _channel
                 .ReceiverStream
                 .FirstOrDefaultAsync()
-                .Subscribe( async packet =>
+                .Subscribe( packet =>
                 {
                     if( packet.Item == default( IPacket ) )
                     {
@@ -96,7 +96,7 @@ namespace CK.MQTT.Sdk
                         StartKeepAliveMonitor();
                     }
 
-                    await DispatchPacketAsync( packet );
+                    DispatchPacketAsync( packet ).Wait();
                 }, ex =>
                 {
                     var m = new ActivityMonitor();//TODO: Remove onerror monitor.
@@ -109,7 +109,7 @@ namespace CK.MQTT.Sdk
                 .ReceiverStream
                 .Skip( 1 )
                 .Subscribe(
-                    async packet => await DispatchPacketAsync( packet )
+                    packet => DispatchPacketAsync( packet ).Wait()
                     , ex =>
                     {
                         var m = new ActivityMonitor();//TODO: Remove onerror monitor.

@@ -15,7 +15,6 @@ namespace CK.MQTT.Sdk
 {
     internal class ServerPacketListener : IPacketListener
     {
-        readonly IActivityMonitor _m;
         readonly IMqttChannel<IPacket> _channel;
         readonly IConnectionProvider _connectionProvider;
         readonly IProtocolFlowProvider _flowProvider;
@@ -27,13 +26,12 @@ namespace CK.MQTT.Sdk
         string _clientId = string.Empty;
         int _keepAlive = 0;
 
-        public ServerPacketListener( IActivityMonitor m,
+        public ServerPacketListener(
             IMqttChannel<IPacket> channel,
             IConnectionProvider connectionProvider,
             IProtocolFlowProvider flowProvider,
             MqttConfiguration configuration )
         {
-            _m = m;
             _channel = channel;
             _connectionProvider = connectionProvider;
             _flowProvider = flowProvider;
@@ -57,9 +55,11 @@ namespace CK.MQTT.Sdk
 
         public void Dispose()
         {
+            //TODO: this need a start/stop.
             if( _disposed ) return;
             _disposed = true;
-            _m.Info( ClientProperties.Mqtt_Disposing( GetType().FullName ) );
+            var m = new ActivityMonitor();
+            m.Info( ClientProperties.Mqtt_Disposing( GetType().FullName ) );
 
             _listenerDisposable.Dispose();
             _packets.OnCompleted();
@@ -74,7 +74,7 @@ namespace CK.MQTT.Sdk
                 .ReceiverStream
                 .FirstOrDefaultAsync()
                 .Timeout( packetDueTime )
-                .Subscribe( async packet =>
+                .Subscribe( packet =>
                 {
                     if( packet.Item == default( IPacket ) )
                     {
@@ -85,7 +85,7 @@ namespace CK.MQTT.Sdk
 
                     if( connect == null )
                     {
-                        await NotifyErrorAsync( packet.Monitor, ServerProperties.ServerPacketListener_FirstPacketMustBeConnect );
+                        NotifyErrorAsync( packet.Monitor, ServerProperties.ServerPacketListener_FirstPacketMustBeConnect ).GetAwaiter().GetResult();
                         return;
                     }
 
@@ -95,11 +95,11 @@ namespace CK.MQTT.Sdk
 
                     packet.Monitor.Info( ServerProperties.ServerPacketListener_ConnectPacketReceived( _clientId ) );
 
-                    await DispatchPacketAsync( new Mon<IPacket>( packet.Monitor, connect ) );
-                }, async ( e ) =>
+                    DispatchPacketAsync( new Mon<IPacket>( packet.Monitor, connect ) ).GetAwaiter().GetResult();
+                }, ( e ) =>
                 {
                     var m = new ActivityMonitor();
-                    await HandleConnectionExceptionAsync( m, e );
+                    HandleConnectionExceptionAsync( m, e ).Wait();
                 } );
         }
 
@@ -107,20 +107,20 @@ namespace CK.MQTT.Sdk
             => _channel
                 .ReceiverStream
                 .Skip( 1 )
-                .Subscribe( async packet =>
+                .Subscribe( packet =>
                 {
                     if( packet.Item is Connect )
                     {
-                        await NotifyErrorAsync( packet.Monitor, new MqttProtocolViolationException( ServerProperties.ServerPacketListener_SecondConnectNotAllowed ) );
+                        NotifyErrorAsync( packet.Monitor, new MqttProtocolViolationException( ServerProperties.ServerPacketListener_SecondConnectNotAllowed ) ).Wait();
 
                         return;
                     }
 
-                    await DispatchPacketAsync( packet );
-                }, async ex =>
+                    DispatchPacketAsync( packet ).Wait();
+                }, ex =>
                 {
                     var m = new ActivityMonitor();//TODO: avoid creating a new Monitor.
-                    await NotifyErrorAsync( m, ex );
+                    NotifyErrorAsync( m, ex ).Wait();
                 } );
 
         IDisposable ListenCompletionAndErrors()

@@ -95,7 +95,7 @@ namespace CK.MQTT.Sdk.Flows
         {
             using( IDisposable intervalSubscription = Observable
                 .Interval( TimeSpan.FromSeconds( configuration.WaitTimeoutSecs ), NewThreadScheduler.Default )
-                .Subscribe( async _ =>
+                .Subscribe( _ =>
                 {
                     if( channel.IsConnected )
                     {
@@ -104,7 +104,7 @@ namespace CK.MQTT.Sdk.Flows
                         Publish duplicated = new Publish( sentMessage.Topic, sentMessage.Payload, sentMessage.QualityOfService,
                             sentMessage.Retain, duplicated: true, packetId: sentMessage.PacketId );
 
-                        await channel.SendAsync( new Mon<IPacket>( m, duplicated ) );
+                        channel.SendAsync( new Mon<IPacket>( m, duplicated ) ).Wait();
                     }
                 } ) )
             {
