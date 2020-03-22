@@ -44,7 +44,7 @@ namespace IntegrationTests.Context
                 Path = FileUtil.CreateUniqueTimedFolder( LogFile.RootLogPath + "Text/", null, DateTime.UtcNow ),
                 AutoFlushRate = 0
             } );
-            //GrandOutput.Default.ApplyConfiguration()
+            GrandOutput.EnsureActiveDefault( conf );
             TestHelper.Monitor.Info( "Starting tests !" );
             var m = new ActivityMonitor( "Server Monitor." );
             Server = MqttServer.Create( m, Configuration, MqttServerBinding, _authenticationProvider );

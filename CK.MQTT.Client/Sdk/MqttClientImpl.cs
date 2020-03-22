@@ -189,8 +189,9 @@ namespace CK.MQTT.Sdk
             }
         }
 
-        public Task<SessionState> ConnectAsync( IActivityMonitor m, MqttLastWill will = null ) =>
+        public Task<SessionState> ConnectAnonymousAsync(IActivityMonitor m, MqttLastWill will = null) =>
             ConnectAsync( m, new MqttClientCredentials(), will, cleanSession: true );
+
 
         public async Task SubscribeAsync( IActivityMonitor m, string topicFilter, MqttQualityOfService qos )
         {
@@ -414,7 +415,7 @@ namespace CK.MQTT.Sdk
             Channel = await _channelFactory
                 .CreateAsync( m );
 
-            _packetListener = new ClientPacketListener( m, Channel, _flowProvider, _configuration );
+            _packetListener = new ClientPacketListener(Channel, _flowProvider, _configuration);
             _packetListener.Listen();
             ObservePackets();
         }

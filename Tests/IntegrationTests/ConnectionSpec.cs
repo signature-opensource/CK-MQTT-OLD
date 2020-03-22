@@ -265,7 +265,7 @@ namespace IntegrationTests
             (IMqttClient client, IActivityMonitor m) = await GetClientAsync();
             using( client )
             {
-                await client.ConnectAsync( m );
+                await client.ConnectAnonymousAsync( m );
 
                 Assert.True( client.CheckConnection( m ) );
                 Assert.False( string.IsNullOrEmpty( client.ClientId ) );

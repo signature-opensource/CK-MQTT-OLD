@@ -21,10 +21,9 @@ namespace CK.MQTT.Sdk.Bindings
         }
 
         public async Task<GenericChannel> AcceptClientAsync(IActivityMonitor m)
-            => new GenericChannel( m,
-                new TcpChannelClient( await _listener.AcceptTcpClientAsync() ),
-                new PacketBuffer(),
-                _configuration );
+            => new GenericChannel(new TcpChannelClient(await _listener.AcceptTcpClientAsync()),
+				new PacketBuffer(),
+				_configuration);
 
         public void Start() => _listener.Start();
 

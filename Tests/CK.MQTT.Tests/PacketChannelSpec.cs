@@ -72,7 +72,7 @@ namespace Tests
             manager.Setup( x => x.GetPacketAsync( It.IsAny<Mon<byte[]>>() ) )
                 .Returns( Task.FromResult<Mon<IPacket>>( new Mon<IPacket>( TestHelper.Monitor, expectedPacket ) ) );
 
-            PacketChannel channel = new PacketChannel( TestHelper.Monitor, innerChannel.Object, manager.Object, configuration );
+            PacketChannel channel = new PacketChannel(innerChannel.Object, manager.Object, configuration);
 
             IPacket receivedPacket = default;
 
@@ -109,7 +109,7 @@ namespace Tests
             manager.Setup( x => x.GetPacketAsync( It.IsAny<Mon<byte[]>>() ) )
                 .Returns( Task.FromResult<Mon<IPacket>>( new Mon<IPacket>( TestHelper.Monitor, (IPacket)expectedPacket ) ) );
 
-            PacketChannel channel = new PacketChannel( TestHelper.Monitor, innerChannel.Object, manager.Object, configuration );
+            PacketChannel channel = new PacketChannel(innerChannel.Object, manager.Object, configuration);
 
             IPacket receivedPacket = default;
 
@@ -169,7 +169,7 @@ namespace Tests
             manager.Setup( x => x.GetBytesAsync( It.IsAny<Mon<IPacket>>() ) )
                 .Returns( Task.FromResult<Mon<byte[]>>( new Mon<byte[]>( TestHelper.Monitor, bytes ) ) );
 
-            PacketChannel channel = new PacketChannel( TestHelper.Monitor, innerChannel.Object, manager.Object, configuration );
+            PacketChannel channel = new PacketChannel(innerChannel.Object, manager.Object, configuration);
 
             await channel.SendAsync( new Mon<IPacket>( TestHelper.Monitor, packet ) );
 
@@ -203,7 +203,7 @@ namespace Tests
             manager.Setup( x => x.GetBytesAsync( It.IsAny<Mon<IPacket>>() ) )
                 .Returns( Task.FromResult<Mon<byte[]>>( new Mon<byte[]>( TestHelper.Monitor, bytes ) ) );
 
-            PacketChannel channel = new PacketChannel( TestHelper.Monitor, innerChannel.Object, manager.Object, configuration );
+            PacketChannel channel = new PacketChannel(innerChannel.Object, manager.Object, configuration);
 
             await channel.SendAsync( new Mon<IPacket>( TestHelper.Monitor, packet ) );
 
@@ -222,7 +222,7 @@ namespace Tests
 
             Mock<IPacketManager> manager = new Mock<IPacketManager>();
 
-            PacketChannel channel = new PacketChannel( TestHelper.Monitor, innerChannel.Object, manager.Object, configuration );
+            PacketChannel channel = new PacketChannel(innerChannel.Object, manager.Object, configuration);
 
             string errorMessage = "Packet Exception";
 

@@ -17,7 +17,7 @@ namespace CK.MQTT.Sdk.Bindings
         }
         public async Task<IMqttChannel<byte[]>> CreateAsync( IActivityMonitor m )
         {
-            return new GenericChannel( m, await _channelClientFactory(m), new PacketBuffer(), _configuration );
+            return new GenericChannel(await _channelClientFactory(m), new PacketBuffer(), _configuration);
         }
     }
 }

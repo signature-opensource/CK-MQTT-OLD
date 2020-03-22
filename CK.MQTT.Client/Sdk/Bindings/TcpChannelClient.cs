@@ -17,6 +17,7 @@ namespace CK.MQTT.Sdk.Bindings
 
         public TcpChannelClient(TcpClient client)
         {
+            Debug.Assert( client.Connected );
             _client = client;
         }
 

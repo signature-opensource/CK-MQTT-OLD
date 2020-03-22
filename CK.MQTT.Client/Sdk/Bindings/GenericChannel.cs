@@ -16,7 +16,6 @@ namespace CK.MQTT.Sdk.Bindings
     public sealed class GenericChannel : IMqttChannel<byte[]>
     {
         bool _disposed;
-        readonly IActivityMonitor _m;
         readonly IChannelClient _client;
         readonly IPacketBuffer _buffer;
         readonly ReplaySubject<Mon<byte[]>> _receiver;
@@ -24,12 +23,10 @@ namespace CK.MQTT.Sdk.Bindings
         readonly IDisposable _streamSubscription;
 
         public GenericChannel(
-            IActivityMonitor m,
-            IChannelClient client,
-            IPacketBuffer buffer,
-            MqttConfiguration configuration )
-        {
-            _m = m;
+			IChannelClient client,
+			IPacketBuffer buffer,
+			MqttConfiguration configuration)
+		{
             _client = client;
             _client.PreferedReceiveBufferSize = configuration.BufferSize;
             _client.PreferedSendBufferSize = configuration.BufferSize;
@@ -92,8 +89,6 @@ namespace CK.MQTT.Sdk.Bindings
         public void Dispose()
         {
             if( _disposed ) return;
-            _m.Info( $"Disposing {GetType().FullName}..." );
-
             _streamSubscription.Dispose();
             _receiver.OnCompleted();
 
@@ -102,8 +97,9 @@ namespace CK.MQTT.Sdk.Bindings
                 _client?.Dispose();
             }
             catch( SocketException socketEx )
-            {
-                _m.Error( $"An error occurred while closing underlying communication channel. Error code: {socketEx.SocketErrorCode}", socketEx );
+            {//Should have Start/Stop
+                var m = new ActivityMonitor();
+                m.Error( $"An error occurred while closing underlying communication channel. Error code: {socketEx.SocketErrorCode}", socketEx );
             }
 
             _disposed = true;

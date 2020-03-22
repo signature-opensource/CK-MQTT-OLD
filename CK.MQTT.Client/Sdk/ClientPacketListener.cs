@@ -14,7 +14,6 @@ namespace CK.MQTT.Sdk
 {
     internal class ClientPacketListener : IPacketListener
     {
-        readonly IActivityMonitor _m;
         readonly IMqttChannel<IPacket> _channel;
         readonly IProtocolFlowProvider _flowProvider;
         readonly MqttConfiguration _configuration;
@@ -25,12 +24,11 @@ namespace CK.MQTT.Sdk
         string _clientId = string.Empty;
         IDisposable _keepAliveMonitor;
 
-        public ClientPacketListener( IActivityMonitor m,
+        public ClientPacketListener(
             IMqttChannel<IPacket> channel,
-            IProtocolFlowProvider flowProvider,
-            MqttConfiguration configuration )
-        {
-            _m = m;
+			IProtocolFlowProvider flowProvider,
+			MqttConfiguration configuration)
+		{
             _channel = channel;
             _flowProvider = flowProvider;
             _configuration = configuration;
@@ -57,13 +55,7 @@ namespace CK.MQTT.Sdk
 
         public void Dispose()
         {
-            if( _disposed )
-            {
-                return;
-            }
-
-            _m.Info( ClientProperties.Mqtt_Disposing( GetType().FullName ) );
-
+            if( _disposed ) return;
             _listenerDisposable.Dispose();
             StopKeepAliveMonitor();
             _packets.OnCompleted();

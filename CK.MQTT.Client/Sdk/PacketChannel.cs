@@ -11,19 +11,16 @@ namespace CK.MQTT.Sdk
     internal class PacketChannel : IMqttChannel<IPacket>
     {
         bool _disposed;
-        readonly IActivityMonitor _m;
         readonly IMqttChannel<byte[]> _innerChannel;
         readonly IPacketManager _manager;
         readonly ReplaySubject<Mon<IPacket>> _receiver;
         readonly ReplaySubject<Mon<IPacket>> _sender;
         readonly IDisposable _subscription;
 
-        public PacketChannel( IActivityMonitor m,
-            IMqttChannel<byte[]> innerChannel,
-            IPacketManager manager,
-            MqttConfiguration configuration )
-        {
-            _m = m;
+        public PacketChannel(IMqttChannel<byte[]> innerChannel,
+			IPacketManager manager,
+			MqttConfiguration configuration)
+		{
             _innerChannel = innerChannel;
             _manager = manager;
 
@@ -68,8 +65,6 @@ namespace CK.MQTT.Sdk
         public void Dispose()
         {
             if( _disposed ) return;
-
-            _m.Info( ClientProperties.Mqtt_Disposing( GetType().FullName ) );
 
             _subscription.Dispose();
             _receiver.OnCompleted();

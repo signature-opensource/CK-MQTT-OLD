@@ -39,7 +39,7 @@ namespace CK.MQTT.Ssl
                 _sslServerConfig.SslProtocols,
                 true
             );
-            return new GenericChannel( m, new SslTcpChannelClient( client, ssl ), new PacketBuffer(), _configuration );
+            return new GenericChannel(new SslTcpChannelClient(client, ssl), new PacketBuffer(), _configuration);
         }
 
         public void Start() => _listener.Start();

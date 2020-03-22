@@ -59,7 +59,7 @@ namespace IntegrationTests
             using( clientThatWork )
             {
                 Server.ClientConnected += Connected;
-                var task = clientThatWork.ConnectAsync( m );
+                var task = clientThatWork.ConnectAnonymousAsync( m );
                 Task.WaitAny( Task.Delay( 2000 ), task );
                 task.IsCompleted.Should().BeTrue();
                 await Task.Delay( 50 );

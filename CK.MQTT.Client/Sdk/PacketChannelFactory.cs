@@ -46,7 +46,7 @@ namespace CK.MQTT.Sdk
             IEnumerable<IFormatter> formatters = GetFormatters();
             PacketManager packetManager = new PacketManager( formatters );
 
-            return new PacketChannel( m, binaryChannel, packetManager, _configuration );
+            return new PacketChannel(binaryChannel, packetManager, _configuration);
         }
 
         IEnumerable<IFormatter> GetFormatters()
