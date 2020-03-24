@@ -276,10 +276,7 @@ namespace CK.MQTT.Sdk
                             .FirstOrDefaultAsync()
                             .Timeout( connectTimeout )).Item;
 
-                        if( ack == null )
-                        {
-                            throw new MqttClientException( $"The client {ClientId} has been disconnected while trying to perform the connection" );
-                        }
+                        if( ack == null ) throw new TimeoutException($"Timed out after { _configuration.WaitTimeoutSecs} seconds, was waiting ConnectAck.");
 
                         if( ack.Status != MqttConnectionStatus.Accepted ) throw new MqttConnectionException( ack.Status );
 

@@ -61,18 +61,19 @@ namespace CK.MQTT.Sdk.Bindings
         {
             var m = new ActivityMonitor();
             InitListener( m );
-            while(!_disposed )
+            while( !_disposed )
             {
                 try
                 {
-                    _channelStream.OnNext( new Mon<IMqttChannel<byte[]>>( m, await _listener.AcceptClientAsync( m ) ) );
+                    var channel = await _listener.AcceptClientAsync( m );
+                    _channelStream.OnNext( new Mon<IMqttChannel<byte[]>>( m, channel ) );
                 }
-                catch(ObjectDisposedException)
+                catch( ObjectDisposedException )
                 {
-                    if(_disposed) break;
+                    if( _disposed ) break;
                     throw;
                 }
-                catch(Exception e)
+                catch( Exception e )
                 {
                     m.Warn( "Error while accetping client: ", e );
                 }
@@ -91,13 +92,13 @@ namespace CK.MQTT.Sdk.Bindings
             {
                 _listener?.Stop();
             }
-            if(!_backgroundTask.IsCompleted) _backgroundTask.Wait( 50 );
+            if( !_backgroundTask.IsCompleted ) _backgroundTask.Wait( 50 );
             if( !_backgroundTask.IsCompleted )
             {
                 var m = new ActivityMonitor();
                 m.Warn( "Background task did not completed in given time." );
             }
-            if(_backgroundTask.IsFaulted)
+            if( _backgroundTask.IsFaulted )
             {
                 throw _backgroundTask.Exception;
             }
