@@ -67,7 +67,7 @@ namespace CK.MQTT.Sdk
                 InMemoryRepositoryProvider repositoryProvider = new InMemoryRepositoryProvider();
                 ClientProtocolFlowProvider flowProvider = new ClientProtocolFlowProvider( topicEvaluator, repositoryProvider, configuration );
 
-                return new MqttClientImpl( m, channelFactory, flowProvider, repositoryProvider, packetIdProvider, configuration );
+                return new MqttClientImpl( channelFactory, flowProvider, repositoryProvider, packetIdProvider, configuration );
             }
             catch( Exception ex )
             {

@@ -56,16 +56,14 @@ namespace IntegrationTests
                 connected = true;
             }
             (IMqttClient clientThatWork, IActivityMonitor m) = await GetClientAsync( "Client testing that server is alive." );
-            using( clientThatWork )
-            {
-                Server.ClientConnected += Connected;
-                var task = clientThatWork.ConnectAnonymousAsync( m );
-                Task.WaitAny( Task.Delay( 2000 ), task );
-                task.IsCompleted.Should().BeTrue();
-                await Task.Delay( 50 );
-                connected.Should().BeTrue();
-                Server.ClientConnected -= Connected;
-            }
+            Server.ClientConnected += Connected;
+            var task = clientThatWork.ConnectAnonymousAsync( m );
+            Task.WaitAny( Task.Delay( 2000 ), task );
+            task.IsCompleted.Should().BeTrue();
+            await Task.Delay( 50 );
+            connected.Should().BeTrue();
+            Server.ClientConnected -= Connected;
+            await clientThatWork.DisconnectAsync( m );
         }
 
     }

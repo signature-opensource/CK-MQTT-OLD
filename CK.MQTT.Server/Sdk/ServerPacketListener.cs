@@ -20,7 +20,6 @@ namespace CK.MQTT.Sdk
         readonly IProtocolFlowProvider _flowProvider;
         readonly MqttConfiguration _configuration;
         readonly ReplaySubject<Mon<IPacket>> _packets;
-        readonly TaskRunner _flowRunner;
         CompositeDisposable _listenerDisposable;
         bool _disposed;
         string _clientId = string.Empty;
@@ -37,7 +36,6 @@ namespace CK.MQTT.Sdk
             _flowProvider = flowProvider;
             _configuration = configuration;
             _packets = new ReplaySubject<Mon<IPacket>>( window: TimeSpan.FromSeconds( configuration.WaitTimeoutSecs ) );
-            _flowRunner = TaskRunner.Get();
         }
 
         public IObservable<Mon<IPacket>> PacketStream => _packets;
@@ -63,7 +61,6 @@ namespace CK.MQTT.Sdk
 
             _listenerDisposable.Dispose();
             _packets.OnCompleted();
-            (_flowRunner as IDisposable)?.Dispose();
         }
 
         IDisposable ListenFirstPacket()
@@ -222,35 +219,32 @@ namespace CK.MQTT.Sdk
 
             try
             {
-                using(packet.Monitor.OpenTrace("Dispatching packet."))
+                using( packet.Monitor.OpenTrace( "Dispatching packet." ) )
                 {
                     _packets.OnNext( packet );
                 }
 
-                await _flowRunner.Run( async () =>
+                IDisposableGroup diposeGroup;
+                if( packet.Item.Type == MqttPacketType.Publish )
                 {
-                    IDisposableGroup diposeGroup;
-                    if( packet.Item.Type == MqttPacketType.Publish )
-                    {
-                        Publish publish = packet.Item as Publish;
+                    Publish publish = packet.Item as Publish;
 
-                        diposeGroup = packet.Monitor.OpenInfo( ServerProperties.ServerPacketListener_DispatchingPublish( flow.GetType().Name, _clientId, publish.Topic ) );
-                    }
-                    else if( packet.Item.Type == MqttPacketType.Subscribe )
-                    {
-                        Subscribe subscribe = packet.Item as Subscribe;
-                        IEnumerable<string> topics = subscribe.Subscriptions == null ? new List<string>() : subscribe.Subscriptions.Select( s => s.TopicFilter );
+                    diposeGroup = packet.Monitor.OpenInfo( ServerProperties.ServerPacketListener_DispatchingPublish( flow.GetType().Name, _clientId, publish.Topic ) );
+                }
+                else if( packet.Item.Type == MqttPacketType.Subscribe )
+                {
+                    Subscribe subscribe = packet.Item as Subscribe;
+                    IEnumerable<string> topics = subscribe.Subscriptions == null ? new List<string>() : subscribe.Subscriptions.Select( s => s.TopicFilter );
 
-                        diposeGroup = packet.Monitor.OpenInfo( ServerProperties.ServerPacketListener_DispatchingSubscribe( flow.GetType().Name, _clientId, string.Join( ", ", topics ) ) );
-                    }
-                    else
-                    {
-                        diposeGroup = packet.Monitor.OpenInfo( ServerProperties.ServerPacketListener_DispatchingMessage( packet.Item.Type, flow.GetType().Name, _clientId ) );
-                    }
+                    diposeGroup = packet.Monitor.OpenInfo( ServerProperties.ServerPacketListener_DispatchingSubscribe( flow.GetType().Name, _clientId, string.Join( ", ", topics ) ) );
+                }
+                else
+                {
+                    diposeGroup = packet.Monitor.OpenInfo( ServerProperties.ServerPacketListener_DispatchingMessage( packet.Item.Type, flow.GetType().Name, _clientId ) );
+                }
 
-                    await flow.ExecuteAsync( packet.Monitor, _clientId, packet.Item, _channel );
-                    diposeGroup.Dispose();
-                } );
+                await flow.ExecuteAsync( packet.Monitor, _clientId, packet.Item, _channel );
+                diposeGroup.Dispose();
             }
             catch( Exception ex )
             {

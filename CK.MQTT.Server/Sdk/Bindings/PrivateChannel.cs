@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace CK.MQTT.Sdk.Bindings
@@ -18,9 +19,10 @@ namespace CK.MQTT.Sdk.Bindings
         readonly ReplaySubject<Mon<byte[]>> _receiver;
         readonly ReplaySubject<Mon<byte[]>> _sender;
         readonly IDisposable _streamSubscription;
-
+        readonly SemaphoreSlim _semaphoreSlim;
         public PrivateChannel( IActivityMonitor m, PrivateStream stream, EndpointIdentifier identifier, MqttConfiguration configuration )
         {
+            _semaphoreSlim = new SemaphoreSlim( 1 );
             _m = m;
             _stream = stream;
             _identifier = identifier;
@@ -35,23 +37,31 @@ namespace CK.MQTT.Sdk.Bindings
 
         public IObservable<Mon<byte[]>> SenderStream => _sender;
 
-        public Task SendAsync( Mon<byte[]> message )
+        public async Task SendAsync( Mon<byte[]> message )
         {
-            if( _disposed ) throw new ObjectDisposedException( nameof( PrivateChannel ) );
-
-            if( !IsConnected ) throw new MqttException( ClientProperties.MqttChannel_ClientNotConnected );
-
-            _sender.OnNext( message );
-
+            await _semaphoreSlim.WaitAsync();
             try
             {
-                message.Monitor.Trace( ClientProperties.MqttChannel_SendingPacket( message.Item.Length ) );
-                _stream.Send( message, _identifier );
-                return Task.FromResult( true );
+
+                if( _disposed ) throw new ObjectDisposedException( nameof( PrivateChannel ) );
+
+                if( !IsConnected ) throw new MqttException( ClientProperties.MqttChannel_ClientNotConnected );
+
+                _sender.OnNext( message );
+
+                try
+                {
+                    message.Monitor.Trace( ClientProperties.MqttChannel_SendingPacket( message.Item.Length ) );
+                    _stream.Send( message, _identifier );
+                }
+                catch( ObjectDisposedException disposedEx )
+                {
+                    throw new MqttException( ClientProperties.MqttChannel_StreamDisconnected, disposedEx );
+                }
             }
-            catch( ObjectDisposedException disposedEx )
+            finally
             {
-                throw new MqttException( ClientProperties.MqttChannel_StreamDisconnected, disposedEx );
+                _semaphoreSlim.Release();
             }
         }
 

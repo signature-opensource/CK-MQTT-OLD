@@ -36,7 +36,7 @@ namespace CK.MQTT.Sdk
                 InMemoryRepositoryProvider repositoryProvider = new InMemoryRepositoryProvider();
                 ClientProtocolFlowProvider flowProvider = new ClientProtocolFlowProvider( topicEvaluator, repositoryProvider, configuration );
 
-                return new MqttConnectedClient( m, channelFactory, flowProvider, repositoryProvider, packetIdProvider, configuration );
+                return new MqttConnectedClient( channelFactory, flowProvider, repositoryProvider, packetIdProvider, configuration );
             }
             catch( Exception ex )
             {
@@ -49,13 +49,13 @@ namespace CK.MQTT.Sdk
 
     class MqttConnectedClient : MqttClientImpl, IMqttConnectedClient
     {
-        internal MqttConnectedClient( IActivityMonitor m,
+        internal MqttConnectedClient(
             IPacketChannelFactory channelFactory,
             IProtocolFlowProvider flowProvider,
             IRepositoryProvider repositoryProvider,
             IPacketIdProvider packetIdProvider,
             MqttConfiguration configuration )
-            : base( m, channelFactory, flowProvider, repositoryProvider, packetIdProvider, configuration )
+            : base( channelFactory, flowProvider, repositoryProvider, packetIdProvider, configuration )
         {
         }
     }

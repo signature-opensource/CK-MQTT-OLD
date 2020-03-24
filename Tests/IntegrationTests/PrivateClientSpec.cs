@@ -17,50 +17,54 @@ namespace IntegrationTests
         [Test]
         public async Task when_creating_in_process_client_then_it_is_already_connected()
         {
-            IMqttConnectedClient client = await Server.CreateClientAsync( TestHelper.Monitor );
+            var m = new ActivityMonitor();
+            IMqttConnectedClient client = await Server.CreateClientAsync( m );
 
             Assert.NotNull( client );
-            Assert.True( client.CheckConnection( TestHelper.Monitor ) );
+            Assert.True( await client.CheckConnectionAsync( m ) );
             Assert.False( string.IsNullOrEmpty( client.ClientId ) );
             Assert.True( client.ClientId.StartsWith( "private" ) );
 
-            client.Dispose();
+            await client.DisconnectAsync( m );
         }
 
         [Test]
         public async Task when_in_process_client_subscribe_to_topic_then_succeeds()
         {
-            IMqttConnectedClient client = await Server.CreateClientAsync( TestHelper.Monitor );
+            var m = new ActivityMonitor();
+            IMqttConnectedClient client = await Server.CreateClientAsync( m );
             string topicFilter = Guid.NewGuid().ToString() + "/#";
 
-            await client.SubscribeAsync( TestHelper.Monitor, topicFilter, MqttQualityOfService.AtMostOnce );
+            await client.SubscribeAsync( m, topicFilter, MqttQualityOfService.AtMostOnce );
 
-            Assert.True( client.CheckConnection( TestHelper.Monitor ) );
+            Assert.True( await client.CheckConnectionAsync( m ) );
 
-            await client.UnsubscribeAsync( TestHelper.Monitor, new string[] { topicFilter } );
+            await client.UnsubscribeAsync( m, new string[] { topicFilter } );
 
-            client.Dispose();
+            await client.DisconnectAsync( m );
         }
 
         [Test]
         public async Task when_in_process_client_subscribe_to_system_topic_then_succeeds()
         {
-            IMqttConnectedClient client = await Server.CreateClientAsync( TestHelper.Monitor );
+            var m = new ActivityMonitor();
+            IMqttConnectedClient client = await Server.CreateClientAsync( m );
             string topicFilter = "$SYS/" + Guid.NewGuid().ToString() + "/#";
 
-            await client.SubscribeAsync( TestHelper.Monitor, topicFilter, MqttQualityOfService.AtMostOnce );
+            await client.SubscribeAsync( m, topicFilter, MqttQualityOfService.AtMostOnce );
 
-            Assert.True( client.CheckConnection( TestHelper.Monitor ) );
+            Assert.True( await client.CheckConnectionAsync( m ) );
 
-            await client.UnsubscribeAsync( TestHelper.Monitor, new string[] { topicFilter } );
+            await client.UnsubscribeAsync( m, new string[] { topicFilter } );
 
-            client.Dispose();
+            await client.DisconnectAsync( m );
         }
 
         [Test]
         public async Task when_in_process_client_publish_messages_then_succeeds()
         {
-            IMqttConnectedClient client = await Server.CreateClientAsync( TestHelper.Monitor );
+            var m = new ActivityMonitor();
+            IMqttConnectedClient client = await Server.CreateClientAsync( m );
             string topic = Guid.NewGuid().ToString();
             TestMessage testMessage = new TestMessage
             {
@@ -69,19 +73,20 @@ namespace IntegrationTests
             };
             var payload = Serializer.Serialize( testMessage );
 
-            await client.PublishAsync( TestHelper.Monitor, topic, payload, MqttQualityOfService.AtMostOnce );
-            await client.PublishAsync( TestHelper.Monitor, topic, payload, MqttQualityOfService.AtLeastOnce );
-            await client.PublishAsync( TestHelper.Monitor, topic, payload, MqttQualityOfService.ExactlyOnce );
+            await client.PublishAsync( m, topic, payload, MqttQualityOfService.AtMostOnce );
+            await client.PublishAsync( m, topic, payload, MqttQualityOfService.AtLeastOnce );
+            await client.PublishAsync( m, topic, payload, MqttQualityOfService.ExactlyOnce );
 
-            Assert.True( client.CheckConnection( TestHelper.Monitor ) );
+            Assert.True( await client.CheckConnectionAsync( m ) );
 
-            client.Dispose();
+            await client.DisconnectAsync( m );
         }
 
         [Test]
         public async Task when_in_process_client_publish_system_messages_then_succeeds()
         {
-            IMqttConnectedClient client = await Server.CreateClientAsync( TestHelper.Monitor );
+            var m = new ActivityMonitor();
+            IMqttConnectedClient client = await Server.CreateClientAsync( m );
             string topic = "$SYS/" + Guid.NewGuid().ToString();
             TestMessage testMessage = new TestMessage
             {
@@ -90,38 +95,40 @@ namespace IntegrationTests
             };
             var payload = Serializer.Serialize( testMessage );
 
-            await client.PublishAsync( TestHelper.Monitor, topic, payload, MqttQualityOfService.AtMostOnce );
-            await client.PublishAsync( TestHelper.Monitor, topic, payload, MqttQualityOfService.AtLeastOnce );
-            await client.PublishAsync( TestHelper.Monitor, topic, payload, MqttQualityOfService.ExactlyOnce );
+            await client.PublishAsync( m, topic, payload, MqttQualityOfService.AtMostOnce );
+            await client.PublishAsync( m, topic, payload, MqttQualityOfService.AtLeastOnce );
+            await client.PublishAsync( m, topic, payload, MqttQualityOfService.ExactlyOnce );
 
-            Assert.True( client.CheckConnection( TestHelper.Monitor ) );
+            Assert.True( await client.CheckConnectionAsync( m ) );
 
-            client.Dispose();
+            await client.DisconnectAsync( m );
         }
 
         [Test]
         public async Task when_in_process_client_disconnect_then_succeeds()
         {
-            IMqttConnectedClient client = await Server.CreateClientAsync( TestHelper.Monitor );
+            var m = new ActivityMonitor();
+            IMqttConnectedClient client = await Server.CreateClientAsync( m );
             string clientId = client.ClientId;
 
-            await client.DisconnectAsync( TestHelper.Monitor );
+            await client.DisconnectAsync( m );
 
             Assert.False( Server.ActiveClients.Any( c => c == clientId ) );
-            Assert.False( client.CheckConnection( TestHelper.Monitor ) );
+            Assert.False( await client.CheckConnectionAsync( m ) );
             Assert.True( string.IsNullOrEmpty( client.ClientId ) );
 
-            client.Dispose();
+            await client.DisconnectAsync( m );
         }
 
         [Test]
         public async Task when_in_process_clients_communicate_each_other_then_succeeds()
         {
-            IMqttConnectedClient fooClient = await Server.CreateClientAsync( TestHelper.Monitor );
-            IMqttConnectedClient barClient = await Server.CreateClientAsync( TestHelper.Monitor );
+            var m = new ActivityMonitor();
+            IMqttConnectedClient fooClient = await Server.CreateClientAsync( m );
+            IMqttConnectedClient barClient = await Server.CreateClientAsync( m );
             string fooTopic = "foo/message";
 
-            await fooClient.SubscribeAsync( TestHelper.Monitor, fooTopic, MqttQualityOfService.ExactlyOnce );
+            await fooClient.SubscribeAsync( m, fooTopic, MqttQualityOfService.ExactlyOnce );
 
             int messagesReceived = 0;
 
@@ -133,74 +140,71 @@ namespace IntegrationTests
                 }
             };
 
-            await barClient.PublishAsync( TestHelper.Monitor, fooTopic, new byte[255], MqttQualityOfService.AtMostOnce );
-            await barClient.PublishAsync( TestHelper.Monitor, fooTopic, new byte[10], MqttQualityOfService.AtLeastOnce );
-            await barClient.PublishAsync( TestHelper.Monitor, "other/topic", new byte[500], MqttQualityOfService.ExactlyOnce );
-            await barClient.PublishAsync( TestHelper.Monitor, fooTopic, new byte[50], MqttQualityOfService.ExactlyOnce );
+            await barClient.PublishAsync( m, fooTopic, new byte[255], MqttQualityOfService.AtMostOnce );
+            await barClient.PublishAsync( m, fooTopic, new byte[10], MqttQualityOfService.AtLeastOnce );
+            await barClient.PublishAsync( m, "other/topic", new byte[500], MqttQualityOfService.ExactlyOnce );
+            await barClient.PublishAsync( m, fooTopic, new byte[50], MqttQualityOfService.ExactlyOnce );
 
             await Task.Delay( TimeSpan.FromMilliseconds( 1000 ) );
 
-            Assert.True( fooClient.CheckConnection( TestHelper.Monitor ) );
-            Assert.True( barClient.CheckConnection( TestHelper.Monitor ) );
+            Assert.True( await fooClient.CheckConnectionAsync( m ) );
+            Assert.True( await barClient.CheckConnectionAsync( m ) );
             messagesReceived.Should().Be( 3 );
 
-            fooClient.Dispose();
-            barClient.Dispose();
+            await fooClient.DisconnectAsync(m);
+            await barClient.DisconnectAsync(m);
         }
 
         [Test]
         public async Task when_in_process_client_communicate_with_tcp_client_then_succeeds()
         {
             var mInProcess = new ActivityMonitor();
-            using( IMqttConnectedClient inProcessClient = await Server.CreateClientAsync( mInProcess ) )
+            IMqttConnectedClient inProcessClient = await Server.CreateClientAsync( mInProcess );
+            (IMqttClient remoteClient, IActivityMonitor mRemote) = await GetClientAsync();
+            await remoteClient.ConnectAsync( mRemote, new MqttClientCredentials( MqttTestHelper.GetClientId() ) );
+
+            string fooTopic = "foo/message";
+            string barTopic = "bar/message";
+
+            await inProcessClient.SubscribeAsync( mInProcess, fooTopic, MqttQualityOfService.ExactlyOnce );
+            await remoteClient.SubscribeAsync( mRemote, barTopic, MqttQualityOfService.AtLeastOnce );
+
+            int fooMessagesReceived = 0;
+            int barMessagesReceived = 0;
+
+            inProcessClient.MessageReceived += ( m, sender, message ) =>
             {
-                (IMqttClient remoteClient, IActivityMonitor mRemote) = await GetClientAsync();
-                using( remoteClient )
+                if( message.Topic == fooTopic )
                 {
-                    await remoteClient.ConnectAsync( mRemote, new MqttClientCredentials( MqttTestHelper.GetClientId() ) );
-
-                    string fooTopic = "foo/message";
-                    string barTopic = "bar/message";
-
-                    await inProcessClient.SubscribeAsync( mInProcess, fooTopic, MqttQualityOfService.ExactlyOnce );
-                    await remoteClient.SubscribeAsync( mRemote, barTopic, MqttQualityOfService.AtLeastOnce );
-
-                    int fooMessagesReceived = 0;
-                    int barMessagesReceived = 0;
-
-                    inProcessClient.MessageReceived += ( m, sender, message ) =>
-                    {
-                        if( message.Topic == fooTopic )
-                        {
-                            fooMessagesReceived++;
-                        }
-                    };
-                    remoteClient.MessageReceived += ( m, sender, message ) =>
-                    {
-                        if( message.Topic == barTopic )
-                        {
-                            barMessagesReceived++;
-                        }
-                    };
-
-                    await remoteClient.PublishAsync( mRemote, fooTopic, new byte[255], MqttQualityOfService.AtMostOnce );
-                    await remoteClient.PublishAsync( mRemote, fooTopic, new byte[10], MqttQualityOfService.AtLeastOnce );
-                    await remoteClient.PublishAsync( mRemote, "other/topic", new byte[500], MqttQualityOfService.ExactlyOnce );
-                    await remoteClient.PublishAsync( mRemote, fooTopic, new byte[50], MqttQualityOfService.ExactlyOnce );
-
-                    await inProcessClient.PublishAsync( mInProcess, barTopic, new byte[255], MqttQualityOfService.AtMostOnce );
-                    await inProcessClient.PublishAsync( mInProcess, barTopic, new byte[10], MqttQualityOfService.AtLeastOnce );
-                    await inProcessClient.PublishAsync( mInProcess, "other/topic", new byte[500], MqttQualityOfService.ExactlyOnce );
-                    await inProcessClient.PublishAsync( mInProcess, barTopic, new byte[50], MqttQualityOfService.ExactlyOnce );
-
-                    await Task.Delay( TimeSpan.FromMilliseconds( 1000 ) );
-
-                    Assert.True( inProcessClient.CheckConnection( mInProcess ) );
-                    Assert.True( remoteClient.CheckConnection( mRemote ) );
-                    fooMessagesReceived.Should().Be( 3 );
-                    barMessagesReceived.Should().Be( 3 );
+                    fooMessagesReceived++;
                 }
-            }
+            };
+            remoteClient.MessageReceived += ( m, sender, message ) =>
+            {
+                if( message.Topic == barTopic )
+                {
+                    barMessagesReceived++;
+                }
+            };
+
+            await remoteClient.PublishAsync( mRemote, fooTopic, new byte[255], MqttQualityOfService.AtMostOnce );
+            await remoteClient.PublishAsync( mRemote, fooTopic, new byte[10], MqttQualityOfService.AtLeastOnce );
+            await remoteClient.PublishAsync( mRemote, "other/topic", new byte[500], MqttQualityOfService.ExactlyOnce );
+            await remoteClient.PublishAsync( mRemote, fooTopic, new byte[50], MqttQualityOfService.ExactlyOnce );
+
+            await inProcessClient.PublishAsync( mInProcess, barTopic, new byte[255], MqttQualityOfService.AtMostOnce );
+            await inProcessClient.PublishAsync( mInProcess, barTopic, new byte[10], MqttQualityOfService.AtLeastOnce );
+            await inProcessClient.PublishAsync( mInProcess, "other/topic", new byte[500], MqttQualityOfService.ExactlyOnce );
+            await inProcessClient.PublishAsync( mInProcess, barTopic, new byte[50], MqttQualityOfService.ExactlyOnce );
+
+            await Task.Delay( TimeSpan.FromMilliseconds( 1000 ) );
+
+            Assert.True( await inProcessClient.CheckConnectionAsync( mInProcess ) );
+            Assert.True( await remoteClient.CheckConnectionAsync( mRemote ) );
+            fooMessagesReceived.Should().Be( 3 );
+            barMessagesReceived.Should().Be( 3 );
+            await remoteClient.DisconnectAsync( mRemote );
+            await inProcessClient.DisconnectAsync( mInProcess );
         }
     }
 }

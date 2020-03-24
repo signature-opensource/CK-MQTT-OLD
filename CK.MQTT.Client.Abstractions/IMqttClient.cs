@@ -1,5 +1,5 @@
 using CK.Core;
-
+using CK.MQTT.Packets;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -9,7 +9,7 @@ namespace CK.MQTT
     /// <summary>
     /// Represents an MQTT Client
     /// </summary>
-    public interface IMqttClient : IDisposable
+    public interface IMqttClient
     {
         /// <summary>
         /// Event raised when the Client gets disconnected in asynchronous way, each async handler being called in parallel
@@ -51,7 +51,7 @@ namespace CK.MQTT
         /// the connection succeed.
         /// </summary>
         /// <param name="m">The monitor that will be used.</param>
-        bool CheckConnection( IActivityMonitor m );
+        ValueTask<bool> CheckConnectionAsync( IActivityMonitor m );
 
         /// <summary>
         /// Event raised for each received message in asynchronous way, each async handler being called in parallel
@@ -116,7 +116,7 @@ namespace CK.MQTT
         /// See <a href="http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/mqtt-v3.1.1.html#_Toc442180876">MQTT Subscribe</a>
         /// for more details about the protocol subscription
         /// </remarks>
-        Task SubscribeAsync( IActivityMonitor m, string topicFilter, MqttQualityOfService qos );
+        Task<SubscribeReturnCode[]> SubscribeAsync( IActivityMonitor m, string topicFilter, MqttQualityOfService qos );
 
         /// <summary>
         /// Represents the protocol publish, which consists of sending a PUBLISH packet

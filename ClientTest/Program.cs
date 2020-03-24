@@ -24,7 +24,7 @@ namespace ClientTest
             };
             while( true )
             {
-                await client.PublishAsync( m, "test/hist_norm_cumul", Encoding.UTF8.GetBytes( Console.ReadLine() ), MqttQualityOfService.ExactlyOnce );
+                await client.PublishAsync( m, "test", Encoding.UTF8.GetBytes( Console.ReadLine() ), MqttQualityOfService.ExactlyOnce );
             }
         }
     }

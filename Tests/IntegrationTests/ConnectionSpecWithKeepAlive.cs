@@ -59,7 +59,7 @@ namespace IntegrationTests
                 _ => { },
                 ex => { Console.WriteLine( $"Error: {ex.Message}" ); } );
 
-            client.Dispose();
+            await client.DisconnectAsync( m );
 
             bool serverDetectedClientClosed = clientClosed.Wait( TimeSpan.FromSeconds( KeepAliveSecs * 2 ) );
 
@@ -74,19 +74,16 @@ namespace IntegrationTests
         public async Task when_keep_alive_enabled_and_no_packets_are_sent_then_connection_is_maintained()
         {
             (IMqttClient client, IActivityMonitor m) = await GetClientAsync();
-            using( client )
-            {
-                string clientId = MqttTestHelper.GetClientId();
+            string clientId = MqttTestHelper.GetClientId();
 
-                await client.ConnectAsync( m, new MqttClientCredentials( clientId ) );
+            await client.ConnectAsync( m, new MqttClientCredentials( clientId ) );
 
-                await Task.Delay( TimeSpan.FromSeconds( KeepAliveSecs * 5 ) );
+            await Task.Delay( TimeSpan.FromSeconds( KeepAliveSecs * 5 ) );
 
-                Assert.True( Server.ActiveClients.Any( c => c == clientId ) );
-                Assert.True( client.CheckConnection( m ) );
-                Assert.False( string.IsNullOrEmpty( client.ClientId ) );
-            }
-
+            Assert.True( Server.ActiveClients.Any( c => c == clientId ) );
+            Assert.True( await client.CheckConnectionAsync( m ) );
+            Assert.False( string.IsNullOrEmpty( client.ClientId ) );
+            await client.DisconnectAsync( m );
         }
     }
 }

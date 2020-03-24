@@ -162,7 +162,7 @@ namespace Tests
 
             innerChannel.Setup( x => x.ReceiverStream ).Returns( receiver );
             innerChannel.Setup( x => x.SendAsync( It.IsAny<Mon<byte[]>>() ) )
-                .Returns( Task.Delay( 0 ) );
+                .Returns( Task.CompletedTask );
 
             Mock<IPacketManager> manager = new Mock<IPacketManager>();
 
@@ -194,7 +194,7 @@ namespace Tests
 
             innerChannel.Setup( x => x.ReceiverStream ).Returns( receiver );
             innerChannel.Setup( x => x.SendAsync( It.IsAny<Mon<byte[]>>() ) )
-                .Returns( Task.Delay( 0 ) );
+                .Returns( Task.CompletedTask );
 
             IPacket packet = Activator.CreateInstance( packetType ) as IPacket;
 

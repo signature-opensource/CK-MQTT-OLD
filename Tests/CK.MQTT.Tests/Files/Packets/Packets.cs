@@ -1,3 +1,4 @@
+using CK.MQTT.Packets;
 using CK.MQTT.Sdk.Packets;
 using System;
 using System.Collections.Generic;

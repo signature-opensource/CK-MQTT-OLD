@@ -1,3 +1,4 @@
+using CK.MQTT.Packets;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,7 +17,7 @@ namespace CK.MQTT.Sdk.Packets
 
         public ushort PacketId { get; }
 
-        public IEnumerable<SubscribeReturnCode> ReturnCodes { get; }
+        public SubscribeReturnCode[] ReturnCodes { get; }
 
         public bool Equals( SubscribeAck other )
         {

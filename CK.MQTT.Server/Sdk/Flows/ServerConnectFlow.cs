@@ -40,7 +40,7 @@ namespace CK.MQTT.Sdk.Flows
             ClientSession session = _sessionRepository.Read( clientId );
             bool sessionPresent = connect.CleanSession ? false : session != null;
 
-            m.Info( $"Client connecting with protocol level {connect.ProtocolLelvel}." );
+            m.Info( $"Client connecting with protocol level {connect.ProtocolLevel}." );
 
             if( connect.CleanSession && session != null )
             {
