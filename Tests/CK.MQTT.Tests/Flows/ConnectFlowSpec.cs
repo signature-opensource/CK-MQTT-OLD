@@ -32,7 +32,7 @@ namespace Tests.Flows
 
             channel.Setup( c => c.SendAsync( It.IsAny<Mon<IPacket>>() ) )
                 .Callback<Mon<IPacket>>( packet => sentPacket = packet.Item )
-                .Returns( Task.Delay( 0 ) );
+                .Returns( Task.CompletedTask );
 
             Mock<IConnectionProvider> connectionProvider = new Mock<IConnectionProvider>();
 
@@ -80,7 +80,7 @@ namespace Tests.Flows
 
             channel.Setup( c => c.SendAsync( It.IsAny<Mon<IPacket>>() ) )
                 .Callback<Mon<IPacket>>( packet => sentPacket = packet.Item )
-                .Returns( Task.Delay( 0 ) );
+                .Returns( Task.CompletedTask );
 
             Mock<IConnectionProvider> connectionProvider = new Mock<IConnectionProvider>();
 
@@ -127,7 +127,7 @@ namespace Tests.Flows
 
             channel.Setup( c => c.SendAsync( It.IsAny<Mon<IPacket>>() ) )
                 .Callback<Mon<IPacket>>( packet => sentPacket = packet.Item )
-                .Returns( Task.Delay( 0 ) );
+                .Returns( Task.CompletedTask );
 
             Mock<IConnectionProvider> connectionProvider = new Mock<IConnectionProvider>();
 
@@ -172,7 +172,7 @@ namespace Tests.Flows
 
             channel.Setup( c => c.SendAsync( It.IsAny<Mon<IPacket>>() ) )
                 .Callback<Mon<IPacket>>( packet => sentPacket = packet.Item )
-                .Returns( Task.Delay( 0 ) );
+                .Returns( Task.CompletedTask );
 
             Mock<IConnectionProvider> connectionProvider = new Mock<IConnectionProvider>();
 
@@ -211,7 +211,7 @@ namespace Tests.Flows
 
             channel.Setup( c => c.SendAsync( It.IsAny<Mon<IPacket>>() ) )
                 .Callback<Mon<IPacket>>( packet => sentPacket = packet.Item )
-                .Returns( Task.Delay( 0 ) );
+                .Returns( Task.CompletedTask );
 
             Mock<IConnectionProvider> connectionProvider = new Mock<IConnectionProvider>();
 
@@ -250,7 +250,7 @@ namespace Tests.Flows
 
             channel.Setup( c => c.SendAsync( It.IsAny<Mon<IPacket>>() ) )
                 .Callback<Mon<IPacket>>( packet => sentPacket = packet.Item )
-                .Returns( Task.Delay( 0 ) );
+                .Returns( Task.CompletedTask );
 
             Mock<IConnectionProvider> connectionProvider = new Mock<IConnectionProvider>();
 
@@ -322,7 +322,7 @@ namespace Tests.Flows
                  {
                      await ch.SendAsync( new Mon<IPacket>( m, pub ) );
                  } )
-                .Returns( Task.Delay( 0 ) );
+                .Returns( Task.CompletedTask );
 
             senderFlow
                 .Setup( f => f.SendAckAsync( TestHelper.Monitor, It.IsAny<string>(), It.IsAny<IFlowPacket>(), It.IsAny<IMqttChannel<IPacket>>(), It.IsAny<PendingMessageStatus>() ) )
@@ -330,7 +330,7 @@ namespace Tests.Flows
                  {
                      await ch.SendAsync( new Mon<IPacket>( TestHelper.Monitor, pack ) );
                  } )
-                .Returns( Task.Delay( 0 ) );
+                .Returns( Task.CompletedTask );
 
             Connect connect = new Connect( clientId, cleanSession: false, MqttProtocol.SupportedLevel );
             Mock<IMqttChannel<IPacket>> channel = new Mock<IMqttChannel<IPacket>>();
@@ -350,7 +350,7 @@ namespace Tests.Flows
                          nextPackets.Add( packet.Item );
                      }
                  } )
-                .Returns( Task.Delay( 0 ) );
+                .Returns( Task.CompletedTask );
 
             Mock<IConnectionProvider> connectionProvider = new Mock<IConnectionProvider>();
 

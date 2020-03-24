@@ -191,7 +191,7 @@ namespace Tests.Flows
             Mock<IRepository<ConnectionWill>> willRepository = new Mock<IRepository<ConnectionWill>>();
 
             publishSenderFlow.Setup( f => f.SendPublishAsync( TestHelper.Monitor, It.IsAny<string>(), It.IsAny<Publish>(), It.IsAny<IMqttChannel<IPacket>>(), It.IsAny<PendingMessageStatus>() ) )
-                .Returns( Task.Delay( 0 ) );
+                .Returns( Task.CompletedTask );
 
             sessionRepository.Setup( r => r.Read( It.IsAny<string>() ) )
                 .Returns( new ClientSession( clientId )
@@ -239,7 +239,7 @@ namespace Tests.Flows
             channelMock.Setup( c => c.SenderStream ).Returns( sender );
             channelMock.Setup( c => c.SendAsync( It.IsAny<Mon<IPacket>>() ) )
                 .Callback<Mon<IPacket>>( packet => sender.OnNext( packet ) )
-                .Returns( Task.Delay( 0 ) );
+                .Returns( Task.CompletedTask );
 
             IMqttChannel<IPacket> channel = channelMock.Object;
             ManualResetEventSlim ackSentSignal = new ManualResetEventSlim( initialState: false );
@@ -328,7 +328,7 @@ namespace Tests.Flows
             channel.Setup( c => c.SenderStream ).Returns( sender );
             channel.Setup( c => c.SendAsync( It.IsAny<Mon<IPacket>>() ) )
                 .Callback<Mon<IPacket>>( packet => sender.OnNext( packet ) )
-                .Returns( Task.Delay( 0 ) );
+                .Returns( Task.CompletedTask );
 
             ManualResetEventSlim publishReceivedSignal = new ManualResetEventSlim( initialState: false );
             int retries = 0;
@@ -614,7 +614,7 @@ namespace Tests.Flows
             clientChannel.Setup( c => c.SenderStream ).Returns( clientSender );
             clientChannel.Setup( c => c.SendAsync( It.IsAny<Mon<IPacket>>() ) )
                 .Callback<Mon<IPacket>>( packet => clientSender.OnNext( new Mon<IPacket>( TestHelper.Monitor, packet.Item ) ) )
-                .Returns( Task.Delay( 0 ) );
+                .Returns( Task.CompletedTask );
             topicEvaluator.Setup( e => e.Matches( It.IsAny<string>(), It.IsAny<string>() ) ).Returns( true );
             sessionRepository.Setup( r => r.ReadAll() ).Returns( sessions.AsQueryable() );
 
@@ -691,7 +691,7 @@ namespace Tests.Flows
             clientChannel.Setup( c => c.SenderStream ).Returns( clientSender );
             clientChannel.Setup( c => c.SendAsync( It.IsAny<Mon<IPacket>>() ) )
                 .Callback<Mon<IPacket>>( packet => clientSender.OnNext( new Mon<IPacket>( TestHelper.Monitor, packet.Item ) ) )
-                .Returns( Task.Delay( 0 ) );
+                .Returns( Task.CompletedTask );
             topicEvaluator.Setup( e => e.Matches( It.IsAny<string>(), It.IsAny<string>() ) ).Returns( true );
             sessionRepository.Setup( r => r.ReadAll() ).Returns( sessions.AsQueryable() );
 

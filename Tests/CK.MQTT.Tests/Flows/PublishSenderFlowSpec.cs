@@ -51,7 +51,7 @@ namespace Tests.Flows
             channel.Setup( c => c.SenderStream ).Returns( sender );
             channel.Setup( c => c.SendAsync( It.IsAny<Mon<IPacket>>() ) )
                 .Callback<Mon<IPacket>>( packet => sender.OnNext( new Mon<IPacket>( TestHelper.Monitor, packet.Item ) ) )
-                .Returns( Task.Delay( 0 ) );
+                .Returns( Task.CompletedTask );
 
             connectionProvider.Setup( m => m.GetConnection( TestHelper.Monitor, It.IsAny<string>() ) ).Returns( channel.Object );
 
@@ -113,7 +113,7 @@ namespace Tests.Flows
             channel.Setup( c => c.SenderStream ).Returns( sender );
             channel.Setup( c => c.SendAsync( It.IsAny<Mon<IPacket>>() ) )
                 .Callback<Mon<IPacket>>( packet => sender.OnNext( new Mon<IPacket>( TestHelper.Monitor, packet.Item ) ) )
-                .Returns( Task.Delay( 0 ) );
+                .Returns( Task.CompletedTask );
 
             connectionProvider.Setup( m => m.GetConnection( TestHelper.Monitor, It.IsAny<string>() ) ).Returns( channel.Object );
 
@@ -173,7 +173,7 @@ namespace Tests.Flows
             channel.Setup( c => c.SenderStream ).Returns( sender );
             channel.Setup( c => c.SendAsync( It.IsAny<Mon<IPacket>>() ) )
                 .Callback<Mon<IPacket>>( packet => sender.OnNext( new Mon<IPacket>( TestHelper.Monitor, packet.Item ) ) )
-                .Returns( Task.Delay( 0 ) );
+                .Returns( Task.CompletedTask );
 
             connectionProvider.Setup( m => m.GetConnection( TestHelper.Monitor, It.Is<string>( s => s == clientId ) ) ).Returns( channel.Object );
 
@@ -225,7 +225,7 @@ namespace Tests.Flows
             channel.Setup( c => c.SenderStream ).Returns( sender );
             channel.Setup( c => c.SendAsync( It.IsAny<Mon<IPacket>>() ) )
                 .Callback<Mon<IPacket>>( packet => sender.OnNext( new Mon<IPacket>( TestHelper.Monitor, packet.Item ) ) )
-                .Returns( Task.Delay( 0 ) );
+                .Returns( Task.CompletedTask );
 
             connectionProvider.Setup( m => m.GetConnection( TestHelper.Monitor, It.Is<string>( s => s == clientId ) ) ).Returns( channel.Object );
 

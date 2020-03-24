@@ -24,7 +24,7 @@ namespace Tests.Flows
 
             channel.Setup( c => c.SendAsync( It.IsAny<Mon<IPacket>>() ) )
                 .Callback<Mon<IPacket>>( packet => sentPacket = packet.Item )
-                .Returns( Task.Delay( 0 ) );
+                .Returns( Task.CompletedTask );
 
             PingFlow flow = new PingFlow();
 

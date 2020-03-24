@@ -39,7 +39,7 @@ namespace CK.MQTT.Sdk.Flows
 
         protected virtual Task ProcessPublishAsync( IActivityMonitor m, Publish publish, string clientId )
         {
-            return Task.Delay( 0 );
+            return Task.CompletedTask;
         }
 
         protected virtual void Validate( Publish publish, string clientId )

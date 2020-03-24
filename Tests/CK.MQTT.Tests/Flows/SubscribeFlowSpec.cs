@@ -52,7 +52,7 @@ namespace Tests.Flows
 
             channel.Setup( c => c.SendAsync( It.IsAny<Mon<IPacket>>() ) )
                 .Callback<Mon<IPacket>>( p => response = p.Item )
-                .Returns( Task.Delay( 0 ) );
+                .Returns( Task.CompletedTask );
 
             Mock<IConnectionProvider> connectionProvider = new Mock<IConnectionProvider>();
 
@@ -112,7 +112,7 @@ namespace Tests.Flows
 
             channel.Setup( c => c.SendAsync( It.IsAny<Mon<IPacket>>() ) )
                 .Callback<Mon<IPacket>>( p => response = p.Item )
-                .Returns( Task.Delay( 0 ) );
+                .Returns( Task.CompletedTask );
 
             Mock<IConnectionProvider> connectionProvider = new Mock<IConnectionProvider>();
 
@@ -167,7 +167,7 @@ namespace Tests.Flows
 
             channel.Setup( c => c.SendAsync( It.IsAny<Mon<IPacket>>() ) )
                 .Callback<Mon<IPacket>>( p => response = p.Item )
-                .Returns( Task.Delay( 0 ) );
+                .Returns( Task.CompletedTask );
 
             Mock<IConnectionProvider> connectionProvider = new Mock<IConnectionProvider>();
 
