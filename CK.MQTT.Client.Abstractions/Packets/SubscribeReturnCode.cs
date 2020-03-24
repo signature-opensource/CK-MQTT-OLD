@@ -1,6 +1,6 @@
-﻿namespace CK.MQTT.Sdk.Packets
+namespace CK.MQTT.Packets
 {
-    internal enum SubscribeReturnCode : byte
+    public enum SubscribeReturnCode : byte
     {
         MaximumQoS0 = 0x00,
         MaximumQoS1 = 0x01,

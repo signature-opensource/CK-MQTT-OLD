@@ -4,11 +4,13 @@ using CK.MQTT.Sdk;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Net.Sockets;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace CK.MQTT.Sdk.Bindings
@@ -21,12 +23,14 @@ namespace CK.MQTT.Sdk.Bindings
         readonly ReplaySubject<Mon<byte[]>> _receiver;
         readonly ReplaySubject<Mon<byte[]>> _sender;
         readonly IDisposable _streamSubscription;
-
+        readonly SemaphoreSlim _semaphoreSlim;
+        Stream _sendStream;
         public GenericChannel(
-			IChannelClient client,
-			IPacketBuffer buffer,
-			MqttConfiguration configuration)
-		{
+            IChannelClient client,
+            IPacketBuffer buffer,
+            MqttConfiguration configuration )
+        {
+            _semaphoreSlim = new SemaphoreSlim( 1 );
             _client = client;
             _client.PreferedReceiveBufferSize = configuration.BufferSize;
             _client.PreferedSendBufferSize = configuration.BufferSize;
@@ -61,29 +65,45 @@ namespace CK.MQTT.Sdk.Bindings
 
         public async Task SendAsync( Mon<byte[]> message )
         {
-            if( _disposed )
-            {
-                throw new ObjectDisposedException( GetType().FullName );
-            }
-
-            if( !IsConnected )
-            {
-                throw new MqttException( "The underlying communication stream is not connected" );
-            }
-
-            _sender.OnNext( message );
-
+            await _semaphoreSlim.WaitAsync();
             try
             {
-                message.Monitor.Trace( $"Sending packet of {message.Item.Length} bytes" );
+                if( _disposed )
+                {
+                    throw new ObjectDisposedException( GetType().FullName );
+                }
+                if( _sendStream == null )
+                {
+                    _sendStream = _client.GetStream();
+                }
 
-                await _client.GetStream()
-                    .WriteAsync( message.Item, 0, message.Item.Length );
+                if( !IsConnected )
+                {
+                    throw new MqttException( "The underlying communication stream is not connected" );
+                }
+
+                _sender.OnNext( message );
+
+                try
+                {
+                    message.Monitor.Trace( $"Sending packet of {message.Item.Length} bytes" );
+
+                    await _sendStream.WriteAsync( message.Item, 0, message.Item.Length );
+                }
+                catch( ObjectDisposedException disposedEx )
+                {
+                    throw new MqttException( "The underlying communication stream is not available. The socket could have been disconnected", disposedEx );
+                }
+                catch(Exception e)
+                {
+                    throw;
+                }
             }
-            catch( ObjectDisposedException disposedEx )
+            finally
             {
-                throw new MqttException( "The underlying communication stream is not available. The socket could have been disconnected", disposedEx );
+                _semaphoreSlim.Release();
             }
+
         }
 
         public void Dispose()
@@ -146,7 +166,7 @@ namespace CK.MQTT.Sdk.Bindings
                     }
                     catch( Exception F )
                     {
-                        m.Warn(  "Error while disposing client connection.", F );
+                        m.Warn( "Error while disposing client connection.", F );
                     }
                 }
 

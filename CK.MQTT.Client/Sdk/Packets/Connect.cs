@@ -9,7 +9,7 @@ namespace CK.MQTT.Sdk.Packets
             if( string.IsNullOrEmpty( clientId ) ) throw new ArgumentNullException( nameof( clientId ) );
             ClientId = clientId;
             CleanSession = cleanSession;
-            ProtocolLelvel = protocolLevel;
+            ProtocolLevel = protocolLevel;
             KeepAlive = 0;
         }
 
@@ -19,13 +19,31 @@ namespace CK.MQTT.Sdk.Packets
             KeepAlive = 0;
         }
 
-        public MqttPacketType Type { get { return MqttPacketType.Connect; } }
+        public Connect(
+            string clientId,
+            bool cleanSession,
+            byte protocolLevel,
+            ushort keepAlive,
+            MqttLastWill will,
+            string userName,
+            string password)
+        {
+            ClientId = clientId;
+            CleanSession = cleanSession;
+            ProtocolLevel = protocolLevel;
+            KeepAlive = keepAlive;
+            Will = will;
+            UserName = userName;
+            Password = password;
+        }
+
+        public MqttPacketType Type => MqttPacketType.Connect;
 
         public string ClientId { get; set; }
 
         public bool CleanSession { get; set; }
 
-        public byte ProtocolLelvel { get; }
+        public byte ProtocolLevel { get; }
 
         public ushort KeepAlive { get; set; }
 
@@ -35,17 +53,14 @@ namespace CK.MQTT.Sdk.Packets
 
         public string Password { get; set; }
 
-        public bool Equals( Connect other )
-        {
-            if( other == null ) return false;
-
-            return ClientId == other.ClientId &&
+        public bool Equals( Connect other ) =>
+                other != null &&
+                ClientId == other.ClientId &&
                 CleanSession == other.CleanSession &&
                 KeepAlive == other.KeepAlive &&
                 Will == other.Will &&
                 UserName == other.UserName &&
                 Password == other.Password;
-        }
 
         public override bool Equals( object obj )
         {

@@ -34,12 +34,10 @@ namespace CK.MQTT
         public static string Client_PacketsObservableCompleted => "Client - Packet observable sequence has been completed, hence closing the channel";
         public static string Client_NewApplicationMessageReceived( string clientId, string topicName ) => $"Client {clientId} - An application message for topic {topicName} was received";
         public static string Client_CleanedOldSession( string clientId ) => $"Client {clientId} - Cleaned old session";
-        public static string Client_Closing( string id, DisconnectedReason reason ) => $"Client {id} - Closing. Reason: {reason.ToString()}";
         public static string Client_CreatedSession( string clientId ) => $"Client {clientId} - Created new client session";
         public static string ClientPacketListener_DispatchingMessage( string clientId, MqttPacketType packetType, string flowTypeName ) => $"Client {clientId} - Dispatching {packetType} message to flow {flowTypeName}";
         public static string ClientPacketListener_DispatchingPublish( string clientId, string packetType, string flowTypeName ) => $"Client {clientId} - Dispatching Publish message to flow {packetType} and topic {flowTypeName}";
         public static string ClientPacketListener_FirstPacketReceived( string clientId, MqttPacketType packetType ) => $"Client {clientId} - First packet from Server has been received. Type: {packetType}";
-        public static string ClientPacketListener_SendingKeepAlive( string clientId, int seconds ) => $"Client '{clientId}' - No packet has been sent in {seconds} seconds. Sending Ping to Server to maintain Keep Alive";
         public static string ClientPacketListener_PacketChannelCompleted( string clientId ) => $"Client {clientId} - Packet Channel observable sequence has been completed";
         public static string Client_DeletedSessionOnDisconnect( string clientId ) => $"Client {clientId} - Removed client session";
         public static string ConnectFormatter_ClientIdMaxLengthExceeded => "Client Id cannot exceed 23 bytes";
@@ -62,7 +60,6 @@ namespace CK.MQTT
         public static string MqttChannel_SendingPacket( int length ) => $"Sending packet of {length} bytes";
         public static string ConnectAckFormatter_InvalidSessionPresentForErrorReturnCode => "Session Present flag must be set to 0 for non-zero return codes";
         public static string PublishFlow_RetryingQoSFlow( MqttPacketType type, string clientId ) => $"The ack for message {type} has not been received. Re sending message for client {clientId}";
-        public static string Client_SubscriptionDisconnected( string clientId, string topicName ) => $"The client {clientId} has been disconnected while trying to perform the subscription to topic {topicName}";
         public static string Client_UnsubscribeDisconnected( string clientId, string topics ) => $"The client {clientId} has been disconnected while trying to perform the unsubscribe to topics: {topics}";
         public static string Client_ConnectNotAccepted( string clientId, MqttConnectionStatus status ) => $"The connect packet of client {clientId} has not been accepted by the server. Status: {status}. The connection will be closed";
         public static string ClientPacketListener_FirstReceivedPacketMustBeConnectAck => "The first packet received from the Server must be a ConnectAck packet. The connection will be closed.";
@@ -71,7 +68,6 @@ namespace CK.MQTT
         public static string Client_AlreadyConnected( string clientId ) => $"The protocol connection cannot be performed because an active connection for client {clientId} already exists";
         public static string Client_AlreadyDisconnected => "The protocol disconnection cannot be performed because the client is already disconnected";
         public static string PacketManager_PacketUnknown => "The received packet cannot be handled by any of the registered formatters";
-        public static string Client_SubscriptionRejected( string clientId, string topicName ) => $"The server has rejected the subscription of client {clientId} to topic {topicName}";
         public static string TopicEvaluator_InvalidTopicFilter( string topicFilter ) => $"The topic filter {topicFilter} is invalid according to the protocol rules and configuration";
         public static string TopicEvaluator_InvalidTopicName( string topicName ) => $"The topic name {topicName} is invalid according to the protocol rules";
         public static string MqttChannel_NetworkStreamCompleted => "The underlying communication stream has completed sending bytes. The observable sequence will be completed and the channel will be disposed";
