@@ -1,7 +1,7 @@
 using CK.Core;
-
 using CK.MQTT.Sdk.Formatters;
 using CK.MQTT.Sdk.Packets;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -32,7 +32,7 @@ namespace CK.MQTT.Sdk
         {
             if( _innerChannelFactory == null )
             {
-                throw new MqttException( ClientProperties.PacketChannelFactory_InnerChannelFactoryNotFound );
+                throw new NullReferenceException( ClientProperties.PacketChannelFactory_InnerChannelFactoryNotFound );
             }
 
             IMqttChannel<byte[]> binaryChannel = await _innerChannelFactory

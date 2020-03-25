@@ -13,7 +13,7 @@ using static CK.Testing.MonitorTestHelper;
 
 namespace IntegrationTests
 {
-    public abstract class BadPacketsTests : IntegrationContext, IDisposable
+    public abstract class BadPacketsTests : IntegrationContext
     {
         [TestCase( "Files/RandomPacketIFoundOnMyPc.bin" )]
         public async Task mqtt_stay_alive_after_bad_packet_instead_of_ssl_handshake( string packetPath )
