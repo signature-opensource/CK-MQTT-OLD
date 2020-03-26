@@ -33,12 +33,11 @@ namespace CK.MQTT.Sdk.Flows
                 SavePendingAcknowledgement( ack, clientId );
             }
 
-            if( !channel.IsConnected )
+            if( !channel.IsConnected ) return;
+            using(m.OpenInfo($"Sending Ack {ack.Type} to the Server."))
             {
-                return;
+                await channel.SendAsync( new Mon<IPacket>( m, ack ) );
             }
-
-            await channel.SendAsync( new Mon<IPacket>( m, ack ) );
 
             if( ack.Type == MqttPacketType.PublishReceived )
             {
@@ -85,7 +84,6 @@ namespace CK.MQTT.Sdk.Flows
             {
                 await channel
                     .ReceiverStream
-                    .ObserveOn( NewThreadScheduler.Default )
                     .OfMonitoredType<T, IPacket>()
                     .FirstOrDefaultAsync( x => x.Item.PacketId == sentMessage.PacketId );
             }

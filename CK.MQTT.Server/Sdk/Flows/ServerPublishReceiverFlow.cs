@@ -42,7 +42,7 @@ namespace CK.MQTT.Sdk.Flows
             {
                 Publish willPublish = new Publish( will.Will.Topic, will.Will.Payload, will.Will.QualityOfService, will.Will.Retain, duplicated: false );
 
-                m.Info( ServerProperties.ServerPublishReceiverFlow_SendingWill( clientId, willPublish.Topic ) );
+                m.Info( $"Server - Sending last will message of client {clientId} to topic {willPublish.Topic}" );
 
                 await DispatchAsync( m, willPublish, clientId, isWill: true );
             }

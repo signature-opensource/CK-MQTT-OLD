@@ -211,7 +211,6 @@ namespace CK.MQTT.Sdk
         async Task DispatchPacketAsync( Mon<IPacket> packet )
         {
             IProtocolFlow flow = _flowProvider.GetFlow( packet.Item.Type );
-
             if( flow == null )
             {
                 return;
@@ -219,7 +218,7 @@ namespace CK.MQTT.Sdk
 
             try
             {
-                using( packet.Monitor.OpenTrace( "Dispatching packet." ) )
+                using( packet.Monitor.OpenTrace( $"Emitting packet of type {packet.Item.Type} in the packet stream." ) )
                 {
                     _packets.OnNext( packet );
                 }

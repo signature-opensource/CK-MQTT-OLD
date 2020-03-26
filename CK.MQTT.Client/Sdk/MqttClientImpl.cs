@@ -318,7 +318,6 @@ namespace CK.MQTT.Sdk
         {
             _packetsSubscription = _packetListener
                 .PacketStream
-                .ObserveOn( NewThreadScheduler.Default )
                 .Subscribe( packet =>
                 {
                     if( packet.Item.Type == MqttPacketType.Publish )

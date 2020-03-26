@@ -134,7 +134,6 @@ namespace CK.MQTT.Sdk
             => _channel.SenderStream
                 .OfMonitoredType<Disconnect, IPacket>()
                 .FirstAsync()
-                .ObserveOn( NewThreadScheduler.Default )
                 .Subscribe( disconnect =>
                 {
                     if( _configuration.KeepAliveSecs > 0 ) StopKeepAliveMonitor();
@@ -151,6 +150,11 @@ namespace CK.MQTT.Sdk
                  {
                      try
                      {
+                         if( _disposed )
+                         {
+                             monitor.Warn( "Keep Alive monitor was still running but the observable chain was disposed." );
+                             return;
+                         }
                          monitor.Info( $"Client '{_clientId}' - No packet has been sent in {_configuration.KeepAliveSecs} seconds. Sending Ping to Server to maintain Keep Alive" );
 
                          PingRequest ping = new PingRequest();
@@ -181,7 +185,7 @@ namespace CK.MQTT.Sdk
             {
                 try
                 {
-                    using( packet.Monitor.OpenTrace( "Emitting packet to packet stream." ) )
+                    using( packet.Monitor.OpenTrace( $"Emitting packet to packet {packet.Item.Type} stream." ) )
                     {
                         _packets.OnNext( packet );
                     }
@@ -204,6 +208,10 @@ namespace CK.MQTT.Sdk
                 {
                     NotifyError( packet.Monitor, ex );
                 }
+            }
+            else
+            {
+                throw new InvalidOperationException( "Do we enter this branch path?" );
             }
         }
 

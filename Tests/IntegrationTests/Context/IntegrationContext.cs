@@ -39,10 +39,7 @@ namespace IntegrationTests.Context
         {
             ActivityMonitor.AutoConfiguration += m => m.AutoTags = m.AutoTags.Union( ActivityMonitor.Tags.StackTrace );
             ActivityMonitor.DefaultFilter = LogFilter.Debug;
-            var conf = new GrandOutputConfiguration()
-            {
-                MinimalFilter = LogFilter.Debug
-            };
+            var conf = new GrandOutputConfiguration();
             conf.AddHandler( new TextFileConfiguration
             {
                 Path = FileUtil.CreateUniqueTimedFolder( LogFile.RootLogPath + "Text/", null, DateTime.UtcNow ),

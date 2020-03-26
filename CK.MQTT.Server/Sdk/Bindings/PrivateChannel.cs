@@ -86,12 +86,12 @@ namespace CK.MQTT.Sdk.Bindings
 
             return _stream
                 .Receive( senderIdentifier )
-                .ObserveOn( NewThreadScheduler.Default )
                 .Subscribe( packet =>
                 {
-                    packet.Monitor.Trace( ClientProperties.MqttChannel_ReceivedPacket( packet.Item.Length ) );
-
-                    _receiver.OnNext( packet );
+                    using( packet.Monitor.OpenTrace( ClientProperties.MqttChannel_ReceivedPacket( packet.Item.Length ) ) )
+                    {
+                        _receiver.OnNext( packet );
+                    }
                 }, ex =>
                 {
                     if( ex is ObjectDisposedException )

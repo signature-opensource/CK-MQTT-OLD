@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Tests;
@@ -17,6 +18,10 @@ namespace IntegrationTests
 {
     public abstract class ConnectionSpec : IntegrationContext
     {
+        public ConnectionSpec() : base( keepAliveSecs: 0 )
+        {
+        }
+
         [Test]
         public async Task when_connecting_client_to_non_existing_server_then_fails()
         {
@@ -426,6 +431,21 @@ namespace IntegrationTests
         }
 
         [Test]
+        public async Task can_send_message_two_time()
+        {
+            (IMqttClient client, IActivityMonitor m) = await GetClientAsync();
+            await client.ConnectAnonymousAsync( m );
+            var m2 = new ActivityMonitor();
+            var serverClient = await Server.CreateClientAsync( m2 );
+            int received = 0;
+            serverClient.MessageReceived += ( a, b, c ) => received++;
+            await serverClient.SubscribeAsync( m2, "test", MqttQualityOfService.ExactlyOnce );
+            await client.PublishAsync( m2, "test", Encoding.ASCII.GetBytes( "test" ), MqttQualityOfService.ExactlyOnce );
+            await client.PublishAsync( m2, "test", Encoding.ASCII.GetBytes( "test" ), MqttQualityOfService.ExactlyOnce );
+            received.Should().Be( 2 );
+        }
+
+        [Test]
         public async Task when_client_disconnects_unexpectedly_then_will_message_is_sent()
         {
             (IMqttClient client1, IActivityMonitor m1) = await GetClientAsync();
@@ -445,14 +465,14 @@ namespace IntegrationTests
             await client2.SubscribeAsync( m2, topic, MqttQualityOfService.AtMostOnce );
             await client3.SubscribeAsync( m3, topic, MqttQualityOfService.AtLeastOnce );
 
-            ManualResetEventSlim willReceivedSignal = new ManualResetEventSlim( initialState: false );
+            SemaphoreSlim willReceivedSemaphor = new SemaphoreSlim( 0 );
             MqttApplicationMessage willApplicationMessage = default;
             void WillSignaler( IActivityMonitor m, IMqttClient sender, MqttApplicationMessage message )
             {
                 if( message.Topic == topic )
                 {
                     willApplicationMessage = message;
-                    willReceivedSignal.Set();
+                    willReceivedSemaphor.Release();
                 }
             }
             client2.MessageReceived += WillSignaler;
@@ -460,8 +480,7 @@ namespace IntegrationTests
 
             //Forces socket disconnection without using protocol Disconnect (Disconnect or Dispose Client method)
             (client1 as MqttClientImpl).Channel.Dispose();
-
-            bool willReceived = willReceivedSignal.Wait( 2000 );
+            bool willReceived = await willReceivedSemaphor.WaitAsync( Configuration.WaitTimeoutSecs * 300000 );
 
             Assert.True( willReceived );
             Assert.NotNull( willMessage );

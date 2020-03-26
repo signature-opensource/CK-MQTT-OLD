@@ -32,7 +32,6 @@ namespace CK.MQTT
         public static string ServerPacketListener_KeepAliveTimeExceeded( TimeSpan tolerance, string clientId ) => $"The keep alive tolerance of {tolerance} seconds has been exceeded and no packet has been received from client {clientId}. The connection will be closed.";
         public static string ServerPacketListener_NoConnectReceived => "No connect packet has been received since the network connection was established. The connection will be closed.";
         public static string ServerPacketListener_SecondConnectNotAllowed => "Only one Connect packet is allowed. The connection will be closed.";
-        public static string ServerPublishReceiverFlow_SendingWill( string clientId, string topicName ) => $"Server - Sending last will message of client {clientId} to topic {topicName}";
         public static string ServerPublishReceiverFlow_SystemMessageNotAllowedForClient => "Publish messages with a leading $ in the topic are considered  server specific messages, hence remote clients are not allowed to publish them";
         public static string ServerPublishReceiverFlow_TopicNotSubscribed( string topicName, string clientId ) => $"The topic {topicName} has no subscribers, hence the message sent by {clientId} will not be forwarded";
         public static string ServerSubscribeFlow_ErrorOnSubscription( string clientId, string topicName ) => $"Server - An error occurred when subscribing client {clientId} to topic {topicName}";

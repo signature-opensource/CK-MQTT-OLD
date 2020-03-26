@@ -17,10 +17,10 @@ namespace CK.MQTT.Sdk
         readonly ReplaySubject<Mon<IPacket>> _sender;
         readonly IDisposable _subscription;
 
-        public PacketChannel(IMqttChannel<byte[]> innerChannel,
-			IPacketManager manager,
-			MqttConfiguration configuration)
-		{
+        public PacketChannel( IMqttChannel<byte[]> innerChannel,
+            IPacketManager manager,
+            MqttConfiguration configuration )
+        {
             _innerChannel = innerChannel;
             _manager = manager;
 
@@ -33,8 +33,14 @@ namespace CK.MQTT.Sdk
                     try
                     {
                         Mon<IPacket> packet = _manager.GetPacketAsync( bytes ).GetAwaiter().GetResult();
-
-                        _receiver.OnNext( packet );
+                        if(packet.Item == null || packet.Monitor == null)
+                        {
+                            throw new NullReferenceException();
+                        }
+                        using( bytes.Monitor.OpenTrace( $"This packet is a {packet.Item.Type}, emitting in in the ReceiverStream." ) )
+                        {
+                            _receiver.OnNext( packet );
+                        }
                     }
                     catch( MqttException ex )
                     {
