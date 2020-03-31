@@ -2,6 +2,7 @@
   <Import Project="..\Common\Shared.props" />
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
+    <Nullable>annotations</Nullable>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="CK.ActivityMonitor" Version="13.2.1--0000-develop" />

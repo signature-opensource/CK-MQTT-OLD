@@ -14,12 +14,12 @@ namespace CK.MQTT
     /// <param name="monitor">The monitor to use.</param>
     /// <param name="sender">The source of the event.</param>
     /// <param name="e">An object that contains no event data (<see cref="EventArgs.Empty"/> should be used).</param>
-    public delegate void SequentialEventHandler<T>( IActivityMonitor monitor, IMqttClient sender, T e );
+    public delegate void SequentialEventHandler<TSender,TArg>( IActivityMonitor monitor, TSender sender, TArg e );
 
     /// <summary>
-    /// Implements a host for <see cref="SequentialEventHandler{T}"/> delegates.
+    /// Implements a host for <see cref="SequentialEventHandler{TSender,TArg}"/> delegates.
     /// </summary>
-    public struct SequentialEventHandlerSender<T>
+    public class SequentialEventHandlerSender<TSender, TArg>
     {
         object _handler;
 
@@ -32,14 +32,14 @@ namespace CK.MQTT
         /// Adds a handler. This is an atomic (thread safe) operation.
         /// </summary>
         /// <param name="h">Non null handler.</param>
-        public SequentialEventHandlerSender<T> Add( SequentialEventHandler<T> handler )
+        public SequentialEventHandlerSender<TSender, TArg> Add( SequentialEventHandler<TSender, TArg> handler )
         {
             if( handler == null ) throw new ArgumentNullException( nameof( handler ) );
             Util.InterlockedSet( ref _handler, h =>
             {
                 if( h == null ) return handler;
-                if( h is SequentialEventHandler<T> a ) return new SequentialEventHandler<T>[] { a, handler };
-                var ah = (SequentialEventHandler<T>[])h;
+                if( h is SequentialEventHandler<TSender, TArg> a ) return new SequentialEventHandler<TSender, TArg>[] { a, handler };
+                var ah = (SequentialEventHandler<TSender, TArg>[])h;
                 int len = ah.Length;
                 Array.Resize( ref ah, len + 1 );
                 ah[len] = handler;
@@ -52,18 +52,18 @@ namespace CK.MQTT
         /// Removes a handler if it exists. This is an atomic (thread safe) operation.
         /// </summary>
         /// <param name="h">The handler to remove. Cannot be null.</param>
-        public SequentialEventHandlerSender<T> Remove( SequentialEventHandler<T> handler )
+        public SequentialEventHandlerSender<TSender, TArg> Remove( SequentialEventHandler<TSender, TArg> handler )
         {
             if( handler == null ) throw new ArgumentNullException( nameof( handler ) );
             Util.InterlockedSet( ref _handler, h =>
             {
                 if( h == null ) return null;
-                if( h is SequentialEventHandler<T> a ) return a == handler ? null : h;
-                var current = (SequentialEventHandler<T>[])h;
+                if( h is SequentialEventHandler<TSender, TArg> a ) return a == handler ? null : h;
+                var current = (SequentialEventHandler<TSender, TArg>[])h;
                 int idx = Array.IndexOf( current, handler );
                 if( idx < 0 ) return current;
                 Debug.Assert( current.Length > 1 );
-                var ah = new SequentialEventHandler<T>[current.Length - 1];
+                var ah = new SequentialEventHandler<TSender, TArg>[current.Length - 1];
                 System.Array.Copy( current, 0, ah, 0, idx );
                 System.Array.Copy( current, idx + 1, ah, idx, ah.Length - idx );
                 return ah;
@@ -77,7 +77,7 @@ namespace CK.MQTT
         /// <param name="eventHost">The host.</param>
         /// <param name="handler">The non null handler to add.</param>
         /// <returns>The host.</returns>
-        public static SequentialEventHandlerSender<T> operator +( SequentialEventHandlerSender<T> eventHost, SequentialEventHandler<T> handler ) => eventHost.Add( handler );
+        public static SequentialEventHandlerSender<TSender, TArg> operator +( SequentialEventHandlerSender<TSender, TArg> eventHost, SequentialEventHandler<TSender, TArg> handler ) => eventHost.Add( handler );
 
         /// <summary>
         /// Relays to <see cref="Remove"/>.
@@ -85,7 +85,7 @@ namespace CK.MQTT
         /// <param name="eventHost">The host.</param>
         /// <param name="handler">The non null handler to remove.</param>
         /// <returns>The host.</returns>
-        public static SequentialEventHandlerSender<T> operator -( SequentialEventHandlerSender<T> eventHost, SequentialEventHandler<T> handler ) => eventHost.Remove( handler );
+        public static SequentialEventHandlerSender<TSender, TArg> operator -( SequentialEventHandlerSender<TSender, TArg> eventHost, SequentialEventHandler<TSender, TArg> handler ) => eventHost.Remove( handler );
 
         /// <summary>
         /// Clears the delegate list.
@@ -98,14 +98,14 @@ namespace CK.MQTT
         /// <param name="monitor">The monitor to use.</param>
         /// <param name="sender">The sender of the event.</param>
         /// <param name="args">The event argument.</param>
-        public void Raise( IActivityMonitor monitor, IMqttClient sender, T args )
+        public void Raise( IActivityMonitor monitor, TSender sender, TArg args )
         {
             var h = _handler;
             if( h == null ) return;
-            if( h is SequentialEventHandler<T> a ) a( monitor, sender, args );
+            if( h is SequentialEventHandler<TSender, TArg> a ) a( monitor, sender, args );
             else
             {
-                var all = (SequentialEventHandler<T>[])h;
+                var all = (SequentialEventHandler<TSender, TArg>[])h;
                 foreach( var x in all ) x( monitor, sender, args );
             }
         }

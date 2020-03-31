@@ -26,7 +26,7 @@ namespace CK.MQTT
         /// produced by the Server.
         /// See <see cref="MqttEndpointDisconnected"/> for more details on the disconnection information
         /// </summary>
-        event SequentialEventHandler<MqttEndpointDisconnected> Disconnected;
+        event SequentialEventHandler<IMqttClient,MqttEndpointDisconnected> Disconnected;
 
         /// <summary>
         /// Event raised when the Client gets disconnected in asynchronous way, each async handler being called
@@ -62,7 +62,16 @@ namespace CK.MQTT
         /// <summary>
         /// Event raised for each received message, synchronously.
         /// </summary>
-        event SequentialEventHandler<MqttApplicationMessage> MessageReceived;
+        event SequentialEventHandler<IMqttClient,MqttApplicationMessage> MessageReceived;
+
+        /// <summary>
+        /// Asynchronously waits for the next <see cref="MessageReceived"/> that matches an optional <paramref name="predicate"/>
+        /// during an optional <paramref name="timeoutMillisecond"/> time span.
+        /// </summary>
+        /// <param name="predicate">The predicate that received message must satisfy.</param>
+        /// <param name="timeoutMillisecond">The timeout in milliseconds.</param>
+        /// <returns>The message or null if the timeout expired before the message has been received.</returns>
+        Task<MqttApplicationMessage?> WaitMessageReceivedAsync( Func<MqttApplicationMessage, bool>? predicate = null, int timeoutMillisecond = -1 );
 
         /// <summary>
         /// Event raised for each received message in asynchronous way, each async handler being called

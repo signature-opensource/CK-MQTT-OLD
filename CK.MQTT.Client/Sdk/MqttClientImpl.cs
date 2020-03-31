@@ -47,8 +47,8 @@ namespace CK.MQTT.Sdk
         #region Events
 
 
-        SequentialEventHandlerSender<MqttEndpointDisconnected> _eSeqDisconnect;
-        public event SequentialEventHandler<MqttEndpointDisconnected> Disconnected
+        SequentialEventHandlerSender<IMqttClient,MqttEndpointDisconnected> _eSeqDisconnect = new SequentialEventHandlerSender<IMqttClient, MqttEndpointDisconnected>();
+        public event SequentialEventHandler<IMqttClient, MqttEndpointDisconnected> Disconnected
         {
             add => _eSeqDisconnect.Add( value );
             remove => _eSeqDisconnect.Remove( value );
@@ -82,11 +82,16 @@ namespace CK.MQTT.Sdk
             remove => _eParMessageAsync.Remove( value );
         }
 
-        SequentialEventHandlerSender<MqttApplicationMessage> _eSeqMessage;
-        public event SequentialEventHandler<MqttApplicationMessage> MessageReceived
+        SequentialEventHandlerSender<IMqttClient, MqttApplicationMessage> _eSeqMessage = new SequentialEventHandlerSender<IMqttClient, MqttApplicationMessage>();
+        public event SequentialEventHandler<IMqttClient, MqttApplicationMessage> MessageReceived
         {
             add => _eSeqMessage.Add( value );
             remove => _eSeqMessage.Remove( value );
+        }
+
+        public Task<MqttApplicationMessage?> WaitMessageReceivedAsync( Func<MqttApplicationMessage, bool>? predicate = null, int timeoutMillisecond = -1 )
+        {
+            return _eSeqMessage.WaitAsync( predicate, timeoutMillisecond );
         }
 
         SequentialEventHandlerAsyncSender<MqttApplicationMessage> _eSeqMessageAsync;
