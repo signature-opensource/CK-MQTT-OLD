@@ -1,0 +1,7 @@
+namespace CK.MQTT.Common.Packets
+{
+    internal class PingResponse : IPacket
+    {
+        public MqttPacketType Type => MqttPacketType.PingResponse;
+    }
+}

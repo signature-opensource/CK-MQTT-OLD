@@ -1,7 +1,5 @@
 using CK.Core;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace CK.MQTT
@@ -42,33 +40,5 @@ namespace CK.MQTT
             return taskCompletionSource.Task;
         }
 
-    }
-
-    static class Test
-    {
-        static SequentialEventHandlerSender<IMqttClient, EventArgs> _message = new SequentialEventHandlerSender<IMqttClient, EventArgs>();
-
-        static event SequentialEventHandler<IMqttClient, EventArgs> Message
-        {
-            add => _message.Add( value );
-            remove => _message.Remove( value );
-        }
-
-        static Task<EventArgs?> WaitMessageAsync( Func<EventArgs,bool>? predicate = null, int timeout = 0 )
-        {
-            return _message.WaitAsync( predicate, timeout );
-        }
-
-        static public async Task TestWait()
-        {
-            Message += EventExtension_Message;
-
-            await WaitMessageAsync( arg => true, 1 );
-        }
-
-        static void EventExtension_Message( IActivityMonitor monitor, object sender, object e )
-        {
-            Console.WriteLine( "Pouf!" );
-        }
     }
 }

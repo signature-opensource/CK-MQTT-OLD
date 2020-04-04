@@ -15,7 +15,7 @@ namespace CK.MQTT
             // http://msdn.microsoft.com/en-us/library/system.net.sockets.tcpclient.receivebuffersize.aspx
             // is 8192 bytes
             BufferSize = 8192;
-            MaximumQualityOfService = MqttQualityOfService.AtMostOnce;
+            MaximumQualityOfService = QualityOfService.AtMostOnce;
             KeepAliveSecs = 0;
             WaitTimeoutSecs = 5;
             ConnectionTimeoutSecs = 5;
@@ -37,7 +37,7 @@ namespace CK.MQTT
         /// Maximum Quality of Service (QoS) to support
         /// Default value is AtMostOnce, which means QoS 0
         /// </summary>
-		public MqttQualityOfService MaximumQualityOfService { get; set; }
+		public QualityOfService MaximumQualityOfService { get; set; }
 
         /// <summary>
         /// Seconds to wait for the MQTT Keep Alive mechanism
