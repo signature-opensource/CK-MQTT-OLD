@@ -64,6 +64,7 @@ namespace CK.MQTT.Sdk
             _listenerDisposable.Dispose();
             _packets.OnCompleted();
             (_flowRunner as IDisposable)?.Dispose();
+            _channel.Dispose();
         }
 
         IDisposable ListenFirstPacket()
