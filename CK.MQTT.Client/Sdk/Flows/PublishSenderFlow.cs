@@ -66,7 +66,6 @@ namespace CK.MQTT.Sdk.Flows
                 await MonitorAckAsync<PublishReceived>( m, message, clientId, channel );
                 await channel
                     .ReceiverStream
-                    .ObserveOn( NewThreadScheduler.Default )
                     .OfMonitoredType<PublishComplete, IPacket>()
                     .FirstOrDefaultAsync( x => x.Item.PacketId == message.PacketId.Value );
             }
@@ -113,7 +112,6 @@ namespace CK.MQTT.Sdk.Flows
             {
                 await channel
                     .ReceiverStream
-                    .ObserveOn( NewThreadScheduler.Default )
                     .OfMonitoredType<T, IPacket>()
                     .FirstOrDefaultAsync( x => x.Item.PacketId == sentMessage.PacketId.Value );
             }

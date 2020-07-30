@@ -145,7 +145,6 @@ namespace CK.MQTT.Sdk
             => _channel.SenderStream
                 .OfMonitoredType<Disconnect, IPacket>()
                 .FirstAsync()
-                .ObserveOn( NewThreadScheduler.Default )
                 .Subscribe( disconnect =>
                 {
                     if( _configuration.KeepAliveSecs > 0 ) StopKeepAliveMonitor();

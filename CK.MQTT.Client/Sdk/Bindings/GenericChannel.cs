@@ -124,7 +124,6 @@ namespace CK.MQTT.Sdk.Bindings
             } )
             .Repeat()
             .TakeWhile( bytes => bytes.Any() )
-            .ObserveOn( NewThreadScheduler.Default )
             .Subscribe( bytes =>
             {
                 try

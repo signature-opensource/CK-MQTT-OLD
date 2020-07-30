@@ -97,7 +97,6 @@ namespace CK.MQTT.Sdk
                     TimeSpan connectTimeout = TimeSpan.FromSeconds( _configuration.WaitTimeoutSecs );
                     ConnectAck ack = (await _packetListener
                         .PacketStream
-                        .ObserveOn( NewThreadScheduler.Default )
                         .OfMonitoredType<ConnectAck, IPacket>()
                         .FirstOrDefaultAsync()
                         .Timeout( connectTimeout )).Item;
@@ -161,7 +160,6 @@ namespace CK.MQTT.Sdk
 
                 ack = (await _packetListener
                     .PacketStream
-                    .ObserveOn( NewThreadScheduler.Default )
                     .OfMonitoredType<SubscribeAck, IPacket>()
                     .FirstOrDefaultAsync( x => x.Item.PacketId == packetId )
                     .Timeout( subscribeTimeout )).Item;
@@ -254,7 +252,6 @@ namespace CK.MQTT.Sdk
 
                 ack = (await _packetListener
                     .PacketStream
-                    .ObserveOn( NewThreadScheduler.Default )
                     .OfMonitoredType<UnsubscribeAck, IPacket>()
                     .FirstOrDefaultAsync( x => x.Item.PacketId == packetId )
                     .Timeout( unsubscribeTimeout )).Item;
@@ -429,7 +426,6 @@ namespace CK.MQTT.Sdk
         {
             _packetsSubscription = _packetListener
                 .PacketStream
-                .ObserveOn( NewThreadScheduler.Default )
                 .Subscribe( packet =>
                  {
                      if( packet.Item.Type == MqttPacketType.Publish )

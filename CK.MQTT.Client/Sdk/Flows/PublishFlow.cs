@@ -85,7 +85,6 @@ namespace CK.MQTT.Sdk.Flows
             {
                 await channel
                     .ReceiverStream
-                    .ObserveOn( NewThreadScheduler.Default )
                     .OfMonitoredType<T, IPacket>()
                     .FirstOrDefaultAsync( x => x.Item.PacketId == sentMessage.PacketId );
             }
